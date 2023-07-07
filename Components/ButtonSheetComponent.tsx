@@ -1,0 +1,187 @@
+import RBSheet from "react-native-raw-bottom-sheet";
+import React, { useState } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import comStyles from '../Constant/Components.styles'
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import Modal from 'react-native-modal';
+import ActionButton from "./ActionButton";
+import { getLoginUserRoll } from "../Constant/AsynStorageFuntion";
+
+const ButtonSheetComponent = () => {
+
+    const navigation = useNavigation();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [screenType, setScreenType] = useState('main');
+    const [roll, setRoll] = useState('');
+
+    const closeModal = (val: boolean) => {
+        // setModalVisible(val);
+        setScreenType('main');
+    }
+
+    const modalClose = () => {
+        setModalVisible(false);
+        navigation.navigate('Home');
+    }
+
+    const newIOU = () => {
+        
+        setModalVisible(false);
+        navigation.navigate('NewIOU');
+        
+    }
+    const NewIOUSettlement = () =>{
+        
+        setModalVisible(false);
+        navigation.navigate('NewIOUSettlement');
+        
+    }
+
+    const NewOneOffSettlement = () =>{
+        
+        setModalVisible(false);
+        navigation.navigate('NewOneOffSettlement');
+        
+    }
+
+    useFocusEffect(
+        React.useCallback(() => {
+
+            getLoginUserRoll().then(resp => {
+                setRoll(resp);
+                // console.log("User Roll: ", resp);
+            })
+
+        }, [])
+    );
+
+
+    return (
+
+        <View style={styles.headerContainer}>
+
+            <TouchableOpacity style={{ alignSelf: 'center' }} onPress={() => { setModalVisible(true) }}>
+                <Icon name={"add-box"} size={30} color={"white"} style={{}} />
+            </TouchableOpacity>
+            <View style={styles.container}>
+                <Modal
+                    backdropOpacity={0.3}
+                    isVisible={modalVisible}
+                    onBackdropPress={() => modalClose()}
+                    style={styles.contentView}
+                >
+                    <View style={styles.modalMainContainer}>
+
+                        <TouchableOpacity style={styles.dashStyle} onPress={() => modalClose()} />
+
+                        <View style={{ width: '100%', }}>
+
+                            <ActionButton
+                                title="Add New IOU"
+                                style={styles.loginBtn}
+                                textStyle={styles.txtStyle}
+                                is_icon={true}
+                                iconColor={comStyles.COLORS.ICON_BLUE}
+                                icon_name='square'
+                                onPress={() => newIOU()}
+                                
+                            />
+                            <ActionButton
+                                title="Add New IOU Settlement"
+                                style={styles.loginBtn}
+                                textStyle={styles.txtStyle}
+                                is_icon={true}
+                                iconColor={comStyles.COLORS.ICON_BLUE}
+                                icon_name='square'
+                                onPress={() => NewIOUSettlement()} 
+                                />
+                            <ActionButton
+                                title="Add New One-Off Settlement"
+                                style={styles.loginBtn}
+                                textStyle={styles.txtStyle}
+                                is_icon={true}
+                                iconColor={comStyles.COLORS.ICON_BLUE}
+                                icon_name='square'
+                                onPress={() => NewOneOffSettlement()} 
+                                //disabled={roll=='Requester' ? false : true}
+                                />
+
+                            <ActionButton title="Cancel" style={styles.ActionButton} onPress={() => modalClose()} />
+                        </View>
+
+                    </View>
+
+                </Modal>
+            </View>
+        </View>
+
+
+    );
+
+}
+const styles = StyleSheet.create({
+
+    headerContainer: {
+        justifyContent: 'center'
+    },
+    container: {
+        width: 100,
+    },
+
+    contentView: {
+        justifyContent: 'flex-end',
+        margin: 0,
+    },
+
+    modalMainContainer: {
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 10,
+        backgroundColor: 'white',
+        borderTopRightRadius: 20,
+        borderTopLeftRadius: 20,
+    },
+
+    loginBtn: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: comStyles.COLORS.ICON_BLUE,
+        marginBottom: 10,
+        marginTop: 20,
+        justifyContent: "flex-start",
+        alignItems: "flex-start",
+        alignContent: "flex-start",
+
+    },
+
+    rejectBtn: {
+        backgroundColor: comStyles.COLORS.HIGH_BUTTON_RED,
+        marginBottom: 30
+    },
+
+    ActionButton: {
+        marginTop: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        alignContent: "center",
+    },
+
+    txtStyle: {
+        color: comStyles.COLORS.ICON_BLUE
+    },
+    dashStyle: {
+        width: 50,
+        height: 5,
+        backgroundColor: comStyles.COLORS.DASH_COLOR,
+        borderRadius: 20,
+        marginTop: 5,
+    },
+    modalCont: {
+        flex: 1,
+        flexGrow: 1,
+        paddingHorizontal: 10,
+
+    },
+});
+export default ButtonSheetComponent;
