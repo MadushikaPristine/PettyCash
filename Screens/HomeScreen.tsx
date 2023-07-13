@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import {
     SafeAreaView,
     View,
@@ -24,7 +24,7 @@ import { getIOUSETToatalAmount, getPendingIOUSettlement, getPendingIOUSettlement
 import { getONEOFFToatalAmount, getPendingOneOffSettlement, getPendingOneOffSettlementHome, saveOneOffSettlement } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
 import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
 import * as DB from '../SQLiteDBAction/DBService';
-import { getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_LOGIN_ROUND } from "../Constant/AsynStorageFuntion";
+import { getLoginUserID, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_LOGIN_ROUND } from "../Constant/AsynStorageFuntion";
 import Modal from "react-native-modal";
 import { BASE_URL, headers } from "../Constant/ApiConstants";
 import axios from "axios";
@@ -41,6 +41,7 @@ import { saveUserRolls } from "../SQLiteDBAction/Controllers/UserRollController"
 import { saveDepartment } from "../SQLiteDBAction/Controllers/DepartmentController";
 import { Conection_Checking } from "../Constant/InternetConection_Checking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import moment from "moment";
 
 let SyncArray1: any[] = [];
 let arrayindex = 0;
@@ -70,6 +71,8 @@ const HomeScreen = () => {
     const [TotalIOUSETAmount, setTotalIOUSETAmount] = useState(0);
     const [TotalONEOFFAmount, setTotalONEOFFAmount] = useState(0);
     const [TotalPayableAmount, setTotalPayableAmount] = useState(0);
+
+    const [userID, setUserID] = useState('');
 
     //let TotalIOUAmount = 0.00;
     //let TotalIOUSETAmount = 0.00;
@@ -155,21 +158,21 @@ const HomeScreen = () => {
             let Total = iouamount + iousetamount + oneoffamount;
 
             console.log("set Amount ===   ", Total);
-    
+
             setTotalPayableAmount(Total);
-    
+
             formattedTotal = Total.toLocaleString("en-LK", {
                 style: "currency",
                 currency: "LKR",
                 minimumFractionDigits: 2,
             });
-    
+
             setTotalPayableAmount(formattedTotal);
 
         });
 
 
-      
+
 
 
 
@@ -185,7 +188,7 @@ const HomeScreen = () => {
 
     const getTotalPayableAmount = () => {
 
-       let Total = TotalIOUAmount + TotalIOUSETAmount + TotalONEOFFAmount;
+        let Total = TotalIOUAmount + TotalIOUSETAmount + TotalONEOFFAmount;
 
         console.log("set Amount ===   ", Total);
 
@@ -237,16 +240,19 @@ const HomeScreen = () => {
             const backHandler = BackHandler.addEventListener(
                 'hardwareBackPress',
                 handleBackButton
-              );
-          
-              
+            );
 
-            // BackHandler.addEventListener('hardwareBackPress', HandleBackButton);
 
-            SetCloseBtnSync(false)
-            SyncArray1 = [];
-            setSyncArray([]);
-            OnLoadData();
+            getLoginUserID().then(res => {
+                setUserID(res);
+
+                SetCloseBtnSync(false)
+                SyncArray1 = [];
+                setSyncArray([]);
+                OnLoadData();
+            })
+
+
             //createChannels();
 
         }, [navigation])
@@ -293,13 +299,13 @@ const HomeScreen = () => {
                         console.log("conection is tru");
                         Download_IOU_Types();
 
-                    }else{
+                    } else {
                         console.log("no connection");
 
                     }
                 })
 
-                
+
 
             }
 
@@ -330,10 +336,10 @@ const HomeScreen = () => {
     const handleBackButton = () => {
         // Disable the default back button behavior
         console.log("Hardware back button is pressed");
-        
+
         return true;
 
-      };
+    };
 
     // Sync Modal Functions ------
 
@@ -1350,7 +1356,7 @@ const HomeScreen = () => {
 
     const Download_IOURequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1479,7 +1485,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement Request --------------------------------------
     const Download_IOUSETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1606,7 +1612,7 @@ const HomeScreen = () => {
     // -------------------- Download One-Off Settlement Request --------------------------------------
     const Download_ONE_OFF_SETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1732,7 +1738,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement JOBS Request --------------------------------------
     const Download_IOUSETJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1858,7 +1864,7 @@ const HomeScreen = () => {
     // -------------------- Download OneOff JOBS Request --------------------------------------
     const Download_ONEOFFJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1985,7 +1991,10 @@ const HomeScreen = () => {
     // -------------------- Download IOU Job Data --------------------------------------
     const Download_IOUJobs = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+
+        console.log(" IOU JOBS URL ==== " , URL);
+        
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -2193,7 +2202,7 @@ const HomeScreen = () => {
     return (
 
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
-            <Header title={`Good Morningg\n${uName}!`} image={true} isIcon={true} iconOnPress={() => sync()} />
+            <Header title={`Good Morning\n${uName}!`} image={true} isIcon={true} iconOnPress={() => sync()} />
 
             {/* // --------------- Sync Modal ---------------------------------- */}
 
@@ -2434,8 +2443,13 @@ const HomeScreen = () => {
                                         <ListBox
                                             IOUNo={item.IOU_ID}
                                             nameAddress={true}
-                                            date={item.RequestDate}
-                                            price={item.Amount + "  LKR"}
+                                            date={moment.utc(item.RequestDate).format('YYYY-MM-DD - h:mm A')}
+                                            // price={item.Amount + "  LKR"}
+                                            price={item.Amount == null || '' ? "0.00 LKR" : item.Amount.toLocaleString("en-LK", {
+                                                style: "currency",
+                                                currency: "LKR",
+                                                minimumFractionDigits: 2,
+                                            })}
                                             status="New"
                                             isIcon={true}
                                             onPressIcon={() => console.log(item.IOU_ID)}
@@ -2488,8 +2502,12 @@ const HomeScreen = () => {
                                         <ListBox
                                             IOUNo={item.IOUSettlement_ID}
                                             nameAddress={true}
-                                            date={item.RequestDate}
-                                            price={item.Amount + "  LKR"}
+                                            date={moment.utc(item.RequestDate).format('YYYY-MM-DD - h:mm A')}
+                                            price={item.Amount == null || '' ? "0.00 LKR" : item.Amount.toLocaleString("en-LK", {
+                                                style: "currency",
+                                                currency: "LKR",
+                                                minimumFractionDigits: 2,
+                                            })}
                                             status="New"
                                             isIcon={true}
                                             onPressIcon={() => console.log(item.IOUSettlement_ID)}
@@ -2540,8 +2558,12 @@ const HomeScreen = () => {
                                         <ListBox
                                             IOUNo={item.ONEOFFSettlement_ID}
                                             nameAddress={true}
-                                            date={item.RequestDate}
-                                            price={item.Amount + "  LKR"}
+                                            date={moment.utc(item.RequestDate).format('YYYY-MM-DD - h:mm A')}
+                                            price={item.Amount == null || '' ? "0.00 LKR" : item.Amount.toLocaleString("en-LK", {
+                                                style: "currency",
+                                                currency: "LKR",
+                                                minimumFractionDigits: 2,
+                                            })}
                                             status="New"
                                             isIcon={true}
                                             onPressIcon={() => console.log(item.ONEOFFSettlement_ID)}

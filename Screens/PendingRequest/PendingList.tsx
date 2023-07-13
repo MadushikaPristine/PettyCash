@@ -15,6 +15,10 @@ import { getCurrentPendingListType, getLoginUserID, getLoginUserRoll, get_ASYNC_
 import { BASE_URL, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import Spinner from "react-native-loading-spinner-overlay";
+import { Dialog } from "react-native-paper";
+import InputText from "../../Components/InputText";
+import DateRangePicker from "rn-select-date-range";
+import IconA from 'react-native-vector-icons/FontAwesome';
 
 
 let width = Dimensions.get("screen").width;
@@ -53,6 +57,9 @@ const PendingList = () => {
 
   const [notificationMessage, setNotificationMessage] = useState('');
   const [loandingspinner, setloandingspinner] = useState(false);
+  const [isDialog, setisDialog] = useState(false);
+
+  const [selectedRange, setRange] = useState({});
 
   //const {selectedItems, handleItemPress} = RequestList([]);
 
@@ -78,7 +85,7 @@ const PendingList = () => {
     // console.log('sampleIn');
 
     Animated.timing(modalStyle, {
-      toValue: height / 2,
+      toValue: height / 5,
       duration: 500,
       useNativeDriver: false,
     }).start();
@@ -121,12 +128,21 @@ const PendingList = () => {
     if (selectedItems.length > 0) {
 
 
-      slideInModal();
+      setisDialog(true);
+      // slideInModal();
 
 
     } else {
 
       console.log(" no selected items");
+
+      Alert.alert('No Selected Requests !', 'Please Select Requests that you want to Approve. ', [
+        {
+          text: 'Ok',
+          onPress: () => console.log('Ok Pressed'),
+          style: 'default',
+        },
+      ]);
 
 
     }
@@ -136,14 +152,62 @@ const PendingList = () => {
   const reject = () => {
     setIsApprove(false);
     setIsReject(true);
-    slideInModal();
+    // slideInModal();
+
+    if (selectedItems.length > 0) {
+
+
+      setisDialog(true);
+      // slideInModal();
+
+
+    } else {
+
+      console.log(" no selected items");
+
+      Alert.alert('No Selected Requests !', 'Please Select Requests that you want to reject. ', [
+        {
+          text: 'Ok',
+          onPress: () => console.log('Ok Pressed'),
+          style: 'default',
+        },
+      ]);
+
+    }
 
   }
 
   const cancel = () => {
     setIsApprove(false);
     setIsReject(false);
-    slideInModal();
+    // slideInModal();
+    if (selectedItems.length > 0) {
+
+
+      setisDialog(true);
+      // slideInModal();
+
+
+    } else {
+
+      console.log(" no selected items");
+
+      Alert.alert('No Selected Requests !', 'Please Select Requests that you want to Cancel. ', [
+        {
+          text: 'Ok',
+          onPress: () => console.log('Ok Pressed'),
+          style: 'default',
+        },
+      ]);
+
+
+    }
+  }
+
+  const closeDialog = () => {
+
+    setTxtRemark('');
+    setisDialog(false)
   }
 
   //------------Send Approve Notification----------
@@ -268,7 +332,7 @@ const PendingList = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      { text: 'Yes', onPress: (approveRemark) },
+      { text: 'Yes', onPress: () => approveRemark(txtRemark) },
     ]);
   }
 
@@ -279,7 +343,7 @@ const PendingList = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      { text: 'Yes', onPress: (rejectRemark) },
+      { text: 'Yes', onPress: () => rejectRemark(txtRemark) },
     ]);
   }
 
@@ -290,7 +354,7 @@ const PendingList = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      { text: 'Yes', onPress: (cancelRemark) },
+      { text: 'Yes', onPress: () => cancelRemark(txtRemark) },
     ]);
   }
 
@@ -298,10 +362,9 @@ const PendingList = () => {
 
   const approveRemark = (remark: any) => {
 
-
-
-
     // console.log("selected list >>>>>>>>>>>>>>>>>>>>>>>>>>>>>   ",selectedItems);
+
+    setisDialog(false);
 
     for (let i = 0; i < selectedItems.length; ++i) {
       if (type === 'IOU') {
@@ -314,17 +377,30 @@ const PendingList = () => {
         saveApproveRemark(remark, selectedItems[i], (result: any) => {
           console.log("approved status -- ", result);
 
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'IOU Request', 2, remark);
+
+            navigation.navigate('IOU', { status: 'Approved', })
+
+          } else {
+
+            Alert.alert('Request Approve Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
 
 
         })
-        slideOutModal();
-        remark = '';
+        // slideOutModal();
+        // remark = '';
         //Alert.alert("Approved Request");
 
         // onApprovedNotification(selectedItems[i], type);
-        navigation.navigate('IOU', { status: 'Approved', })
 
-        UpdateRequest(selectedItems[i], 'IOU Request', 2, remark);
         //handlePress();
         //console.log(remark);
 
@@ -337,15 +413,33 @@ const PendingList = () => {
         })
         saveApproveRemarkIOUSET(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", txtRemark);
-        })
-        slideOutModal();
-        //Alert.alert("Approved Request");
-        // onApprovedNotification(selectedItems[i], type);
-        navigation.navigate('SettlementScreen', {
-          status: 'Approved',
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'IOU Settlement', 2, remark);
+
+            navigation.navigate('SettlementScreen', {
+              status: 'Approved',
+            })
+
+
+          } else {
+
+            Alert.alert('Request Approve Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
+
         })
 
-        UpdateRequest(selectedItems[i], 'IOU Settlement', 2, remark);
+        //Alert.alert("Approved Request");
+        // onApprovedNotification(selectedItems[i], type);
+
+
+
         //console.log(remark);
 
 
@@ -357,15 +451,31 @@ const PendingList = () => {
         })
         saveApproveRemarkONEOFF(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", txtRemark);
-        })
-        slideOutModal();
-        //Alert.alert("Approved Request");
-        // onApprovedNotification(selectedItems[i], type);
-        navigation.navigate('OneOffScreen', {
-          status: 'Approved',
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'OneOff Settlement', 2, remark);
+
+            navigation.navigate('OneOffScreen', {
+              status: 'Approved',
+            })
+
+
+          } else {
+
+            Alert.alert('Request Approve Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
         })
 
-        UpdateRequest(selectedItems[i], 'OneOff Settlement', 2, remark);
+        //Alert.alert("Approved Request");
+        // onApprovedNotification(selectedItems[i], type);
+
+
         //console.log(remark);
 
 
@@ -419,14 +529,30 @@ const PendingList = () => {
         })
         saveApproveRemark(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", remark);
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'IOU Request', 3, remark);
+
+            navigation.navigate('IOU', {
+              status: 'Rejected',
+            })
+
+          } else {
+
+            Alert.alert('Request Reject Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
         })
-        slideOutModal();
+
         //Alert.alert("Reject Request");
         // onRejectedNotification(selectedItems[i], type);
-        navigation.navigate('IOU', {
-          status: 'Rejected',
-        })
-        UpdateRequest(selectedItems[i], 'IOU Request', 3, remark);
+
+
         //console.log(remark);
 
 
@@ -438,15 +564,31 @@ const PendingList = () => {
         })
         saveApproveRemarkIOUSET(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", remark);
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'IOU Settlement', 3, remark);
+
+            navigation.navigate('SettlementScreen', {
+              status: 'Rejected',
+            })
+
+
+          } else {
+
+            Alert.alert('Request Reject Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
         })
 
-        slideOutModal();
+
         //Alert.alert("Reject Request");
         // onRejectedNotification(selectedItems[i], type);
-        navigation.navigate('SettlementScreen', {
-          status: 'Rejected',
-        })
-        UpdateRequest(selectedItems[i], 'IOU Settlement', 3, remark);
+
         //console.log(remark);
 
 
@@ -458,15 +600,35 @@ const PendingList = () => {
         })
         saveApproveRemarkONEOFF(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", remark);
+
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'OneOff Settlement', 3, remark);
+
+            navigation.navigate('OneOffScreen', {
+              status: 'Rejected',
+            })
+
+
+
+          } else {
+
+            Alert.alert('Request Reject Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+
+          }
+
         })
 
-        slideOutModal();
+
         //Alert.alert("Reject Request");
         // onRejectedNotification(selectedItems[i], type);
-        navigation.navigate('OneOffScreen', {
-          status: 'Rejected',
-        })
-        UpdateRequest(selectedItems[i], 'OneOff Settlement', 3, remark);
+
         //console.log(remark);
 
       }
@@ -489,15 +651,33 @@ const PendingList = () => {
         })
         saveApproveRemark(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", remark);
-        })
-        slideOutModal();
-        //Alert.alert("Cancel Request");
-        // onCancelledNotification(selectedItems[i], type);
-        navigation.navigate('IOU', {
-          status: 'Cancelled',
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'IOU Request', 4, remark);
+
+            navigation.navigate('IOU', {
+              status: 'Cancelled',
+            })
+
+
+
+          } else {
+
+            Alert.alert('Request Cancel Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
+
         })
 
-        UpdateRequest(selectedItems[i], 'IOU Request', 4, remark);
+        //Alert.alert("Cancel Request");
+        // onCancelledNotification(selectedItems[i], type);
+
+
         //console.log(remark);
 
 
@@ -509,14 +689,32 @@ const PendingList = () => {
         })
         saveApproveRemarkIOUSET(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", remark);
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'IOU Settlement', 4, remark);
+
+            navigation.navigate('SettlementScreen', {
+              status: 'Cancelled',
+            })
+
+
+          } else {
+
+            Alert.alert('Request Cancel Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+
+
+          }
         })
-        slideOutModal();
+
         //Alert.alert("Cancel Request");
         // onCancelledNotification(selectedItems[i], type);
-        navigation.navigate('SettlementScreen', {
-          status: 'Cancelled',
-        })
-        UpdateRequest(selectedItems[i], 'IOU Settlement', 4, remark);
+
         //console.log(remark);
 
 
@@ -528,16 +726,34 @@ const PendingList = () => {
         })
         saveApproveRemarkONEOFF(remark, selectedItems[i], (result: any) => {
           // console.log("Remark", remark);
+
+          if (result == "success") {
+
+            UpdateRequest(selectedItems[i], 'OneOff Settlement', 4, remark);
+
+            navigation.navigate('OneOffScreen', {
+              status: 'Cancelled',
+            })
+
+
+
+          } else {
+
+
+            Alert.alert('Request Cancel Failed !', '', [
+              {
+                text: 'Ok', onPress: () => console.log("ok Pressed")
+              },
+            ]);
+
+          }
+
         })
-        slideOutModal();
+
         //console.log(remark);
         //Alert.alert("Cancel Request");
         // onCancelledNotification(selectedItems[i], type);
-        navigation.navigate('OneOffScreen', {
-          status: 'Cancelled',
-        })
 
-        UpdateRequest(selectedItems[i], 'OneOff Settlement', 4, remark);
       }
 
 
@@ -723,27 +939,38 @@ const PendingList = () => {
   //----IOU pendings filter by Date range------
 
   const getDatesFromRange = (range: any) => {
+
+    slideOutModal();
+
+    var fdate = range.firstDate + "T00:00:00";
+    var ldate = range.secondDate + "T59:59:59";
+
+    setloandingspinner(true);
     if (type === 'IOU') {
 
-      var fdate = range.firstDate + " 00:00:00";
-      var ldate = range.secondDate + " 23:59:59";
 
-      // console.log(" range first date ----------------" ,fdate);
+      console.log(" range first date ----------------", fdate);
 
       getDateFilterIOUList(fdate, ldate, (result: any) => {
         setPendingList(result);
 
+        setRange({});
+        setloandingspinner(false);
         // console.log(range.firstDate, range.secondDate)
         // console.log(result);
       })
     } else if (type === 'IOU Settlement') {
-      getDateFilterIOUSETList(range.firstDate, range.secondDate, (result: any) => {
+      getDateFilterIOUSETList(fdate, ldate, (result: any) => {
         setPendingList(result);
+        setRange({});
+        setloandingspinner(false);
         // console.log(result);
       })
     } else if (type === 'One-Off Settlement') {
-      getDateFilterONEOFFList(range.firstDate, range.secondDate, (result: any) => {
+      getDateFilterONEOFFList(fdate, ldate, (result: any) => {
         setPendingList(result);
+        setRange({});
+        setloandingspinner(false);
         // console.log(result);
       })
     }
@@ -826,7 +1053,7 @@ const PendingList = () => {
       })
 
       setSelectedItems([]);
-      approveRemark(remarks);
+      // approveRemark(remarks);
 
     }, [navigation])
 
@@ -836,19 +1063,19 @@ const PendingList = () => {
   //--------Update status and remark--------------
   const UpdateRequest = async (ID: any, Rtype: any, status: any, remark: string) => {
 
-    const URL = BASE_URL + 'Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST'
+    const URL = BASE_URL + 'Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST';
+
+    const prams =
+    {
+      "PCRCode": ID,
+      "Type": Rtype,
+      "StatusID": status,
+      "ModifyBy": 158,
+      "Remark": remark,
+
+    }
 
     try {
-
-      const prams = {
-        "PCRCode": ID,
-        "Type": Rtype,
-        "StatusID": status,
-        "ModifyBy": 158,
-        "Remark": remark,
-
-      }
-
 
       // console.log(prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
@@ -871,19 +1098,19 @@ const PendingList = () => {
 
         } else {
 
-          // console.log(" response code ======= ", response.status);
+          console.log(" response code ======= ", response.status);
 
         }
       }).catch((error) => {
 
-        // console.log("error .....   ", error);
+        console.log("error .....   ", error);
 
 
       });
 
 
     } catch (error) {
-      // console.log(error);
+      console.log(error);
 
     }
 
@@ -891,6 +1118,13 @@ const PendingList = () => {
 
   }
 
+  const selectDateRange = () => {
+
+    setRange('');
+    slideInModal();
+
+
+  }
 
 
 
@@ -900,9 +1134,13 @@ const PendingList = () => {
 
         <Header title="Pending Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
 
-        <View style={{ flexDirection: 'row', }}>
-          <Text style={styles.listHeadling}>Pending Requests</Text>
-          <View style={styles.filter}><DateRangePopup filter={getDatesFromRange} /></View>
+        <View style={{ flexDirection: 'row', marginTop: 8, marginBottom: 8, marginLeft: 15, marginRight: 15 }}>
+          <View style={{ flex: 1 }} />
+          {/* <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.BOLD, color: ComponentsStyles.COLORS.HEADER_BLACK, fontSize: 16,marginRight:15 }}>Filter</Text> */}
+          <TouchableOpacity onPress={() => selectDateRange()}>
+            <IconA name='calendar' size={20} color={ComponentsStyles.COLORS.BLACK} />
+          </TouchableOpacity>
+
         </View>
         <View style={styles.listTab}>
           {
@@ -936,6 +1174,7 @@ const PendingList = () => {
           showsHorizontalScrollIndicator={false}
           data={pendingList}
           horizontal={false}
+          ListEmptyComponent={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={styles.EmptyMassage}>No data found</Text></View>}
           renderItem={({ item }) => {
             return (
               <View>
@@ -1037,7 +1276,7 @@ const PendingList = () => {
         }}>
         <View style={styles.modalCont}>
 
-          {
+          {/* {
             isApprove ?
 
               <ApproveRejectModal
@@ -1086,11 +1325,89 @@ const PendingList = () => {
 
 
 
-          }
+          } */}
+
+          <DateRangePicker
+            onSelectDateRange={(range) => {
+              setRange(range);
+              // changeRange(range);
+              // getDatesFromRange(range);
+            }}
+            blockSingleDateSelection={true}
+            responseFormat="YYYY-MM-DD"
+            onConfirm={() => getDatesFromRange(selectedRange)}
+            onClear={slideOutModal}
+            font={ComponentsStyles.FONT_FAMILY.SEMI_BOLD}
+            confirmBtnTitle="Search"
+            clearBtnTitle="Cancel"
+
+          // maxDate={moment()}
+          // minDate={moment().subtract(100, "days")}
+          />
 
         </View>
 
+        <View style={{ padding: 100 }} />
+
       </Animated.View>
+
+
+      <Dialog
+        visible={isDialog}
+        onDismiss={() => closeDialog()}
+      >
+
+        {
+          isApprove ?
+            <Dialog.Title style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD }}>Please Enter Approve Remark</Dialog.Title>
+            :
+
+            <>
+              {
+                isReject ?
+
+                  <Dialog.Title style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD }}>Please Enter Reject Remark</Dialog.Title>
+
+
+                  :
+
+                  <Dialog.Title style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD }}>Please Enter Cancel Remark</Dialog.Title>
+
+
+              }
+
+            </>
+
+        }
+
+        <Dialog.Content style={{ alignContent: "center", alignItems: "center" }}>
+
+          <InputText
+            style={{ paddingLeft: 10, }}
+            placeholder="Enter Remark Here"
+            placeholderColor={ComponentsStyles.COLORS.PROCEED_ASH}
+            stateValue={txtRemark}
+            setState={setTxtRemark}
+            multiline={true}
+            max={200}
+          />
+
+          <ActionButton
+            title={isApprove ? "Approve" : isReject ? "Reject" : "Cancel"}
+            onPress={() => isApprove ? ApproveAlert() : isReject ? RejectAlert() : CancelAlert()} />
+
+          <View style={{ padding: 10 }} />
+
+          <ActionButton
+            title="Cancel"
+            onPress={() => closeDialog()}
+            style={{ backgroundColor: ComponentsStyles.COLORS.RED_COLOR }}
+          />
+          <View style={{ padding: 5 }} />
+
+        </Dialog.Content>
+
+      </Dialog>
 
     </SafeAreaView>
 
@@ -1189,6 +1506,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     justifyContent: 'center',
     right: 12,
+  },
+  EmptyMassage: {
+    color: ComponentsStyles.COLORS.BLACK,
+    marginLeft: 10,
+    fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+    fontSize: 16,
+    fontStyle: 'normal',
   },
 })
 

@@ -33,6 +33,7 @@
     "react-native-sqlite-storage": "^6.0.1",
     "react-native-status-bar-height": "^2.6.0",
     "react-native-vector-icons": "^9.2.0",
+    "react-native-vpn-detect": "^1.0.0",
     "rn-select-date-range": "^5.0.0"
   },
   "devDependencies": {

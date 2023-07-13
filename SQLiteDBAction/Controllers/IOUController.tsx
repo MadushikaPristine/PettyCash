@@ -23,10 +23,10 @@ export const saveIOU = (data: any, callBack: any) => {
                         data[i].Amount,
                         data[i].StatusID,
                         data[i].RequestedBy,
-                        0,
-                        "approve remark",
-                        "Reject remark",
-                        "1",
+                        1,
+                        data[i].REMARK,
+                        "",
+                        "0",
 
                     ],
                 },
@@ -165,6 +165,9 @@ export const CancelledIOU = (ID: any, callBack: any) => {
 //---------update approve remark-----------------
 
 export const saveApproveRemark = (remark: any, ID: any, callBack: any) => {
+
+    console.log(ID," approve remark ----- " , remark);
+    
     DB.updateData(
         'UPDATE IOU SET Approve_Remark=? WHERE IOU_ID=?',
         [remark, ID],

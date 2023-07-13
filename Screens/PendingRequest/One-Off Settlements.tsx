@@ -7,6 +7,8 @@ import ComponentsStyles from "../../Constant/Components.styles";
 import { pendingRequestList } from "../../Constant/DummyData";
 import { getApprovedIOUOFS, getCancelledIOUOFS, getDateFilterONEOFFApproveList, getDateFilterONEOFFCancelList, getDateFilterONEOFFRejectList, getRejectIOUOFS } from "../../SQLiteDBAction/Controllers/OneOffSettlementController";
 import DateRangePopup from "../../Components/DateRangePopup";
+import Spinner from "react-native-loading-spinner-overlay";
+import IconA from 'react-native-vector-icons/FontAwesome';
 
 const listTab = [
     {
@@ -29,14 +31,15 @@ const OneOffScreen = () => {
 
     const [status, setStatus] = useState('Approved')
     const [datalist, setdatalist] = useState(pendingRequestList)
+    const [loandingspinner, setloandingspinner] = useState(false);
 
-    const handleItemPress = (itemId) => {
+    const handleItemPress = (itemId:any) => {
         if (selectedItems.includes(itemId)) {
-          setSelectedItems(selectedItems.filter((user_id) => user_id !== itemId));
+            setSelectedItems(selectedItems.filter((user_id) => user_id !== itemId));
         } else {
-          setSelectedItems([...selectedItems, itemId]);
+            setSelectedItems([...selectedItems, itemId]);
         }
-      };
+    };
 
     useFocusEffect(
         React.useCallback(() => {
@@ -45,7 +48,7 @@ const OneOffScreen = () => {
 
         }, [])
     );
-    
+
     const setStatusFilter = (status: any) => {
         if (status === 'Approved') {// purple and green
             setStatus('Approved');
@@ -72,45 +75,45 @@ const OneOffScreen = () => {
     }
 
     const getDatesFromRange = (range: any) => {
-        const start="T00:00:00.000Z";
-        const end="T59:59:59.000Z";
-        console.log("range.firstDate",range.firstDate+start,"--------------",range.secondDate+end,"range.secondDate---------------");
+        const start = "T00:00:00.000Z";
+        const end = "T59:59:59.000Z";
+        console.log("range.firstDate", range.firstDate + start, "--------------", range.secondDate + end, "range.secondDate---------------");
         console.log("");
 
-        if(status === 'Approved'){
-            getDateFilterONEOFFApproveList(range.firstDate+start, range.secondDate+end, (result: any) => {
+        if (status === 'Approved') {
+            getDateFilterONEOFFApproveList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setONEOFFList(result);
-             console.log(result);
-          })
-        } else if(status === 'Rejected'){
-            getDateFilterONEOFFRejectList(range.firstDate+start, range.secondDate+end, (result: any) => {
+                console.log(result);
+            })
+        } else if (status === 'Rejected') {
+            getDateFilterONEOFFRejectList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setONEOFFList(result);
-             console.log(result);
-          })
-        } else if(status === 'Cancelled'){
-            getDateFilterONEOFFCancelList(range.firstDate+start, range.secondDate+end, (result: any) => {
+                console.log(result);
+            })
+        } else if (status === 'Cancelled') {
+            getDateFilterONEOFFCancelList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setONEOFFList(result);
-             console.log(result);
-          })
+                console.log(result);
+            })
         }
     }
 
 
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
-        <View style={styles.screen}>
+            <View style={styles.screen}>
 
-            <Header title="Petty Cash Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
+                <Header title="Petty Cash Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
 
-            <View style={{flexDirection: 'row'}}>
-                <Text style={styles.listHeadling}>One-Off Settlementss</Text>
-                <View style={styles.filter}><DateRangePopup filter={getDatesFromRange}/></View>      
-            </View>
-            
-            
+                <View style={{ flexDirection: 'row' }}>
+                    <Text style={styles.listHeadling}>One-Off Settlementss</Text>
+                    <View style={styles.filter}><DateRangePopup filter={getDatesFromRange} /></View>
+                </View>
+
+
                 <View style={styles.listTab}>
                     {
-                        listTab.map((e,i) => (
+                        listTab.map((e, i) => (
                             <TouchableOpacity
                                 key={i}
                                 style={[styles.btnTab, status === e.status && styles.btnTabActive]}
@@ -125,6 +128,17 @@ const OneOffScreen = () => {
 
                 </View>
 
+
+                <Spinner
+                    visible={loandingspinner}
+                    textContent={'Loading...'}
+                    textStyle={{
+                        color: ComponentsStyles.COLORS.DASH_COLOR,
+                        fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+                        fontSize: 15
+                    }}
+                />
+
                 <FlatList
                     showsHorizontalScrollIndicator={false}
                     data={ONEOFFList}
@@ -137,8 +151,8 @@ const OneOffScreen = () => {
                                     //last_name='name'
                                     user_id={item.ID}
                                     request_type='One-Off Settlement Request'
-                                    amount= {item.Amount}
-                                    status={item.Approve_Status==2? "Approve" : (item.Approve_Status==3? "Rejected" : item.Approve_Status==4? "Cancelled" : "HOD Approved")}
+                                    amount={item.Amount}
+                                    status={item.Approve_Status == 2 ? "Approve" : (item.Approve_Status == 3 ? "Rejected" : item.Approve_Status == 4 ? "Cancelled" : "HOD Approved")}
                                     currency_type={item.currency_type}
                                     user_avatar='https://reqres.in/img/faces/9-image.jpg'
                                     request_channel="Mobile App"
@@ -161,12 +175,12 @@ const OneOffScreen = () => {
                     }
 
                     }
-                     keyExtractor={item =>`${item.Id}`}
+                    keyExtractor={item => `${item.Id}`}
                 />
 
 
-            
-        </View>
+
+            </View>
         </SafeAreaView>
     )
 }
@@ -175,14 +189,14 @@ const styles = StyleSheet.create({
     screen: {
         flex: 1,
         backgroundColor: "#e9e9e9",
-        
+
     },
     listHeadling: {
         color: ComponentsStyles.COLORS.HEADER_BLACK,
         fontSize: 16,
         fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
         padding: 15
-      },
+    },
     heading: {
         color: '#000',
         backgroundColor: "#fff",
@@ -253,7 +267,7 @@ const styles = StyleSheet.create({
         padding: 18,
         marginLeft: 90,
         flex: 1,
-      }
+    }
 })
 
 export default OneOffScreen;
