@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     text: {
-        color: ComponentsStyles.COLORS.BORDER_COLOR,
+        color: ComponentsStyles.COLORS.DETAIL_ASH,
         fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM,
         fontSize: 12,
         lineHeight: 20,

@@ -34,6 +34,7 @@ import * as CryptoJS from 'crypto-js';
 import Spinner from "react-native-loading-spinner-overlay";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import RNVPNDetect from "react-native-vpn-detect";
 
 
 const LoginScreen = () => {
@@ -123,6 +124,11 @@ const LoginScreen = () => {
             
             Conection_Checking(async (res: any) => {
                 if (res != false) {
+
+                    //check vpn connected
+
+                    // console.log("vpn connection check ... ",RNVPNDetect.checkIsVpnConnected());
+                    
 
                     await axios.get(URL, { headers }
                         ).then(async response => {

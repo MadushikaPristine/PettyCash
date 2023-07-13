@@ -167,13 +167,13 @@ const Header = ({ title, isIcon, image, isBtn, iconOnPress, btnOnPress, IconUser
                 :
                 <></>
             }
-            <View style={{ flex: 1, }}>
+            <View style={{ flex: 1, justifyContent:"center",alignContent:"center",alignItems:"center" }}>
                 <Text style={styles.textStyle}>{title}</Text>
             </View>
             <View style={{ width: 50, height: 40, borderRadius: 100 }}>
                 <TouchableOpacity onPress={() => resizeBox(1)}
                 >
-                    <Image source={require('../assets/images/tpl_black.png')} style={{ width: 40, height: 40, borderRadius: 100, }} />
+                    <Image source={require('../assets/images/ic_launcher.png')} style={{ width: 40, height: 40, borderRadius: 100, }} />
                 </TouchableOpacity>
                 <Modal transparent visible={visible}>
                     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} onTouchStart={() => resizeBox(0)}>

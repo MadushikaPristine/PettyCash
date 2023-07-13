@@ -1781,7 +1781,7 @@ const NewOneOffSettlement = () => {
                         is_icon={true}
                         iconColor={ComStyles.COLORS.WHITE}
                         icon_name="plus"
-                        title="Add Job"
+                        title="Add Details"
                         onPress={() => addjob()} />
 
 

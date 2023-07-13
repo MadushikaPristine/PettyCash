@@ -51,7 +51,8 @@ import { BASE_URL, headers } from "../../Constant/ApiConstants";
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
 import { getDepartments } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import Modal from "react-native-modal";
+import ComponentsStyles from "../../Constant/Components.styles";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -79,7 +80,7 @@ const NewIOUSettlement = () => {
 
     var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss')
 
-
+    const [isModalVisible, setisModalVisible] = useState(false);
     const navigation = useNavigation();
 
     const [isFocus, setIsFocus] = useState(false);
@@ -316,7 +317,7 @@ const NewIOUSettlement = () => {
         // console.log('sampleIn');
 
         Animated.timing(modalStyle, {
-            toValue: height / 2.5,
+            toValue: height / 6,
             duration: 500,
             useNativeDriver: false,
         }).start();
@@ -1128,7 +1129,7 @@ const NewIOUSettlement = () => {
                     if (response == 3) {
 
                         jobArray.push(saveObject);
-                        setJobList(jobArray);
+                        // setJobList(jobArray);
 
                         // console.log(" JOB List [][][][ ", joblist);
 
@@ -1305,6 +1306,9 @@ const NewIOUSettlement = () => {
         // console.log("Check Data Function calling", ReOpenDetails);
 
         getIOUSETJobsListByID(id, (response: any) => {
+
+            console.log("settlement jobs ---- ", response);
+
             setJobList(response);
         });
 
@@ -1575,7 +1579,12 @@ const NewIOUSettlement = () => {
             }
 
 
-            console.log("IOU SET UPLOAD JSON ==== ",prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+            console.log(" type details ---------- === ", obj);
+
+            console.log(" file object === ", Fileobj);
+
+
+            console.log("IOU SET UPLOAD JSON ==== ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
             // await axios.get(URL, { headers })
             axios.post(URL, prams, {
@@ -1742,60 +1751,71 @@ const NewIOUSettlement = () => {
                                                     isJobOrVehicle ?
                                                         // isJob ?
 
-                                                        <Dropdown
-                                                            style={[
-                                                                styles.dropdown,
-                                                                isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                                                            ]}
-                                                            itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                                                            placeholderStyle={Style.placeholderStyle}
-                                                            selectedTextStyle={Style.selectedTextStyle}
-                                                            inputSearchStyle={Style.inputSearchStyle}
-                                                            iconStyle={styles.iconStyle}
-                                                            data={IOUTypeID == "1" ? Job_NoList : Vehicle_NoList}
-                                                            search
-                                                            maxHeight={300}
-                                                            labelField={IOUTypeID == "1" ? "Job_No" : "Vehicle_No"}
-                                                            valueField={IOUTypeID == "1" ? "Job_No" : "Vehicle_No"}
-                                                            placeholder={!isFocus ? iouTypeJob : '...'}
-                                                            searchPlaceholder={searchtxt}
-                                                            value={selectJOBVehicleNo}
-                                                            onFocus={() => setIsFocus(true)}
-                                                            onBlur={() => setIsFocus(false)}
-                                                            onChange={item => {
+                                                        <View>
 
-                                                                if (IOUTypeID == "1") {
-
-                                                                    const name = item.Job_No + "";
-
-                                                                    const no = name.split("-");
-
-                                                                    console.log(" job no === ", no[0].trim());
-
-                                                                    setSelecteJoborVehicle(no[0].trim());
-
-                                                                    setselectJOBVehicleNo(item.Job_No);
+                                                            <View style={{ flexDirection: 'row', }}>
+                                                                <Text style={styles.bodyTextLeft}>
+                                                                    {IOUTypeID == "1" ? "Job No*" : "Vehicle No*"}
+                                                                </Text>
+                                                            </View>
 
 
-                                                                } else {
+                                                            <Dropdown
+                                                                style={[
+                                                                    styles.dropdown,
+                                                                    isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
+                                                                ]}
+                                                                itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
+                                                                placeholderStyle={Style.placeholderStyle}
+                                                                selectedTextStyle={Style.selectedTextStyle}
+                                                                inputSearchStyle={Style.inputSearchStyle}
+                                                                iconStyle={styles.iconStyle}
+                                                                data={IOUTypeID == "1" ? Job_NoList : Vehicle_NoList}
+                                                                search
+                                                                maxHeight={300}
+                                                                labelField={IOUTypeID == "1" ? "Job_No" : "Vehicle_No"}
+                                                                valueField={IOUTypeID == "1" ? "Job_No" : "Vehicle_No"}
+                                                                placeholder={!isFocus ? IOUTypeID == "1" ? 'Select Job No ' : 'Select Vehicle No' : ''}
+                                                                searchPlaceholder={IOUTypeID == "1" ? "Search Job No" : " Search Vehicle No"}
+                                                                value={selectJOBVehicleNo}
+                                                                onFocus={() => setIsFocus(true)}
+                                                                onBlur={() => setIsFocus(false)}
+                                                                onChange={item => {
 
-                                                                    setSelecteJoborVehicle(item.Vehicle_No);
-                                                                    setselectJOBVehicleNo(item.Vehicle_No);
+                                                                    if (IOUTypeID == "1") {
 
-                                                                }
+                                                                        const name = item.Job_No + "";
 
-                                                                setIsFocus(false);
-                                                                { IOUTypeID == "1" ? getCostCenter(JobOwner, IOUTypeID) : '...' }
-                                                            }}
-                                                            renderLeftIcon={() => (
-                                                                <AntDesign
-                                                                    style={styles.icon}
-                                                                    color={isFocus ? 'blue' : 'black'}
-                                                                    name="Safety"
-                                                                    size={15}
-                                                                />
-                                                            )}
-                                                        />
+                                                                        const no = name.split("-");
+
+                                                                        console.log(" job no === ", no[0].trim());
+
+                                                                        setSelecteJoborVehicle(no[0].trim());
+
+                                                                        setselectJOBVehicleNo(item.Job_No);
+
+
+                                                                    } else {
+
+                                                                        setSelecteJoborVehicle(item.Vehicle_No);
+                                                                        setselectJOBVehicleNo(item.Vehicle_No);
+
+                                                                    }
+
+                                                                    setIsFocus(false);
+                                                                    { IOUTypeID == "1" ? getCostCenter(JobOwner, IOUTypeID) : '...' }
+                                                                }}
+                                                                renderLeftIcon={() => (
+                                                                    <AntDesign
+                                                                        style={styles.icon}
+                                                                        color={isFocus ? 'blue' : 'black'}
+                                                                        name="Safety"
+                                                                        size={15}
+                                                                    />
+                                                                )}
+                                                            />
+
+                                                        </View>
 
 
                                                         :
@@ -1806,6 +1826,13 @@ const NewIOUSettlement = () => {
                                                 {error.field === 'JobOwner' && (
                                                     <Text style={styles.error}>{error.message}</Text>
                                                 )}
+
+                                                <View style={{ flexDirection: 'row', }}>
+                                                    <Text style={styles.bodyTextLeft}>
+                                                        Expense Type*
+                                                    </Text>
+                                                </View>
+
 
                                                 <Dropdown
                                                     style={[
@@ -1848,6 +1875,11 @@ const NewIOUSettlement = () => {
                                                     <Text style={styles.error}>{error.message}</Text>
                                                 )}
 
+                                                <View style={{ flexDirection: 'row', }}>
+                                                    <Text style={styles.bodyTextLeft}>
+                                                        Request Amount*
+                                                    </Text>
+                                                </View>
                                                 <InputText
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Requested amount(LKR)*"
@@ -1861,6 +1893,11 @@ const NewIOUSettlement = () => {
                                                     <Text style={styles.error}>{error.message}</Text>
                                                 )}
 
+                                                <View style={{ flexDirection: 'row', }}>
+                                                    <Text style={styles.bodyTextLeft}>
+                                                        Remark
+                                                    </Text>
+                                                </View>
                                                 <InputText
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Remarks"
@@ -1870,6 +1907,11 @@ const NewIOUSettlement = () => {
                                                     style={ComStyles.IOUInput}
                                                 />
 
+                                                <View style={{ flexDirection: 'row', }}>
+                                                    <Text style={styles.bodyTextLeft}>
+                                                        Account No
+                                                    </Text>
+                                                </View>
                                                 <InputText
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Account No"
@@ -1878,6 +1920,12 @@ const NewIOUSettlement = () => {
                                                     setState={(val: any) => setAccountNo(val)}
                                                     style={ComStyles.IOUInput}
                                                 />
+
+                                                <View style={{ flexDirection: 'row', }}>
+                                                    <Text style={styles.bodyTextLeft}>
+                                                        Cost Center
+                                                    </Text>
+                                                </View>
                                                 <Dropdown
                                                     style={[
                                                         Style.dropdown,
@@ -1918,7 +1966,11 @@ const NewIOUSettlement = () => {
                                                     )}
                                                 />
 
-
+                                                <View style={{ flexDirection: 'row', }}>
+                                                    <Text style={styles.bodyTextLeft}>
+                                                        Resource
+                                                    </Text>
+                                                </View>
                                                 <Dropdown
                                                     style={[
                                                         styles.dropdown,
@@ -2269,7 +2321,7 @@ const NewIOUSettlement = () => {
                     is_icon={true}
                     iconColor={ComStyles.COLORS.WHITE}
                     icon_name="plus"
-                    title="Add Job"
+                    title="Add Details"
                     onPress={() => addjob()} />
                 <View style={ComStyles.separateLine} />
 
@@ -2393,6 +2445,19 @@ const NewIOUSettlement = () => {
             <View style={{ marginBottom: 70 }} />
 
 
+            <Modal isVisible={isModalVisible} style={{ backgroundColor: ComponentsStyles.COLORS.WHITE, borderRadius: 10 }}>
+
+
+                <View style={{ flexDirection: 'row', marginTop: 5, marginBottom: 8, marginLeft: 5, marginRight: 5 }}>
+
+                    <ScrollView>
+
+
+
+
+                    </ScrollView>
+                </View>
+            </Modal>
 
         </SafeAreaView>
 
@@ -2540,5 +2605,11 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginTop: 5,
         marginBottom: 10,
+    },
+    bodyTextLeft: {
+        color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH,
+        fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR,
+        fontSize: 14,
+        flex: 1
     },
 })

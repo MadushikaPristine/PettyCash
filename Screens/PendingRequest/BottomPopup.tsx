@@ -455,6 +455,9 @@ const styles = StyleSheet.create({
     color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH,
     fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
     fontSize: 12,
+  },
+  line:{
+
   }
 });
 

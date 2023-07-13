@@ -1,6 +1,6 @@
-import { useFocusEffect } from "@react-navigation/native";
-import React from "react";
-import { Image, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
+import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { Button, Checkbox } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Double } from "react-native/Libraries/Types/CodegenTypes";
@@ -13,7 +13,13 @@ import { getOneOffJobsListByID } from "../SQLiteDBAction/Controllers/OneOffSettl
 import ButtonSheetComponent from "./ButtonSheetComponent";
 import { getIOUAttachmentListByID } from "../SQLiteDBAction/Controllers/AttachmentController";
 import { get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_MAX_AMOUNT } from "../Constant/AsynStorageFuntion";
-
+import Modal from "react-native-modal";
+import ActionButton from "./ActionButton";
+import IconA from 'react-native-vector-icons/FontAwesome';
+import AttachmentView from "./AttachmentView";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
+import JobsView from "./JobsView";
 
 
 type ParamTypes = {
@@ -43,18 +49,23 @@ type ParamTypes = {
   iou_type?: any,
 }
 
-const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_name, last_name, user_id, status, date,iou_type, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, job_no, expense_type, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
+const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, first_name, last_name, user_id, status, date, iou_type, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, job_no, expense_type, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
   let popupRef = React.createRef()
 
+  const navigation = useNavigation();
   const onShowPopup = () => {
-    popupRef.show()
+
+    setisModalVisible(true);
+    // popupRef.show()
   }
 
   const onClosePopup = () => {
-    popupRef.close()
+
+    setisModalVisible(false);
+    // popupRef.close()
   }
 
-  
+
 
   //   const getType = () => {
   //     if (request_type == "1") {
@@ -79,7 +90,8 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
   const [Request_ID, setRequest_ID] = React.useState(RequestID);
   const [DetailsList, setDetailList] = React.useState([]);
   const [attachList, setAttachList] = React.useState([]);
-  const [maxAmount,setMaxAmount] = React.useState(0.0);
+  const [maxAmount, setMaxAmount] = React.useState(0.0);
+  const [isModalVisible, setisModalVisible] = useState(false);
 
   // const onToggleCheckbox = () => {
   //   // const index = checked.indexOf(id);
@@ -114,19 +126,19 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
         // console.log("Maximum Amount: ", resp);
       })
 
-    },[])
+    }, [])
   );
 
   const getAttachmentList = () => {
-    getIOUAttachmentListByID(Request_ID, (resp:any) => {
+    getIOUAttachmentListByID(Request_ID, (resp: any) => {
       setAttachList(resp);
       //console.log(attachList);
     })
   }
 
   const getJobList = () => {
-    if(request_type == "IOU Request"){
-      getIOUJobsListByID(Request_ID,(response:any) => {
+    if (request_type == "IOU Request") {
+      getIOUJobsListByID(Request_ID, (response: any) => {
 
         setDetailList(response);
         //console.log(response);
@@ -137,23 +149,39 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
       //   setAttachList(resp);
       //   console.log(attachList);
       // })
-  
-    }else if(request_type == "IOU Settlement Request"){
-      getIOUSETJobsListByID(Request_ID,(response:any) => {
+
+    } else if (request_type == "IOU Settlement Request") {
+      getIOUSETJobsListByID(Request_ID, (response: any) => {
 
         setDetailList(response);
-  
+
       });
-    }else if(request_type == "One-Off Settlement Request"){
-      getOneOffJobsListByID(Request_ID,(response:any) => {
+    } else if (request_type == "One-Off Settlement Request") {
+      getOneOffJobsListByID(Request_ID, (response: any) => {
 
         setDetailList(response);
-  
+
       });
     }
 
-    
+
   }
+
+  const reOpenRequest = () => {
+    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "True");
+    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_REJECTED_ID, user_id);
+    if (request_type == "IOU Request") {
+      navigation.navigate('NewIOU');
+      this.close();
+    } else if (request_type == "IOU Settlement Request") {
+      navigation.navigate('NewIOUSettlement');
+      this.close();
+    } else if (request_type == "One-Off Settlement Request") {
+      navigation.navigate('NewOneOffSettlement');
+      this.close();
+    }
+  }
+
 
   return (
 
@@ -166,7 +194,7 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
             resizeMode="center"
           />
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={{ color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12, fontWeight: "bold"}}>
+            <Text style={{ color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12, fontWeight: "bold" }}>
               {first_name}
             </Text>
             <Text style={{ color: ComponentsStyles.COLORS.SERVICE_DETAILS_BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, fontSize: 12 }}>{user_id}</Text>
@@ -175,10 +203,10 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
           <View style={{ flex: 1, marginLeft: 25 }}>
             <Text style={{ color: ComponentsStyles.COLORS.ICON_BLUE, fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, fontSize: 12, fontWeight: "bold" }}>{request_type}</Text>
             <Text style={{ color: amount >= maxAmount ? ComponentsStyles.COLORS.RED_COLOR : ComponentsStyles.COLORS.SERVICE_DETAILS_BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM, fontSize: 12 }}>{amount = null || '' ? "0.00 LKR" : amount.toLocaleString("en-LK", {
-                    style: "currency",
-                    currency: "LKR",
-                    minimumFractionDigits: 2,
-                  })}</Text>
+              style: "currency",
+              currency: "LKR",
+              minimumFractionDigits: 2,
+            })}</Text>
           </View>
 
           {
@@ -205,7 +233,6 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
         </View>
       </TouchableWithoutFeedback>
       <BottomPopup
-        
         ref={(target) => popupRef = target}
         onTouchOutside={onClosePopup}
         first_name={first_name}
@@ -226,12 +253,321 @@ const RequestList = ({ jobremarks,RequestID,isCheckBoxVisible, ap_status, first_
         jobList={DetailsList}
         attachList={attachList}
         jobremarks={jobremarks}
-        isCopyRequest={approved_status=="3"? true : false}
+        isCopyRequest={approved_status == "3" ? true : false}
         iou_type={iou_type}
       />
-      
+
+
+
+      <Modal isVisible={isModalVisible} style={{ backgroundColor: ComponentsStyles.COLORS.WHITE, borderRadius: 10 }}>
+        {/* <View style={{ flex: 1 }}>
+          <View style={{ flex: 1.5, marginBottom: 5 }}>
+
+
+            <View style={{ flexDirection: 'row', marginTop: 5, marginBottom: 8, marginLeft: 5, marginRight: 5 }}>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    color: ComponentsStyles.COLORS.PRIMARY_COLOR,
+                    fontSize: 20,
+                    fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
+                    textAlign: "center"
+                  }}>
+                  Request Details
+                </Text>
+              </View>
+              {/* <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.BOLD, color: ComponentsStyles.COLORS.HEADER_BLACK, fontSize: 16,marginRight:15 }}>Filter</Text>
+              <TouchableOpacity onPress={() => onClosePopup()}>
+                <IconA name='close' size={30} color={ComponentsStyles.COLORS.RED_COLOR} />
+              </TouchableOpacity>
+
+            </View>
+
+            <View style={{ margin: 10, marginRight: 15 }}>
+
+              <ScrollView >
+
+
+
+
+                <View style={styles.detaillist}>
+                  <Image
+                    source={{ uri: user_avatar }}
+                    style={styles.avatar}
+                    resizeMode="center"
+                  />
+                  <View style={{ flex: 1, marginLeft: 10 }}>
+                    <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, color: ComponentsStyles.COLORS.BLACK, fontSize: 14 }}>
+                      Requested By
+                    </Text>
+                    <Text style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM, fontSize: 12 }}>Employee Number</Text>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 50, }}>
+                    <Text style={{ color: ComponentsStyles.COLORS.DETAIL_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, fontSize: 12, textAlign: 'right' }}>{first_name} {last_name}</Text>
+                    <Text style={{ color: ComponentsStyles.COLORS.DETAIL_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, fontSize: 12, textAlign: 'right' }}>
+                      {user_id}
+                    </Text>
+                  </View>
+
+
+                  <View style={styles.list}>
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={styles.textHeader}>Petty cash Request ID</Text>
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 100 }}>
+                      <Text style={styles.text}>{user_id}</Text>
+                    </View>
+                  </View>
+
+
+
+                </View>
+
+              </ScrollView>
+
+            </View>
+          </View>
+        </View> */}
+
+        <View style={{ flexDirection: 'row', marginTop: 5, marginBottom: 8, marginLeft: 5, marginRight: 5 }}>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: ComponentsStyles.COLORS.DETAIL_ASH,
+                fontSize: 20,
+                fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
+                textAlign: "center"
+              }}>
+              Request Details
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => onClosePopup()}>
+            <IconA name='close' size={30} color={ComponentsStyles.COLORS.RED_COLOR} />
+          </TouchableOpacity>
+
+        </View>
+
+
+        <ScrollView>
+
+          <View style={styles.detaillist}>
+            <Image
+              source={{ uri: user_avatar }}
+              style={styles.avatar}
+              resizeMode="center"
+            />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, color: ComponentsStyles.COLORS.DETAIL_ASH, fontSize: 14 }}>
+                Requested By
+              </Text>
+              <Text style={{ color: ComponentsStyles.COLORS.DETAIL_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM, fontSize: 12 }}>Employee Number</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 50, }}>
+              <Text style={{ color: ComponentsStyles.COLORS.DETAIL_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, fontSize: 12, textAlign: 'right' }}>{first_name} {last_name}</Text>
+              <Text style={{ color: ComponentsStyles.COLORS.DETAIL_ASH, fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, fontSize: 12, textAlign: 'right' }}>
+                {user_id}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Petty cash Request ID</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 100 }}>
+              <Text style={styles.text}>{user_id}</Text>
+            </View>
+          </View>
+
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Request Type</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 100 }}>
+              <Text style={styles.text}>{request_type}</Text>
+            </View>
+          </View>
+
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Request Channel</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 100 }}>
+              <Text style={styles.text}>{request_channel}</Text>
+            </View>
+          </View>
+
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Status</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 100 }}>
+              <Text style={{ color: status === 'Cancelled' ? ComponentsStyles.COLORS.RED_COLOR : ComponentsStyles.COLORS.OPEN_COLOR, fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM, fontSize: 12, textAlign: 'right' }}>
+                {status}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Covering Employee Name</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 50 }}>
+              <Text style={styles.text}>{employee_name}</Text>
+            </View>
+          </View>
+
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Covering Employee No</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 80 }}>
+              <Text style={styles.text}>{employee_no}</Text>
+            </View>
+          </View>
+
+          <View style={styles.list}>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.textHeader}>Remark</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 100 }}>
+              <Text style={styles.text}>{remarks}</Text>
+            </View>
+          </View>
+
+          <View style={styles.line} />
+
+
+          <ScrollView horizontal={true}>
+            <FlatList
+              showsHorizontalScrollIndicator={false}
+              data={DetailsList}
+              horizontal={false}
+              renderItem={({ item }) => {
+                return (
+                  <View>
+
+                    <JobsView
+                      IOU_Type={item.IOU_Type}
+                      amount={item.Amount}
+                      job_no={item.IOUTypeNo}
+                      expense_type={item.ExpenseType == 1 ? "Meals" : (item.ExpenseType == 2 ? "Batta" : (item.ExpenseType == 3 ? "Labour" : (item.ExpenseType == 4 ? "Project Materials" : (item.ExpenseType == 5 ? "Travelling" : (item.ExpenseType == 6 ? "Other" : "")))))}
+                      jobremarks={item.Remark}
+                      accNo={item.AccNo}
+                      costCenter={item.CostCenter}
+                      resource={item.Resource}
+                    />
+
+
+
+                  </View>
+                )
+              }
+
+              }
+              keyExtractor={item => `${item._Id}`}
+            />
+
+          </ScrollView>
+          {/* <View style={styles.list}>
+<View style={{flex: 1, marginLeft: 10}}>
+  <Text style={styles.textHeader}>Job No</Text>
+</View>
+<View style={{flex: 1, marginRight: -130}}>
+  <Text style={styles.text}>{job_no}</Text>
+</View>
+</View>
+
+<View style={styles.list}>
+<View style={{flex: 1, marginLeft: 10}}>
+  <Text style={styles.textHeader}>Expense type</Text>
+</View>
+<View style={{flex: 1, marginRight: -130}}>
+  <Text style={styles.text}>{expense_type}</Text>
+</View>
+</View>
+
+<View style={styles.list}>
+<View style={{flex: 1, marginLeft: 10}}>
+  <Text style={styles.textHeader}>Request Amount</Text>
+</View>
+<View style={{flex: 1, marginRight: -130}}>
+  <Text style={{color: ComponentsStyles.COLORS.PRIMARY_COLOR, fontFamily: ComponentsStyles.FONT_FAMILY.BOLD, fontSize: 12}}>{amount}{currency_type}</Text>
+</View>
+</View>
+
+
+<View style={styles.list}>
+<View style={{flex: 1, marginLeft: 10}}>
+  <Text style={styles.textHeader}>Remarks</Text>
+</View>
+<View style={{flex: 1, marginRight: -130}}>
+  <Text style={styles.text}>{remarks}</Text>
+</View>
+</View> */}
+          <Text style={{ marginLeft: 10, color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12 }}>Attachments</Text>
+          {/* <View style={styles.list}>
+  <View style={{ marginLeft: 10 }}>
+    <Image source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }} style={{ height: 50, width: 50 }} />
+
+  </View>
+  <View style={{ flex: 1, marginLeft: 50 }}>
+
+    <Image source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }} style={{ height: 50, width: 50 }} />
+  </View>
+
+
+</View> */}
+          <ScrollView horizontal={true}
+            nestedScrollEnabled={true}>
+
+            <FlatList
+              showsHorizontalScrollIndicator={false}
+              data={attachList}
+              horizontal={false}
+              renderItem={({ item }) => {
+                return (
+                  <View>
+
+                    <AttachmentView
+                      Img_url={item.Img_url}
+                    />
+
+                  </View>
+                )
+              }
+
+              }
+              keyExtractor={item => `${item._Id}`}
+            />
+
+          </ScrollView>
+
+          {
+            approved_status == "3" ?
+              <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10, marginBottom: 20 }}>
+                <ActionButton
+                  title="Create a Copy"
+                  onPress={reOpenRequest}
+                  //styletouchable={{width: '100%' }}
+                  style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: ComponentsStyles.COLORS.ICON_BLUE }}
+                //disabled={roll=='Requester' ? true : false}
+                />
+              </View>
+
+              :
+              <></>
+          }
+
+
+
+
+
+        </ScrollView>
+      </Modal>
+
+
     </SafeAreaView>
-    
+
 
 
 
@@ -249,7 +585,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
-    
+
+  },
+
+  detaillist: {
+
+    padding: 12,
+    backgroundColor: ComponentsStyles.COLORS.BACKGROUND_COLOR,
+    borderRadius: 3,
+    marginVertical: 2,
+    marginHorizontal: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   avatar: {
     width: 30,
@@ -264,6 +612,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#BDCDD6',
     marginLeft: 10,
   },
+  textHeader: {
+    color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH,
+    fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+    fontSize: 12,
+  },
+  text: {
+    color: ComponentsStyles.COLORS.DETAIL_ASH,
+    fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM,
+    fontSize: 12,
+    textAlign: 'right'
+  },
+  line: {
+    backgroundColor: '#D0CFCF',
+    width: '100%',
+    height: 0.9,
+    marginTop: 15,
+    marginBottom: 20,
+  }
 })
 
 export default RequestList;

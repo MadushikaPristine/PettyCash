@@ -84,3 +84,15 @@ export const getAllUsers = (callBack: any) => {
         },
     );
 };
+
+export const getLoginUserDetails = (uID:any,callBack: any) => {
+
+    DB.searchData(
+        'SELECT UserName,DisplayName,Email FROM USER WHERE USER_ID=?',
+        [uID],
+        (resp: any, err: any) => {
+            // console.log("************** All employee ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};

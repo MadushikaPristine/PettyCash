@@ -23,9 +23,9 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
                         data[i].StatusID,
                         data[i].RequestedBy,
                         0,
-                        "approve remark",
-                        "Reject remark",
-                        "1",
+                        data[i].REMARK,
+                        "",
+                        "0",
 
                     ],
                 },
