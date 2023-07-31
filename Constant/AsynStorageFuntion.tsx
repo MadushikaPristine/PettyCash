@@ -90,6 +90,15 @@ export const get_ASYNC_CHECKSYNC = async () => {
   }
 }
 
+export const get_ASYNC_IS_Auth_Requester = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester)
+    return value
+
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
 export const get_ASYNC_MAX_AMOUNT = async () => {
   try {
     const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_MAXIMUM_REQUEST_AMOUNT)

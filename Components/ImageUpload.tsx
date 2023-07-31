@@ -19,9 +19,10 @@ type params = {
     headertxt?: string;
     subtxt?: string;
     approverejecttxt?: string;
+    isvisible?: boolean;
 }
 
-const ImageUpload = ({ camerabtn, gallerybtn, cancelbtn,placeholder,headertxt,subtxt,approverejecttxt, cbtn,closeModal }: params) => {
+const ImageUpload = ({ isvisible,camerabtn, gallerybtn, cancelbtn,placeholder,headertxt,subtxt,approverejecttxt, cbtn,closeModal }: params) => {
 
     return (
 
@@ -51,15 +52,26 @@ const ImageUpload = ({ camerabtn, gallerybtn, cancelbtn,placeholder,headertxt,su
 
             <View style={{ padding: 5 }} />
 
+            {isvisible ? 
+
+            <View>
+
             <ActionButton
-                onPress={gallerybtn}
-                title="Open Gallery"
-                
-                styletouchable={{ width: '100%' }}
+            onPress={gallerybtn}
+            title="Open Gallery"
+            styletouchable={{ width: '100%' }}
 
-            />
+        />
 
-            <View style={{ padding: 5 }} />
+        <View style={{ padding: 5 }} />
+
+        </View>
+            
+        :
+        <></>
+        }
+
+        
 
             <ActionButton
                 onPress={cancelbtn}

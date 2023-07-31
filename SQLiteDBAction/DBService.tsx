@@ -166,6 +166,32 @@ export const CreateTableIndexKey = () => {
       },
     );
 
+
+    //.................................. USER ROLES IDX ..............................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_USER = `CREATE UNIQUE INDEX IF NOT EXISTS idx_USER_ROLLS ON  USER_ROLLS(ROLL_ID) `;
+
+        tx.executeSql(
+          query_idx_USER,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success USER: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error USER: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+
     //.............................. IOU IDX .........................................
 
     db.transaction(
@@ -277,6 +303,56 @@ export const CreateTableIndexKey = () => {
 
         tx.executeSql(
           query_idx_EXPENSE_TYPE,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success EXPENSE_TYPE: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error EXPENSE_TYPE: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+
+
+    // ...................................... IOU Jobs IDX ................................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_IOU_JOB = `CREATE UNIQUE INDEX IF NOT EXISTS idx_IOUJobs ON  IOU_JOBS(Job_ID) `;
+
+        tx.executeSql(
+          query_idx_IOU_JOB,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success EXPENSE_TYPE: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error EXPENSE_TYPE: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+    // ...................................... DEpartments IDX ................................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_IOU_JOB = `CREATE UNIQUE INDEX IF NOT EXISTS idx_DEPARTMENTS ON  DEPARTMENTS(DepID) `;
+
+        tx.executeSql(
+          query_idx_IOU_JOB,
           [],
           (tx: any, response: any) => {
             // console.log(`create table index success EXPENSE_TYPE: `, response);

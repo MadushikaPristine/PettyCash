@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import ComStyles from "../../Constant/Components.styles";
 import {
     SafeAreaView,
@@ -137,7 +137,8 @@ const NewOneOffSettlement = () => {
     const [ExpenseTypeList, setExpenseTypeList] = useState([]);
     const [joblist, setJobList]: any = useState([]);
 
-    var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss');
+    var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
+    var currentDate1 = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss');
 
     const navigation = useNavigation();
 
@@ -149,16 +150,17 @@ const NewOneOffSettlement = () => {
     };
 
     const newFolderPath = `${RNFS.DocumentDirectoryPath}/ImageFolder`;
-    const newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
+    let newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
     const newGalleryPath = `${newFolderPath}/${AttachementNo}.jpg`;
 
-    const imageURI = Platform.OS === 'android'
+    let imageURI = Platform.OS === 'android'
         ? `file://${newFilePath}`
         : `file:///android_asset/${newFilePath}`;
 
     const galleryImageURI = Platform.OS === 'android'
         ? `file://${newGalleryPath}`
         : `file:///android_asset/${newGalleryPath}`;
+
 
 
 
@@ -170,6 +172,17 @@ const NewOneOffSettlement = () => {
             const result = await launchCamera(options);
 
             try {
+
+
+                let atchNo = Date.now();
+                console.log("attno", atchNo);
+
+                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+
+                imageURI = Platform.OS === 'android'
+                    ? `file://${newFilePath}`
+                    : `file:///android_asset/${newFilePath}`;
+
                 await RNFS.mkdir(newFolderPath);
                 await RNFS.moveFile(result.assets[0].uri, newFilePath);
                 // console.log('Picture saved successfully.');
@@ -180,7 +193,6 @@ const NewOneOffSettlement = () => {
             }
 
 
-            //setCameraPhoto(result.assets[0].uri);
             const newCaptureImages = [...cameraPhoto, imageURI];
             setCameraPhoto(newCaptureImages);
             // console.log("Cache URI: ", result.assets[0].uri);
@@ -330,7 +342,10 @@ const NewOneOffSettlement = () => {
             loginError.field = 'EmpName';
             loginError.message = 'Please select Employee to procced'
             setError(loginError);
-        } else {
+        } else if (cameraPhoto.length == 0) {
+            Alert.alert("Please Add Attachments");
+        }
+        else {
             if (amount == 0.0) {
 
 
@@ -412,10 +427,10 @@ const NewOneOffSettlement = () => {
                 RequestedDate: currentDate,
                 Amount: amount,
                 StatusID: 1,
-                RequestedBy: 158,
-                IsSync: 1,
-                Approve_Remark: "approve remark",
-                Reject_Remark: "Reject remark",
+                RequestedBy: userID,
+                IsSync: 0,
+                Approve_Remark: "",
+                Reject_Remark: "",
                 Attachment_Status: 1
             }
         ]
@@ -803,7 +818,7 @@ const NewOneOffSettlement = () => {
                     Amount: response[i].Amount,
                     Remark: response[i].Remark,
                     CreateAt: currentDate,
-                    RequestedBy: 2,
+                    RequestedBy: userID,
                     IsSync: 1
 
 
@@ -949,7 +964,7 @@ const NewOneOffSettlement = () => {
             Amount: requestAmount,
             Remark: remarks,
             CreateAt: currentDate,
-            RequestedBy: 2,
+            RequestedBy: userID,
             IsSync: 1
 
         }
@@ -1140,7 +1155,7 @@ const NewOneOffSettlement = () => {
 
     const UploadOneOff = async (detailsData: any) => {
 
-        const URL = BASE_URL + 'Mob_PostOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
 
         var obj = [];
         var Fileobj = [];
@@ -1177,7 +1192,7 @@ const NewOneOffSettlement = () => {
             const prams = {
 
                 "OneOffID": OneOffSettlementNo,
-                "RequestedBy": 158,
+                "RequestedBy": userID,
                 "ReqChannel": "Mobile",
                 "Date": currentDate,
                 "IOUtype": parseInt(IOUTypeID),
@@ -1198,7 +1213,7 @@ const NewOneOffSettlement = () => {
             }
 
 
-            console.log("ONE OFF UPLOAD JSON ====   ",prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+            console.log("ONE OFF UPLOAD JSON ====   ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
             // await axios.get(URL, { headers })
             axios.post(URL, prams, {
@@ -1596,7 +1611,7 @@ const NewOneOffSettlement = () => {
 
                 <ViewField
                     title="Request Date"
-                    Value={currentDate}
+                    Value={currentDate1}
                 />
 
                 <View style={ComStyles.separateLine} />
@@ -1743,7 +1758,7 @@ const NewOneOffSettlement = () => {
                                 //horizontal={false}
                                 renderItem={({ item }) => {
                                     return (
-                                        <View>
+                                        <View style={{ width: width - 30, padding: 5 }}>
 
                                             <NewJobsView
                                                 IOU_Type={IOUTypeID}

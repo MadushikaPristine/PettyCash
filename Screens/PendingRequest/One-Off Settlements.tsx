@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Dimensions, FlatList, Image, SafeAreaView, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, Dimensions, FlatList, Image, SafeAreaView, TouchableOpacity, Keyboard, Animated, Platform } from "react-native";
 import Header from "../../Components/Header";
 import RequestList from "../../Components/RequestList";
 import ComponentsStyles from "../../Constant/Components.styles";
@@ -9,6 +9,7 @@ import { getApprovedIOUOFS, getCancelledIOUOFS, getDateFilterONEOFFApproveList, 
 import DateRangePopup from "../../Components/DateRangePopup";
 import Spinner from "react-native-loading-spinner-overlay";
 import IconA from 'react-native-vector-icons/FontAwesome';
+import DateRangePicker from "rn-select-date-range";
 
 const listTab = [
     {
@@ -22,6 +23,9 @@ const listTab = [
     }
 ]
 
+let width = Dimensions.get("screen").width;
+const height = Dimensions.get('screen').height;
+
 
 const OneOffScreen = () => {
 
@@ -33,7 +37,12 @@ const OneOffScreen = () => {
     const [datalist, setdatalist] = useState(pendingRequestList)
     const [loandingspinner, setloandingspinner] = useState(false);
 
-    const handleItemPress = (itemId:any) => {
+    const [modalStyle, setModalStyle] = useState(new Animated.Value(height));
+    const [isShowSweep, setIsShowSweep] = useState(true);
+    const [selectedRange, setRange] = useState({});
+
+
+    const handleItemPress = (itemId: any) => {
         if (selectedItems.includes(itemId)) {
             setSelectedItems(selectedItems.filter((user_id) => user_id !== itemId));
         } else {
@@ -50,31 +59,39 @@ const OneOffScreen = () => {
     );
 
     const setStatusFilter = (status: any) => {
+
+        setloandingspinner(true);
+
         if (status === 'Approved') {// purple and green
             setStatus('Approved');
             getApprovedIOUOFS((result: any) => {
                 setONEOFFList(result);
+                setloandingspinner(false);
             })
             //setdatalist([...pendingRequestList.filter(e => e.status === status)])
         } else if (status === 'Rejected') {
             setStatus('Rejected');
             getRejectIOUOFS((result: any) => {
                 setONEOFFList(result)
+                setloandingspinner(false);
             })
             //setdatalist([...pendingRequestList.filter(e => e.status === status)])
         } else if (status === 'Cancelled') {
             setStatus('Cancelled');
             getCancelledIOUOFS((result: any) => {
                 setONEOFFList(result)
+                setloandingspinner(false);
             })
             //setdatalist([...pendingRequestList.filter(e => e.status === status)])
         } else {
+            setloandingspinner(false);
             setONEOFFList(status)
         }
 
     }
 
     const getDatesFromRange = (range: any) => {
+        setloandingspinner(true);
         const start = "T00:00:00.000Z";
         const end = "T59:59:59.000Z";
         console.log("range.firstDate", range.firstDate + start, "--------------", range.secondDate + end, "range.secondDate---------------");
@@ -83,21 +100,56 @@ const OneOffScreen = () => {
         if (status === 'Approved') {
             getDateFilterONEOFFApproveList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setONEOFFList(result);
-                console.log(result);
+                // console.log(result);
+                setloandingspinner(false);
+                slideOutModal();
             })
         } else if (status === 'Rejected') {
             getDateFilterONEOFFRejectList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setONEOFFList(result);
-                console.log(result);
+                setloandingspinner(false);
+                slideOutModal();
+                // console.log(result);
             })
         } else if (status === 'Cancelled') {
             getDateFilterONEOFFCancelList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setONEOFFList(result);
-                console.log(result);
+                setloandingspinner(false);
+                slideOutModal();
+                // console.log(result);
             })
         }
     }
 
+    const slideInModal = () => {
+        setIsShowSweep(false);
+        // console.log('sampleIn');
+
+        Animated.timing(modalStyle, {
+            toValue: height / 5,
+            duration: 500,
+            useNativeDriver: false,
+        }).start();
+    };
+
+    const slideOutModal = () => {
+        setIsShowSweep(true);
+        Keyboard.dismiss();
+        Animated.timing(modalStyle, {
+            toValue: height,
+            duration: 500,
+            useNativeDriver: false,
+        }).start();
+
+    };
+
+    const selectDateRange = () => {
+
+        setRange('');
+        slideInModal();
+
+
+    }
 
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
@@ -105,9 +157,19 @@ const OneOffScreen = () => {
 
                 <Header title="Petty Cash Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
 
-                <View style={{ flexDirection: 'row' }}>
+                {/* <View style={{ flexDirection: 'row' }}>
                     <Text style={styles.listHeadling}>One-Off Settlementss</Text>
                     <View style={styles.filter}><DateRangePopup filter={getDatesFromRange} /></View>
+                </View> */}
+
+
+                <View style={{ flexDirection: 'row', marginTop: 8, marginBottom: 8, marginLeft: 15, marginRight: 15 }}>
+                    <View style={{ flex: 1 }} />
+                    {/* <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.BOLD, color: ComponentsStyles.COLORS.HEADER_BLACK, fontSize: 16,marginRight:15 }}>Filter</Text> */}
+                    <TouchableOpacity onPress={() => selectDateRange()}>
+                        <IconA name='calendar' size={20} color={ComponentsStyles.COLORS.BLACK} />
+                    </TouchableOpacity>
+
                 </View>
 
 
@@ -142,6 +204,7 @@ const OneOffScreen = () => {
                 <FlatList
                     showsHorizontalScrollIndicator={false}
                     data={ONEOFFList}
+                    ListEmptyComponent={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={styles.EmptyMassage}>No data found</Text></View>}
                     horizontal={false}
                     renderItem={({ item }) => {
                         return (
@@ -181,6 +244,101 @@ const OneOffScreen = () => {
 
 
             </View>
+
+            <Animated.View
+                style={{
+                    ...StyleSheet.absoluteFillObject,
+                    top: modalStyle,
+                    backgroundColor: '#fff',
+                    zIndex: 20,
+                    borderRadius: 10,
+                    elevation: 20,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    marginLeft: 0,
+                    ...Platform.select({
+                        ios: {
+                            paddingTop: 10,
+                        },
+                    }),
+                }}>
+                <View style={styles.modalCont}>
+
+                    {/* {
+            isApprove ?
+
+              <ApproveRejectModal
+                approvebtn={ApproveAlert}
+                cancelbtn={NoRemark}
+                approverejecttxt="Approve"
+                headertxt="Add Approval Remark"
+                subtxt="Do you want to add a remark and approve?"
+                placeholder="Add approval remark here(optional)"
+                reamrkState={(val: any) => setTxtRemark(val)}
+                txtremark={txtRemark}
+              />
+
+              :
+
+              <>
+                {
+                  isReject ?
+
+                    <ApproveRejectModal
+                      approvebtn={RejectAlert}
+                      approverejecttxt="Reject"
+                      cancelbtn={NoRemark}
+                      headertxt="Add Reject Remark"
+                      subtxt="Do you want to add a remark and reject?"
+                      placeholder="Add reject remark here*"
+                      reamrkState={(val: any) => setTxtRemark(val)}
+                      txtremark={txtRemark}
+                    />
+
+                    :
+                    <ApproveRejectModal
+                      approvebtn={CancelAlert}
+                      approverejecttxt="Cancel"
+                      cancelbtn={NoRemark}
+                      headertxt="Add Cancel Remark"
+                      subtxt="Do you want to add a remark and cancel?"
+                      placeholder="Add cancel remark here*"
+                      reamrkState={(val: any) => setTxtRemark(val)}
+                      txtremark={txtRemark}
+                    />
+
+
+                }
+              </>
+
+
+
+          } */}
+
+                    <DateRangePicker
+                        onSelectDateRange={(range) => {
+                            setRange(range);
+                            // changeRange(range);
+                            // getDatesFromRange(range);
+                        }}
+                        blockSingleDateSelection={true}
+                        responseFormat="YYYY-MM-DD"
+                        onConfirm={() => getDatesFromRange(selectedRange)}
+                        onClear={slideOutModal}
+                        font={ComponentsStyles.FONT_FAMILY.SEMI_BOLD}
+                        confirmBtnTitle="Search"
+                        clearBtnTitle="Cancel"
+
+                    // maxDate={moment()}
+                    // minDate={moment().subtract(100, "days")}
+                    />
+
+                </View>
+
+                <View style={{ padding: 100 }} />
+
+            </Animated.View>
+
         </SafeAreaView>
     )
 }
@@ -267,7 +425,14 @@ const styles = StyleSheet.create({
         padding: 18,
         marginLeft: 90,
         flex: 1,
-    }
+    },
+    EmptyMassage: {
+        color: ComponentsStyles.COLORS.BLACK,
+        marginLeft: 10,
+        fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+        fontSize: 16,
+        fontStyle: 'normal',
+      },
 })
 
 export default OneOffScreen;

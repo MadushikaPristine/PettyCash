@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { Button, Checkbox } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Double } from "react-native/Libraries/Types/CodegenTypes";
@@ -20,6 +20,9 @@ import AttachmentView from "./AttachmentView";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
 import JobsView from "./JobsView";
+
+let width = Dimensions.get("screen").width;
+const height = Dimensions.get('screen').height;
 
 
 type ParamTypes = {
@@ -152,6 +155,9 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
     } else if (request_type == "IOU Settlement Request") {
       getIOUSETJobsListByID(Request_ID, (response: any) => {
+
+        // console.log(" Request ID ==== " , Request_ID);
+        
 
         setDetailList(response);
 
@@ -444,13 +450,13 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
               horizontal={false}
               renderItem={({ item }) => {
                 return (
-                  <View>
+                  <View style={{ width: width-50, padding: 5 }}>
 
                     <JobsView
                       IOU_Type={item.IOU_Type}
                       amount={item.Amount}
                       job_no={item.IOUTypeNo}
-                      expense_type={item.ExpenseType == 1 ? "Meals" : (item.ExpenseType == 2 ? "Batta" : (item.ExpenseType == 3 ? "Labour" : (item.ExpenseType == 4 ? "Project Materials" : (item.ExpenseType == 5 ? "Travelling" : (item.ExpenseType == 6 ? "Other" : "")))))}
+                      ExpenseType={item.ExpenseType == "1" ? "Meals" : (item.ExpenseType == "2" ? "Batta" : (item.ExpenseType == "3" ? "Labour" : (item.ExpenseType == "4" ? "Project Materials" : (item.ExpenseType == "5" ? "Travelling" : (item.ExpenseType == "6" ? "Other" : "")))))}
                       jobremarks={item.Remark}
                       accNo={item.AccNo}
                       costCenter={item.CostCenter}
@@ -504,7 +510,6 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
   <Text style={styles.text}>{remarks}</Text>
 </View>
 </View> */}
-          <Text style={{ marginLeft: 10, color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12 }}>Attachments</Text>
           {/* <View style={styles.list}>
   <View style={{ marginLeft: 10 }}>
     <Image source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }} style={{ height: 50, width: 50 }} />
@@ -517,30 +522,47 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
 
 </View> */}
-          <ScrollView horizontal={true}
-            nestedScrollEnabled={true}>
 
-            <FlatList
-              showsHorizontalScrollIndicator={false}
-              data={attachList}
-              horizontal={false}
-              renderItem={({ item }) => {
-                return (
-                  <View>
+          {
+            attachList.length > 0 ?
 
-                    <AttachmentView
-                      Img_url={item.Img_url}
-                    />
+              <View>
 
-                  </View>
-                )
-              }
+                <Text style={{ marginLeft: 10, marginTop:15 ,color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12 }}>Attachments</Text>
 
-              }
-              keyExtractor={item => `${item._Id}`}
-            />
 
-          </ScrollView>
+                <ScrollView horizontal={false}
+                  nestedScrollEnabled={true}>
+
+                  <FlatList
+                    showsHorizontalScrollIndicator={false}
+                    data={attachList}
+                    horizontal={true}
+                    renderItem={({ item }) => {
+                      return (
+                        <View>
+
+                          <AttachmentView
+                            Img_url={item.Img_url}
+                          />
+
+                        </View>
+                      )
+                    }
+
+                    }
+                    keyExtractor={item => `${item._Id}`}
+                  />
+
+                </ScrollView>
+
+              </View>
+
+              :
+
+              <></>
+          }
+
 
           {
             approved_status == "3" ?

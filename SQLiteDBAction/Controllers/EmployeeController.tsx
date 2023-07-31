@@ -10,14 +10,14 @@ export const saveEmployee = (data: any, callBack: any) => {
             [
                 {
                     table: 'EMPLOYEE',
-                    columns: `Emp_ID,EmpName,EmpType_ID,Status`,
+                    columns: `Emp_ID,EmpName,CostCenter,Status`,
                     values: '?,?,?,?',
                     params: [
 
-                        data[i].Emp_ID,
-                        data[i].EmpName,
-                        data[i].EmpType_ID,
-                        data[i].Status,
+                        data[i].ID,
+                        data[i].Name,
+                        data[i].CostCenter,
+                        1,
 
                     ],
                 },
@@ -42,9 +42,14 @@ export const saveEmployee = (data: any, callBack: any) => {
 
                 } else {
 
-                    response = 2;
-                    callBack(response);
-                    // console.log(res, " ..........  error ...  ", err);
+
+                    if (i + 1 == data.length) {
+
+                        response = 2;
+                        callBack(response);
+                        // console.log(res, " ..........  error ...  ", err);
+
+                    }
                 }
 
             },
@@ -55,7 +60,7 @@ export const saveEmployee = (data: any, callBack: any) => {
 };
 
 
-export const getTypeWiseUsers = (TypeID:any,callBack: any) => {
+export const getTypeWiseUsers = (TypeID: any, callBack: any) => {
 
     DB.searchData(
         'SELECT * FROM EMPLOYEE WHERE EmpType_ID=?',

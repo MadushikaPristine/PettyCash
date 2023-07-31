@@ -10,11 +10,11 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
             [
                 {
                     table: 'IOU_SETTLEMENT_JOBS',
-                    columns: `Job_ID,Job_NO,JobOwner_ID,Request_ID,AccNo,CostCenter,Resource,Expences_Type,Amount,Remark,CreateDate,CreatedBy,IsSync`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `Job_ID,Job_NO,JobOwner_ID,Request_ID,AccNo,CostCenter,Resource,Expences_Type,Amount,Remark,CreateDate,CreatedBy,IsSync,Requested_Amount,IstoEdit,IOU_TYPEID`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].Job_ID,
+                        data[i].PCRID,
                         data[i].IOUTypeNo,
                         data[i].JobOwner_ID,
                         data[i].PCRCode,
@@ -27,6 +27,10 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
                         data[i].CreateAt,
                         data[i].RequestedBy,
                         0,
+                        data[i].RequestedAmount,
+                        data[i].IstoEdit,
+                        data[i].IOU_TYPEID
+
 
                     ],
                 },
@@ -53,7 +57,7 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
 
                     response = 2;
                     callBack(response);
-                    // console.log(res, " ..........  error ...  ", err);
+                    console.log(res, " ..........  error ...  ", err);
                 }
 
             },
@@ -94,11 +98,47 @@ export const getLastIOUSETJobID = (callBack:any) => {
 export const getIOUSETJOBDataBYRequestID = (ID: any, callBack:any) => {
 
     DB.searchData(
-        'SELECT IOU_SETTLEMENT.IOU_Type as IOUTypeID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IOU_SETTLEMENT_JOBS.Amount as Amount, IOU_SETTLEMENT_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM IOU_SETTLEMENT_JOBS INNER JOIN IOU_SETTLEMENT ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID INNER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
+        'SELECT IOU_SETTLEMENT.IOU_Type as IOUTypeID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM IOU_SETTLEMENT_JOBS INNER JOIN IOU_SETTLEMENT ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID INNER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
         [ID],
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
             callBack(resp);
         },
     )
+}
+export const getIOUSETJOBsBYSettlementID = (ID: any, callBack:any) => {
+
+    DB.searchData(
+        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IFNULL(IOU_SETTLEMENT_JOBS.Requested_Amount,0) as Requested_Amount,IOU_SETTLEMENT_JOBS.Remark as Remark ,IOU_SETTLEMENT_JOBS.IstoEdit FROM IOU_SETTLEMENT_JOBS WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+}
+
+export const UpdateSettJobbyId = (AccNo:any,Costcenter:any,Resource:any,Amount:any,Remark:any,ID:any, callBack: any) => {
+
+    DB.updateData(
+        'UPDATE IOU_SETTLEMENT_JOBS SET AccNo=? , CostCenter=? , Resource=? , Amount=? , Remark=? WHERE _Id=?',
+        [AccNo,Costcenter,Resource,Amount,Remark,ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+
+export const getJobDetailsById = (ID:any,callBack:any) => {
+
+    DB.searchData(
+        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IFNULL(IOU_SETTLEMENT_JOBS.Requested_Amount,0) as Requested_Amount,IOU_SETTLEMENT_JOBS.Remark as Remark ,IOU_SETTLEMENT_JOBS.IstoEdit FROM IOU_SETTLEMENT_JOBS WHERE IOU_SETTLEMENT_JOBS._Id=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+
 }

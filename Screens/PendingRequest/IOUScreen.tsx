@@ -153,18 +153,21 @@ const IOUScreen = () => {
             getDateFilterIOUApproveList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setIOUList(result);
                 setloandingspinner(false);
+                slideOutModal();
                 // console.log(result, "Approved");
             })
         } else if (status === 'Rejected') {
             getDateFilterIOURejectList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setIOUList(result);
                 setloandingspinner(false);
+                slideOutModal();
                 // console.log(result, "Rejected");
             })
         } else if (status === 'Cancelled') {
             getDateFilterIOUCancelList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setIOUList(result);
                 setloandingspinner(false);
+                slideOutModal();
                 // console.log(result, "Cancelled");
             })
         }
@@ -227,6 +230,7 @@ const IOUScreen = () => {
                 <FlatList
                     showsHorizontalScrollIndicator={false}
                     data={IOUList}
+                    ListEmptyComponent={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={styles.EmptyMassage}>No data found</Text></View>}
                     horizontal={false}
                     renderItem={({ item }) => {
                         return (
@@ -464,6 +468,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
 
     },
+    EmptyMassage: {
+        color: ComponentsStyles.COLORS.BLACK,
+        marginLeft: 10,
+        fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+        fontSize: 16,
+        fontStyle: 'normal',
+      },
 });
 
 export default IOUScreen;

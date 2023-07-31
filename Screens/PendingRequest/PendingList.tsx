@@ -1063,7 +1063,7 @@ const PendingList = () => {
   //--------Update status and remark--------------
   const UpdateRequest = async (ID: any, Rtype: any, status: any, remark: string) => {
 
-    const URL = BASE_URL + 'Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST';
+    const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST';
 
     const prams =
     {
@@ -1220,34 +1220,42 @@ const PendingList = () => {
         <View style={{ marginBottom: 10 }} />
 
         <View>
-          <View style={{ flexDirection: "row" }}>
+
+          <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10,marginBottom:5 }}>
+
             <ActionButton
               title="Approve Request"
-              styletouchable={{ width: '49%' }}
               onPress={() => approve()}
               style={{ flexDirection: 'row', justifyContent: "center" }}
             //disabled={roll=='Requester' ? true : false}
             />
 
+          </View>
+
+
+          <View style={{ flexDirection: "row",marginLeft: 5, marginRight: 5 }}>
+
+
             <ActionButton
               title="Reject Request"
               onPress={() => reject()}
-              styletouchable={{ width: '49%', marginLeft: 5 }}
+              styletouchable={{ width: '48%', marginLeft: 5 }}
               style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: "#FF3055" }}
             //disabled={roll=='Requester' ? true : false}
             />
 
-          </View>
-
-          <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10 }}>
             <ActionButton
               title="Cancel Request"
+              styletouchable={{ width: '48%', marginLeft: 5}}
               onPress={() => cancel()}
               //styletouchable={{ marginLeft: 5, width: '100%' }}
-              style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: ComponentsStyles.COLORS.BROWN }}
+              style={{ flexDirection: 'row', justifyContent: "center",backgroundColor: ComponentsStyles.COLORS.BROWN }}
             //disabled={roll=='Requester' ? true : false}
             />
+
           </View>
+
+
 
           <View style={{ marginBottom: 70 }} />
         </View>

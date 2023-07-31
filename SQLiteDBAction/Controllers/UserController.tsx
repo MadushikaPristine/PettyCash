@@ -10,8 +10,8 @@ export const saveUser = (data: any, callBack: any) => {
             [
                 {
                     table: 'USER',
-                    columns: `USER_ID,UserName,DisplayName,ExternalName,Email,RoleID,Status`,
-                    values: '?,?,?,?,?,?,?',
+                    columns: `USER_ID,UserName,DisplayName,ExternalName,Email,RoleID,Status,UserRole,DepartmentId,DepartmentName,IOULimit`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].UserId,
@@ -21,6 +21,10 @@ export const saveUser = (data: any, callBack: any) => {
                         data[i].Email,
                         data[i].RoleId,
                         data[i].ActiveStatus,
+                        data[i].UserRole,
+                        data[i].DepartmentId,
+                        data[i].DepartmentName,
+                        data[i].IOULimit,
 
                     ],
                 },

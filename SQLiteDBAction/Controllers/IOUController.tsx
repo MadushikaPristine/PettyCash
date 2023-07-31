@@ -11,8 +11,8 @@ export const saveIOU = (data: any, callBack: any) => {
             [
                 {
                     table: 'IOU',
-                    columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,FinanceStatus`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -27,6 +27,7 @@ export const saveIOU = (data: any, callBack: any) => {
                         data[i].REMARK,
                         "",
                         "0",
+                        data[i].FinanceStatus
 
                     ],
                 },
@@ -320,6 +321,9 @@ export const getPendingSecondApprovalIOUList = (amount:any, callBack: any) => {
 };
 
 export const getIOUJobsListByID = (RequestID: any, callBack: any) => {
+
+    console.log(" ID SETT === " , RequestID);
+    
 
     DB.searchData(
         'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU.IOU_ID=?',

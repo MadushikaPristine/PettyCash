@@ -134,7 +134,7 @@ export const getLastOneOffSettlement = (callBack: any) => {
 export const getApprovedIOUOFS = (callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, ONE_OFF_SETTLEMENT.Amount as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=2 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(ONE_OFF_SETTLEMENT.Amount , 0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=2 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
         [],
         (resp: any, err: any) => {
 
@@ -146,7 +146,7 @@ export const getApprovedIOUOFS = (callBack: any) => {
 export const getRejectIOUOFS = (callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, ONE_OFF_SETTLEMENT.Amount as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=3 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(ONE_OFF_SETTLEMENT.Amount , 0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=3 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
         [],
         (resp: any, err: any) => {
 
@@ -158,7 +158,7 @@ export const getRejectIOUOFS = (callBack: any) => {
 export const getCancelledIOUOFS = (callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, ONE_OFF_SETTLEMENT.Amount as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=4 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(ONE_OFF_SETTLEMENT.Amount , 0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=4 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
         [],
         (resp: any, err: any) => {
 

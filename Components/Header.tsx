@@ -173,7 +173,7 @@ const Header = ({ title, isIcon, image, isBtn, iconOnPress, btnOnPress, IconUser
             <View style={{ width: 50, height: 40, borderRadius: 100 }}>
                 <TouchableOpacity onPress={() => resizeBox(1)}
                 >
-                    <Image source={require('../assets/images/ic_launcher.png')} style={{ width: 40, height: 40, borderRadius: 100, }} />
+                    <Image source={require('../assets/images/tpl.jpg')} style={{ width: 40, height: 40, borderRadius: 100, }} />
                 </TouchableOpacity>
                 <Modal transparent visible={visible}>
                     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }} onTouchStart={() => resizeBox(0)}>
@@ -231,7 +231,10 @@ const styles = StyleSheet.create({
         fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
         color: '#11074E',
         fontSize: 18,
-        alignSelf: 'center'
+        alignSelf: 'center',
+        alignContent:"center",
+        alignItems:"center",
+        textAlign:"center"
     },
     btnStye: {
         width: 40,

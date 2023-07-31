@@ -10,12 +10,19 @@ export const saveDepartment = (data: any, callBack: any) => {
             [
                 {
                     table: 'DEPARTMENTS',
-                    columns: `SALESUNITCODE,SALESUNITNAME`,
-                    values: '?,?',
+                    columns: `DepID,DepName,CostCenter,HODNo,HODName,isSubAuth,SubNo,SubstiveName,Status`,
+                    values: '?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].SALESUNITCODE,
-                        data[i].SALESUNITNAME,
+                        data[i].ID,
+                        data[i].DepName,
+                        data[i].CostCenter,
+                        data[i].HODNo,
+                        data[i].HODName,
+                        data[i].isSubAuth,
+                        data[i].SubNo,
+                        data[i].SubstiveName,
+                        data[i].Status,
 
                         // data[i].Status,
 

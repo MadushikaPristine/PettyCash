@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Dimensions, FlatList, Image, SafeAreaView, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, Dimensions, FlatList, Image, SafeAreaView, TouchableOpacity, Animated, Platform, Keyboard } from "react-native";
 import Header from "../../Components/Header";
 import RequestList from "../../Components/RequestList";
 import ComponentsStyles from "../../Constant/Components.styles";
@@ -9,6 +9,7 @@ import { getDateFilterIOUApproveList, getDateFilterIOUCancelList, getDateFilterI
 import DateRangePopup from "../../Components/DateRangePopup";
 import Spinner from "react-native-loading-spinner-overlay";
 import IconA from 'react-native-vector-icons/FontAwesome';
+import DateRangePicker from "rn-select-date-range";
 
 const listTab = [
     {
@@ -22,6 +23,9 @@ const listTab = [
     }
 ]
 
+let width = Dimensions.get("screen").width;
+const height = Dimensions.get('screen').height;
+
 
 const SettlementScreen = () => {
 
@@ -32,6 +36,10 @@ const SettlementScreen = () => {
     //const [datalist, setdatalist] = useState(pendingRequestList)
     const [IOUSETList, setIOUSETList] = useState([]);
     const [loandingspinner, setloandingspinner] = useState(false);
+
+    const [modalStyle, setModalStyle] = useState(new Animated.Value(height));
+    const [isShowSweep, setIsShowSweep] = useState(true);
+    const [selectedRange, setRange] = useState({});
 
     const handleItemPress = (itemId) => {
         if (selectedItems.includes(itemId)) {
@@ -49,33 +57,70 @@ const SettlementScreen = () => {
         }, [])
     );
 
+    const selectDateRange = () => {
+
+        setRange('');
+        slideInModal();
+
+
+    }
+
+    const slideInModal = () => {
+        setIsShowSweep(false);
+        // console.log('sampleIn');
+
+        Animated.timing(modalStyle, {
+            toValue: height / 5,
+            duration: 500,
+            useNativeDriver: false,
+        }).start();
+    };
+
+    const slideOutModal = () => {
+        setIsShowSweep(true);
+        Keyboard.dismiss();
+        Animated.timing(modalStyle, {
+            toValue: height,
+            duration: 500,
+            useNativeDriver: false,
+        }).start();
+
+    };
 
     const setStatusFilter = (status: any) => {
+        setIOUSETList([]);
+        setloandingspinner(true);
         if (status === 'Approved') {// purple and green
             setStatus('Approved');
             getApprovedIOUSET((result: any) => {
                 setIOUSETList(result);
+                setloandingspinner(false);
             })
             //setdatalist([...pendingRequestList.filter(e => e.status === status)])
         } else if (status === 'Rejected') {
             setStatus('Rejected');
             getRejectIOUSET((result: any) => {
                 setIOUSETList(result)
+                setloandingspinner(false);
             })
             //setdatalist([...pendingRequestList.filter(e => e.status === status)])
         } else if (status === 'Cancelled') {
             setStatus('Cancelled');
             getCancelledIOUSET((result: any) => {
                 setIOUSETList(result)
+                setloandingspinner(false);
             })
             //setdatalist([...pendingRequestList.filter(e => e.status === status)])
         } else {
+            setloandingspinner(false);
             setIOUSETList(status)
         }
 
     }
 
     const getDatesFromRange = (range: any) => {
+        setIOUSETList([]);
+        setloandingspinner(true);
         console.log("range.firstDate", range.firstDate, "--------------", range.secondDate, "range.secondDate---------------");
         const start = "T00:00:00.000Z";
         const end = "T59:59:59.000Z";
@@ -85,17 +130,23 @@ const SettlementScreen = () => {
         if (status === 'Approved') {
             getDateFilterIOUSETApproveList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setIOUSETList(result);
-                console.log(result, "Approved");
+                setloandingspinner(false);
+                slideOutModal();
+                // console.log(result, "Approved");
             })
         } else if (status === 'Rejected') {
             getDateFilterIOUSETRejectList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setIOUSETList(result);
-                console.log(result, "Rejected");
+                setloandingspinner(false);
+                slideOutModal();
+                // console.log(result, "Rejected");
             })
         } else if (status === 'Cancelled') {
             getDateFilterIOUSETCancelList(range.firstDate + start, range.secondDate + end, (result: any) => {
                 setIOUSETList(result);
-                console.log(result, "Cancelled");
+                setloandingspinner(false);
+                slideOutModal();
+                // console.log(result, "Cancelled");
             })
         }
     }
@@ -106,9 +157,20 @@ const SettlementScreen = () => {
             <View style={styles.screen}>
                 <Header title="Petty Cash Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
 
-                <View style={{ flexDirection: 'row' }}>
+                {/* <View style={{ flexDirection: 'row' }}>
                     <Text style={styles.listHeadling}>IOU Settlements</Text>
                     <View style={styles.filter}><DateRangePopup filter={getDatesFromRange} /></View>
+                </View> */}
+
+
+
+                <View style={{ flexDirection: 'row', marginTop: 8, marginBottom: 8, marginLeft: 15, marginRight: 15 }}>
+                    <View style={{ flex: 1 }} />
+                    {/* <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.BOLD, color: ComponentsStyles.COLORS.HEADER_BLACK, fontSize: 16,marginRight:15 }}>Filter</Text> */}
+                    <TouchableOpacity onPress={() => selectDateRange()}>
+                        <IconA name='calendar' size={20} color={ComponentsStyles.COLORS.BLACK} />
+                    </TouchableOpacity>
+
                 </View>
 
                 <View style={styles.listTab}>
@@ -141,6 +203,7 @@ const SettlementScreen = () => {
 
                 <FlatList
                     data={IOUSETList}
+                    ListEmptyComponent={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={styles.EmptyMassage}>No data found</Text></View>}
                     renderItem={({ item }) => {
                         return (
                             <View>
@@ -179,6 +242,49 @@ const SettlementScreen = () => {
 
 
             </View>
+
+            <Animated.View
+                style={{
+                    ...StyleSheet.absoluteFillObject,
+                    top: modalStyle,
+                    backgroundColor: '#fff',
+                    zIndex: 20,
+                    borderRadius: 10,
+                    elevation: 20,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    marginLeft: 0,
+                    ...Platform.select({
+                        ios: {
+                            paddingTop: 10,
+                        },
+                    }),
+                }}>
+                <View style={styles.modalCont}>
+
+                    <DateRangePicker
+                        onSelectDateRange={(range) => {
+                            setRange(range);
+                            // changeRange(range);
+                            // getDatesFromRange(range);
+                        }}
+                        blockSingleDateSelection={true}
+                        responseFormat="YYYY-MM-DD"
+                        onConfirm={() => getDatesFromRange(selectedRange)}
+                        onClear={()=>slideOutModal()}
+                        font={ComponentsStyles.FONT_FAMILY.SEMI_BOLD}
+                        confirmBtnTitle="Search"
+                        clearBtnTitle="Cancel"
+
+                    // maxDate={moment()}
+                    // minDate={moment().subtract(100, "days")}
+                    />
+
+                </View>
+
+                <View style={{ padding: 100 }} />
+
+            </Animated.View>
         </SafeAreaView>
     )
 }
@@ -265,7 +371,14 @@ const styles = StyleSheet.create({
         padding: 17,
         marginLeft: 130,
         flex: 1,
-    }
+    },
+    EmptyMassage: {
+        color: ComponentsStyles.COLORS.BLACK,
+        marginLeft: 10,
+        fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+        fontSize: 16,
+        fontStyle: 'normal',
+      },
 })
 
 export default SettlementScreen;

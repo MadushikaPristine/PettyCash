@@ -70,7 +70,7 @@ const LoginScreen = () => {
 
     }
 
-   
+
 
     const login = async () => {
 
@@ -118,100 +118,106 @@ const LoginScreen = () => {
             var u_name = "dinushkam";
             var p_word = "GdBzSuV6mAdEyA6/H4plMQ==";
 
-            const URL = LOGIN_BASE_URL + "Login.xsjs?dbName=TPL_REPORT_TEST&username=" + uName + "&password=" + encryptedPassword;
+            const URL = LOGIN_BASE_URL + "Login.xsjs?dbName=TPL_JOBA8_170723&username=" + uName + "&password=" + encryptedPassword + "&sap=PSLTEST_LIVE_SL";
 
-            console.log("Login URL === " , URL);
-            
+            console.log("Login URL === ", URL);
+
             Conection_Checking(async (res: any) => {
                 if (res != false) {
 
                     //check vpn connected
 
                     // console.log("vpn connection check ... ",RNVPNDetect.checkIsVpnConnected());
-                    
 
-                    await axios.get(URL, { headers }
+                    try {
+
+                        await axios.get(URL, { headers }
                         ).then(async response => {
+
+                            console.log(" login response ==== ", response);
+
                             if (response.status === 200) {
-            
+
                                 setloandingspinner(false);
-            
+
                                 if (response.data.count == 1) {
-            
-                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserRoll, response.data.role);
-            
+
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserRoll, response.data.roleId);
+
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_NAME, response.data.displayName);
-            
+
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserID, response.data.userId)
-            
-            
+
+                                    // awai                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         t AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser)
+
+
                                     get_ASYNC_LOGIN_ROUND().then(async res => {
-            
+
                                         if (res !== null) {
                                             // close and re login
-            
+
                                             if (res === "0") {
-            
+
                                                 turn = parseInt(res + "") + 2;
-            
+
                                             } else {
-            
+
                                                 turn = parseInt(res + "") + 1;
-            
+
                                             }
-            
-            
+
+
                                             if (res === "1") {
                                                 //relogin after logout
                                                 // console.log(" relogin after logout ---------------------------------");
-            
+
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "1");
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_ROUND, turn + "");
                                                 navigation.navigate("BottomNavi");
-            
-            
+
+
                                             } else {
                                                 //relogin
-            
+
                                                 // console.log(" relogin  ---------------------------------", response.data.count);
-            
+
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2");
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_ROUND, turn + "");
                                                 navigation.navigate("BottomNavi");
-            
-            
+
+
                                             }
-            
-            
-            
-            
-            
+
+
+
+
+
                                         } else {
                                             //first time login
-            
-            
+
+
                                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "1");
                                             // console.log("initial login ---------------------------------");
                                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_ROUND, "0");
-            
+
                                             get_ASYNC_CHECKSYNC().then(res => {
                                                 // console.log(" sync status >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
-            
+
                                             })
-            
+
                                             navigation.navigate("BottomNavi");
-            
-            
+
+
                                         }
-            
+
                                     })
-            
-            
-            
-            
-            
+
+
+
+
+
                                 } else {
-            
+
                                     Alert.alert(
                                         "Login Failed!",
                                         "Invalid username or password.",
@@ -219,16 +225,16 @@ const LoginScreen = () => {
                                             { text: "OK", onPress: () => console.log(response.data) }
                                         ]
                                     );
-            
-            
+
+
                                 }
-            
-            
-            
+
+
+
                             } else {
-            
+
                                 setloandingspinner(false);
-            
+
                                 Alert.alert(
                                     "Bad Request!",
                                     "Login Failed...",
@@ -236,14 +242,17 @@ const LoginScreen = () => {
                                         { text: "OK", onPress: () => console.log(response.data) }
                                     ]
                                 );
-            
+
                             }
                         }
-            
-            
-            
+
+
+
                         ).catch((err: any) => {
-            
+
+                            console.log(" response error =====  ", err);
+
+
                             setloandingspinner(false);
                             Alert.alert(
                                 "Login Failed!",
@@ -252,11 +261,21 @@ const LoginScreen = () => {
                                     { text: "OK", onPress: () => console.log(err) }
                                 ]
                             );
-            
+
                         });
-                  
-        
-                }else{
+
+                    } catch (error) {
+                        Alert.alert(
+                            "Bad Request!",
+                            "Login Failed...",
+                            [
+                                { text: "OK", onPress: () => console.log(error) }
+                            ]
+                        );
+
+                    }
+
+                } else {
 
                     setloandingspinner(false);
 
@@ -267,12 +286,12 @@ const LoginScreen = () => {
                             { text: "OK", onPress: () => console.log("no internet") }
                         ]
                     );
-                  
-        
+
+
                 }
             })
 
-         
+
 
             //-------------------------------------------------------------
 
