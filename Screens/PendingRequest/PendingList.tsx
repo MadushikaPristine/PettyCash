@@ -6,9 +6,9 @@ import ComponentsStyles from "../../Constant/Components.styles";
 import ActionButton from "../../Components/ActionButton";
 import ApproveRejectModal from "../../Components/ApproveRejectComponent";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { ApprovedIOU, CancelledIOU, getDateFilterIOUList, getPendingHODApprovalIOUList, getPendingIOU, getPendingIOUList, getPendingSecondApprovalIOUList, RejectedIOU, saveApproveRemark, saveIOU, saveRemark } from "../../SQLiteDBAction/Controllers/IOUController";
-import { ApprovedIOUSET, CancelledIOUSET, getDateFilterIOUSETList, getPendingIOUSetList, RejectedIOUSET, saveApproveRemarkIOUSET } from "../../SQLiteDBAction/Controllers/IouSettlementController";
-import { ApprovedONEOFF, CancelledONEOFF, getDateFilterONEOFFList, getPendingOneOffSetList, RejectedONEOFF, saveApproveRemarkONEOFF } from "../../SQLiteDBAction/Controllers/OneOffSettlementController";
+import { ApprovedIOU, CancelledIOU, getDateFilterIOUList, getIOUDataByID, getPendingHODApprovalIOUList, getPendingIOU, getPendingIOUList, getPendingSecondApprovalIOUList, RejectedIOU, saveApproveAllData, saveApproveRemark, saveIOU, saveRemark, Update_IOU_FirstApprovel, Update_IOU_SecondApprovel, Update_IOU_ValidateAmount, UpdateFirstApprovel } from "../../SQLiteDBAction/Controllers/IOUController";
+import { ApprovedIOUSET, CancelledIOUSET, getDateFilterIOUSETList, getIOUSettlement_Data, getPendingIOUSetList, RejectedIOUSET, saveApproveRemarkIOUSET, Update_IOUSettelment_ValidateAmount, Update_IOUSettlement_FirstApprovel, Update_IOUSettlement_SecondApprovel } from "../../SQLiteDBAction/Controllers/IouSettlementController";
+import { ApprovedONEOFF, CancelledONEOFF, getDateFilterONEOFFList, getOneOffReAllData, getPendingOneOffSetList, RejectedONEOFF, saveApproveRemarkONEOFF, Update_ONE_OF_FirstApprovel, Update_ONE_OF_ValidateAmount } from "../../SQLiteDBAction/Controllers/OneOffSettlementController";
 import DateRangePopup from "../../Components/DateRangePopup";
 //import Notifications from 'react-native-notifications';
 import { getCurrentPendingListType, getLoginUserID, getLoginUserRoll, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_MAX_AMOUNT } from "../../Constant/AsynStorageFuntion";
@@ -19,6 +19,9 @@ import { Dialog } from "react-native-paper";
 import InputText from "../../Components/InputText";
 import DateRangePicker from "rn-select-date-range";
 import IconA from 'react-native-vector-icons/FontAwesome';
+import { getAllLoginUserDetails } from "../../SQLiteDBAction/Controllers/UserController";
+import { getHODDetailsID } from "../../SQLiteDBAction/Controllers/DepartmentController";
+import moment from "moment";
 
 
 let width = Dimensions.get("screen").width;
@@ -46,6 +49,7 @@ const PendingList = () => {
   const [pendingType, setPendingType] = useState('');
   const [approveList, setApproveList] = useState();
   const [ApproveID, setApproveID] = useState();
+  const [IOULimit, setIOULimit] = useState();
 
   //flatlist
   const [pendingList, setPendingList] = useState([]);
@@ -368,115 +372,857 @@ const PendingList = () => {
 
     for (let i = 0; i < selectedItems.length; ++i) {
       if (type === 'IOU') {
-        ApprovedIOU(selectedItems[i], (result: any) => {
-          setApproveList(selectedItems[i]);
-          // console.log(" item list ..............  ", selectedItems[i], " resp ,,,,,,,, ", result)
+        getAllLoginUserDetails(loggedUserID, (resultiou: any) => {
+
+
+          setIOULimit(resultiou[0].IOULimit);
+
+          getIOUDataByID(selectedItems[i], (resultiouID: any) => {
+
+
+            console.log(resultiouID[0].Amount, '==========', IOULimit);
+
+            if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
+
+              // iouType = 3 & approvestatues = 5  (Frist Aprovel)
+
+
+              //frist actionby = log wela inna user id
+              //fristaction act = aprove karana datetime eka
+              ///remark
+              //approvestatus = 2
+              const jsonData = [
+                {
+                  FirstActionBy: loggedUserID,
+                  FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Approve_Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+
+                },
+              ];
+              Update_IOU_FirstApprovel(jsonData, (result: any) => {
+
+                if (result == "success") {
+
+                  const prams =
+                  {
+                    "PCRCode": resultiouID[0].IOU_ID,
+                    "Type": resultiouID[0].IOU_Type,
+                    "StatusID": resultiouID[0].Approve_Status,
+                    "ModifyBy": loggedUserID,
+                    "Remark": remark,
+                    "HOD": "",
+                    "ActionStep": 1,
+                    "FirstActionBy": resultiouID[0].FirstActionBy,
+                    "SecondActionBy": "",
+                    "FirstActionAt": resultiouID[0].FirstActionAt,
+                    "SecondActionAt": "",
+                    "AIsLimit": "",
+                    "AIouLimit": "",
+                  }
+                  UpdateNew_API(prams);
+                  navigation.navigate('IOU', { status: 'Approved', })
+
+                } else {
+
+                  Alert.alert('Request Approve Failed !', '', [
+                    {
+                      text: 'Ok', onPress: () => console.log("ok Pressed")
+                    },
+                  ]);
+
+                }
+
+              })
+
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
+              // iouType != 3 & approvestatues = 1  
+
+
+              // Amount Eke Condition eka enna oni
+              if (resultiouID[0].Amount > resultiou[0].IOULimit) {
+                // if
+
+                // is not exied
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = NO
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 2
+                //     // saveApproveAllData(departmenthod[0].HODNo, loggedUserID, moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'), "YES", resultiou[0].IOULimit, remark, selectedItems[i], (result: any) => {
+
+                console.log("1111111111111111111111111111111");
+
+                const jsonData = [
+                  {
+                    FirstActionBy: loggedUserID,
+                    FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                    AIsLimit: "NO",
+                    AIOULimit: resultiou[0].IOULimit,
+                    Approve_Remark: remark,
+                    Approve_Status: 2,
+                    IOU_ID: selectedItems[i],
+
+                  },
+                ];
+
+                Update_IOU_ValidateAmount(jsonData, (result: any) => {
+
+
+                  if (result == "success") {
+
+                    const prams =
+                    {
+                      "PCRCode": resultiouID[0].IOU_ID,
+                      "Type": resultiouID[0].IOU_Type,
+                      "StatusID": resultiouID[0].Approve_Status,
+                      "ModifyBy": loggedUserID,
+                      "Remark": remark,
+                      "HOD": "",
+                      "ActionStep": 1,
+                      "FirstActionBy": resultiouID[0].FirstActionBy,
+                      "SecondActionBy": "",
+                      "FirstActionAt": resultiouID[0].FirstActionAt,
+                      "SecondActionAt": "",
+                      "AIsLimit": resultiouID[0].AIsLimit,
+                      "AIouLimit": resultiouID[0].AIOULimit,
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('IOU', { status: 'Approved', })
+
+                  } else {
+
+                    Alert.alert('Request Approve Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+                })
+              } else {
+                // else
+                // exeeed
+                // hod = logwela inna userge department eke HOD
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = YES
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 5
+
+                getHODDetailsID(loggedUserID, (departmenthod: any) => {
+                  const jsonData = [
+                    {
+                      HOD: departmenthod[0].HODNo,
+                      FirstActionBy: loggedUserID,
+                      FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      AIsLimit: "YES",
+                      AIOULimit: resultiou[0].IOULimit,
+                      Approve_Remark: remark,
+                      Approve_Status: 5,
+                      IOU_ID: selectedItems[i],
+
+                    },
+                  ];
+
+
+                  Update_IOU_ValidateAmount(jsonData, (result: any) => {
+
+                    if (result == "success") {
+
+                      const prams =
+                      {
+                        "PCRCode": resultiouID[0].IOU_ID,
+                        "Type": resultiouID[0].IOU_Type,
+                        "StatusID": resultiouID[0].Approve_Status,
+                        "ModifyBy": loggedUserID,
+                        "Remark": remark,
+                        "HOD": resultiouID[0].HOD,
+                        "ActionStep": 1,
+                        "FirstActionBy": resultiouID[0].FirstActionBy,
+                        "SecondActionBy": "",
+                        "FirstActionAt": resultiouID[0].FirstActionAt,
+                        "SecondActionAt": "",
+                        "AIsLimit": resultiouID[0].AIsLimit,
+                        "AIouLimit": resultiouID[0].AIOULimit,
+                      }
+                      UpdateNew_API(prams);
+                      navigation.navigate('IOU', { status: 'Approved', })
+
+                    } else {
+
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
+
+                    }
+
+                  })
+                })
+
+              }
+              // UpdateFirstApprovel
+
+
+
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
+              // iouType != 3 & approvestatues = 5 (second Action)
+
+
+              //Second actionby = log wela inna user id
+              //SecondAction act = aprove karana datetime eka
+              ///remark 
+              //approvestatus = 2
+
+              const jsonData = [
+                {
+                  SecondActionBy: loggedUserID,
+                  SecondActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Approve_Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+
+                },
+              ];
+
+              Update_IOU_SecondApprovel(jsonData, (result: any) => {
+
+                if (result == "success") {
+
+                  const prams =
+                  {
+                    "PCRCode": resultiouID[0].IOU_ID,
+                    "Type": resultiouID[0].IOU_Type,
+                    "StatusID": resultiouID[0].Approve_Status,
+                    "ModifyBy": loggedUserID,
+                    "Remark": remark,
+                    "HOD": resultiouID[0].HOD,
+                    "ActionStep": 2,
+                    "FirstActionBy": "",
+                    "SecondActionBy": resultiouID[0].SecondActionBy,
+                    "FirstActionAt": "",
+                    "SecondActionAt": resultiouID[0].SecondActionAt,
+                    "AIsLimit": "",
+                    "AIouLimit": "",
+                  }
+                  UpdateNew_API(prams);
+                  navigation.navigate('IOU', { status: 'Approved', })
+
+                } else {
+
+                  Alert.alert('Request Approve Failed !', '', [
+                    {
+                      text: 'Ok', onPress: () => console.log("ok Pressed")
+                    },
+                  ]);
+
+                }
+
+              })
+            }
+
+          })
+
 
         })
-
-        saveApproveRemark(remark, selectedItems[i], (result: any) => {
-          console.log("approved status -- ", result);
-
-          if (result == "success") {
-
-            UpdateRequest(selectedItems[i], 'IOU Request', 2, remark);
-
-            navigation.navigate('IOU', { status: 'Approved', })
-
-          } else {
-
-            Alert.alert('Request Approve Failed !', '', [
-              {
-                text: 'Ok', onPress: () => console.log("ok Pressed")
-              },
-            ]);
-
-          }
-
-
-        })
-        // slideOutModal();
-        // remark = '';
-        //Alert.alert("Approved Request");
-
-        // onApprovedNotification(selectedItems[i], type);
-
-        //handlePress();
-        //console.log(remark);
-
 
       } else if (type === 'IOU Settlement') {
-        ApprovedIOUSET(selectedItems[i], (result: any) => {
-          setApproveList(selectedItems[i]);
-          // console.log(" item list ..............  ", selectedItems[i], " resp ,,,,,,,, ", result)
+
+        getAllLoginUserDetails(loggedUserID, (resultiou: any) => {
+
+
+          // setIOULimit(resultiou[0].IOULimit);
+
+          getIOUSettlement_Data(selectedItems[i], (resultiouID: any) => {
+
+
+
+            if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
+
+              // iouType = 3 & approvestatues = 5  (Frist Aprovel)
+
+
+              //frist actionby = log wela inna user id
+              //fristaction act = aprove karana datetime eka
+              ///remark
+              //approvestatus = 2
+              const jsonData = [
+                {
+                  FirstActionBy: loggedUserID,
+                  FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Approve_Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+
+                },
+              ];
+              Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
+
+                if (result == "success") {
+
+                  const prams =
+                  {
+                    "PCRCode": resultiouID[0].IOUSettlement_ID,
+                    "Type": resultiouID[0].IOU_Type,
+                    "StatusID": resultiouID[0].Approve_Status,
+                    "ModifyBy": loggedUserID,
+                    "Remark": remark,
+                    "HOD": "",
+                    "ActionStep": 1,
+                    "FirstActionBy": resultiouID[0].FirstActionBy,
+                    "SecondActionBy": "",
+                    "FirstActionAt": resultiouID[0].FirstActionAt,
+                    "SecondActionAt": "",
+                    "AIsLimit": "",
+                    "AIouLimit": "",
+                  }
+                  UpdateNew_API(prams);
+                  navigation.navigate('IOU', { status: 'Approved', })
+
+                } else {
+
+                  Alert.alert('Request Approve Failed !', '', [
+                    {
+                      text: 'Ok', onPress: () => console.log("ok Pressed")
+                    },
+                  ]);
+
+                }
+
+              })
+
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
+              // iouType != 3 & approvestatues = 1  
+
+
+              // Amount Eke Condition eka enna oni
+              if (resultiouID[0].Amount > resultiou[0].IOULimit) {
+                // if
+
+                // is not exied
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = NO
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 2
+                //     // saveApproveAllData(departmenthod[0].HODNo, loggedUserID, moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'), "YES", resultiou[0].IOULimit, remark, selectedItems[i], (result: any) => {
+
+                console.log("1111111111111111111111111111111");
+
+                const jsonData = [
+                  {
+                    FirstActionBy: loggedUserID,
+                    FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                    AIsLimit: "NO",
+                    AIOULimit: resultiou[0].IOULimit,
+                    Approve_Remark: remark,
+                    Approve_Status: 2,
+                    IOU_ID: selectedItems[i],
+
+                  },
+                ];
+
+                Update_IOUSettelment_ValidateAmount(jsonData, (result: any) => {
+
+
+                  if (result == "success") {
+
+                    const prams =
+                    {
+                      "PCRCode": resultiouID[0].IOUSettlement_ID,
+                      "Type": resultiouID[0].IOU_Type,
+                      "StatusID": resultiouID[0].Approve_Status,
+                      "ModifyBy": loggedUserID,
+                      "Remark": remark,
+                      "HOD": "",
+                      "ActionStep": 1,
+                      "FirstActionBy": resultiouID[0].FirstActionBy,
+                      "SecondActionBy": "",
+                      "FirstActionAt": resultiouID[0].FirstActionAt,
+                      "SecondActionAt": "",
+                      "AIsLimit": resultiouID[0].AIsLimit,
+                      "AIouLimit": resultiouID[0].AIOULimit,
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('IOU', { status: 'Approved', })
+
+                  } else {
+
+                    Alert.alert('Request Approve Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+                })
+              } else {
+                // else
+                // exeeed
+                // hod = logwela inna userge department eke HOD
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = YES
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 5
+
+                getHODDetailsID(loggedUserID, (departmenthod: any) => {
+                  const jsonData = [
+                    {
+                      HOD: departmenthod[0].HODNo,
+                      FirstActionBy: loggedUserID,
+                      FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      AIsLimit: "YES",
+                      AIOULimit: resultiou[0].IOULimit,
+                      Approve_Remark: remark,
+                      Approve_Status: 5,
+                      IOU_ID: selectedItems[i],
+
+                    },
+                  ];
+
+
+                  Update_IOUSettelment_ValidateAmount(jsonData, (result: any) => {
+
+                    if (result == "success") {
+
+                      const prams =
+                      {
+                        "PCRCode": resultiouID[0].IOUSettlement_ID,
+                        "Type": resultiouID[0].IOU_Type,
+                        "StatusID": resultiouID[0].Approve_Status,
+                        "ModifyBy": loggedUserID,
+                        "Remark": remark,
+                        "HOD": resultiouID[0].HOD,
+                        "ActionStep": 1,
+                        "FirstActionBy": resultiouID[0].FirstActionBy,
+                        "SecondActionBy": "",
+                        "FirstActionAt": resultiouID[0].FirstActionAt,
+                        "SecondActionAt": "",
+                        "AIsLimit": resultiouID[0].AIsLimit,
+                        "AIouLimit": resultiouID[0].AIOULimit,
+                      }
+                      UpdateNew_API(prams);
+                      navigation.navigate('IOU', { status: 'Approved', })
+
+                    } else {
+
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
+
+                    }
+
+                  })
+                })
+
+              }
+              // UpdateFirstApprovel
+
+
+
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
+              // iouType != 3 & approvestatues = 5 (second Action)
+
+
+              //Second actionby = log wela inna user id
+              //SecondAction act = aprove karana datetime eka
+              ///remark 
+              //approvestatus = 2
+
+              const jsonData = [
+                {
+                  SecondActionBy: loggedUserID,
+                  SecondActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Approve_Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+
+                },
+              ];
+
+              Update_IOUSettlement_SecondApprovel(jsonData, (result: any) => {
+
+                if (result == "success") {
+
+                  const prams =
+                  {
+                    "PCRCode": resultiouID[0].IOUSettlement_ID,
+                    "Type": resultiouID[0].IOU_Type,
+                    "StatusID": resultiouID[0].Approve_Status,
+                    "ModifyBy": loggedUserID,
+                    "Remark": remark,
+                    "HOD": resultiouID[0].HOD,
+                    "ActionStep": 2,
+                    "FirstActionBy": "",
+                    "SecondActionBy": resultiouID[0].SecondActionBy,
+                    "FirstActionAt": "",
+                    "SecondActionAt": resultiouID[0].SecondActionAt,
+                    "AIsLimit": "",
+                    "AIouLimit": "",
+                  }
+                  UpdateNew_API(prams);
+                  navigation.navigate('IOU', { status: 'Approved', })
+
+                } else {
+
+                  Alert.alert('Request Approve Failed !', '', [
+                    {
+                      text: 'Ok', onPress: () => console.log("ok Pressed")
+                    },
+                  ]);
+
+                }
+
+              })
+            }
+
+          })
+
 
         })
-        saveApproveRemarkIOUSET(remark, selectedItems[i], (result: any) => {
-          // console.log("Remark", txtRemark);
+        // ApprovedIOUSET(selectedItems[i], (result: any) => {
+        //   setApproveList(selectedItems[i]);
+        //   // console.log(" item list ..............  ", selectedItems[i], " resp ,,,,,,,, ", result)
 
-          if (result == "success") {
+        // })
+        // saveApproveRemarkIOUSET(remark, selectedItems[i], (result: any) => {
+        //   // console.log("Remark", txtRemark);
 
-            UpdateRequest(selectedItems[i], 'IOU Settlement', 2, remark);
+        //   if (result == "success") {
 
-            navigation.navigate('SettlementScreen', {
-              status: 'Approved',
-            })
+        //     UpdateRequest(selectedItems[i], 'IOU Settlement', 2, remark);
 
-
-          } else {
-
-            Alert.alert('Request Approve Failed !', '', [
-              {
-                text: 'Ok', onPress: () => console.log("ok Pressed")
-              },
-            ]);
-
-          }
-
-        })
-
-        //Alert.alert("Approved Request");
-        // onApprovedNotification(selectedItems[i], type);
+        //     navigation.navigate('SettlementScreen', {
+        //       status: 'Approved',
+        //     })
 
 
+        //   } else {
 
-        //console.log(remark);
+        //     Alert.alert('Request Approve Failed !', '', [
+        //       {
+        //         text: 'Ok', onPress: () => console.log("ok Pressed")
+        //       },
+        //     ]);
+
+        //   }
+
+        // })
+
+        // //Alert.alert("Approved Request");
+        // // onApprovedNotification(selectedItems[i], type);
+
+
+
+        // //console.log(remark);
 
 
       } else if (type === 'One-Off Settlement') {
-        ApprovedONEOFF(selectedItems[i], (result: any) => {
-          setApproveList(selectedItems[i]);
-          // console.log(" item list ..............  ", selectedItems[i], " resp ,,,,,,,, ", result)
+        getAllLoginUserDetails(loggedUserID, (resultiou: any) => {
+
+
+          setIOULimit(resultiou[0].IOULimit);
+
+          getOneOffReAllData(selectedItems[i], (resultiouID: any) => {
+
+
+            console.log(resultiouID[0].Amount, '==========', IOULimit);
+
+            if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
+
+              // iouType = 3 & approvestatues = 5  (Frist Aprovel)
+
+
+              //frist actionby = log wela inna user id
+              //fristaction act = aprove karana datetime eka
+              ///remark
+              //approvestatus = 2
+              const jsonData = [
+                {
+                  FirstActionBy: loggedUserID,
+                  FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Approve_Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+
+                },
+              ];
+              Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
+
+                if (result == "success") {
+
+                  const prams =
+                  {
+                    "PCRCode": resultiouID[0].ONEOFFSettlement_ID,
+                    "Type": resultiouID[0].IOU_Type,
+                    "StatusID": resultiouID[0].Approve_Status,
+                    "ModifyBy": loggedUserID,
+                    "Remark": remark,
+                    "HOD": "",
+                    "ActionStep": 1,
+                    "FirstActionBy": resultiouID[0].FirstActionBy,
+                    "SecondActionBy": "",
+                    "FirstActionAt": resultiouID[0].FirstActionAt,
+                    "SecondActionAt": "",
+                    "AIsLimit": "",
+                    "AIouLimit": "",
+                  }
+                  UpdateNew_API(prams);
+                  navigation.navigate('IOU', { status: 'Approved', })
+
+                } else {
+
+                  Alert.alert('Request Approve Failed !', '', [
+                    {
+                      text: 'Ok', onPress: () => console.log("ok Pressed")
+                    },
+                  ]);
+
+                }
+
+              })
+
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
+              // iouType != 3 & approvestatues = 1  
+
+
+              // Amount Eke Condition eka enna oni
+              if (resultiouID[0].Amount > resultiou[0].IOULimit) {
+                // if
+
+                // is not exied
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = NO
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 2
+                //     // saveApproveAllData(departmenthod[0].HODNo, loggedUserID, moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'), "YES", resultiou[0].IOULimit, remark, selectedItems[i], (result: any) => {
+
+                console.log("1111111111111111111111111111111");
+
+                const jsonData = [
+                  {
+                    FirstActionBy: loggedUserID,
+                    FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                    AIsLimit: "NO",
+                    AIOULimit: resultiou[0].IOULimit,
+                    Approve_Remark: remark,
+                    Approve_Status: 2,
+                    IOU_ID: selectedItems[i],
+
+                  },
+                ];
+
+                Update_ONE_OF_ValidateAmount(jsonData, (result: any) => {
+
+
+                  if (result == "success") {
+
+                    const prams =
+                    {
+                      "PCRCode": resultiouID[0].ONEOFFSettlement_ID,
+                      "Type": resultiouID[0].IOU_Type,
+                      "StatusID": resultiouID[0].Approve_Status,
+                      "ModifyBy": loggedUserID,
+                      "Remark": remark,
+                      "HOD": "",
+                      "ActionStep": 1,
+                      "FirstActionBy": resultiouID[0].FirstActionBy,
+                      "SecondActionBy": "",
+                      "FirstActionAt": resultiouID[0].FirstActionAt,
+                      "SecondActionAt": "",
+                      "AIsLimit": resultiouID[0].AIsLimit,
+                      "AIouLimit": resultiouID[0].AIOULimit,
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('IOU', { status: 'Approved', })
+
+                  } else {
+
+                    Alert.alert('Request Approve Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+                })
+              } else {
+                // else
+                // exeeed
+                // hod = logwela inna userge department eke HOD
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = YES
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 5
+
+                getHODDetailsID(loggedUserID, (departmenthod: any) => {
+                  const jsonData = [
+                    {
+                      HOD: departmenthod[0].HODNo,
+                      FirstActionBy: loggedUserID,
+                      FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      AIsLimit: "YES",
+                      AIOULimit: resultiou[0].IOULimit,
+                      Approve_Remark: remark,
+                      Approve_Status: 5,
+                      IOU_ID: selectedItems[i],
+
+                    },
+                  ];
+
+
+                  Update_ONE_OF_ValidateAmount(jsonData, (result: any) => {
+
+                    if (result == "success") {
+
+                      const prams =
+                      {
+                        "PCRCode": resultiouID[0].ONEOFFSettlement_ID,
+                        "Type": resultiouID[0].IOU_Type,
+                        "StatusID": resultiouID[0].Approve_Status,
+                        "ModifyBy": loggedUserID,
+                        "Remark": remark,
+                        "HOD": resultiouID[0].HOD,
+                        "ActionStep": 1,
+                        "FirstActionBy": resultiouID[0].FirstActionBy,
+                        "SecondActionBy": "",
+                        "FirstActionAt": resultiouID[0].FirstActionAt,
+                        "SecondActionAt": "",
+                        "AIsLimit": resultiouID[0].AIsLimit,
+                        "AIouLimit": resultiouID[0].AIOULimit,
+                      }
+                      UpdateNew_API(prams);
+                      navigation.navigate('IOU', { status: 'Approved', })
+
+                    } else {
+
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
+
+                    }
+
+                  })
+                })
+
+              }
+              // UpdateFirstApprovel
+
+
+
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
+              // iouType != 3 & approvestatues = 5 (second Action)
+
+
+              //Second actionby = log wela inna user id
+              //SecondAction act = aprove karana datetime eka
+              ///remark 
+              //approvestatus = 2
+
+              const jsonData = [
+                {
+                  SecondActionBy: loggedUserID,
+                  SecondActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Approve_Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+
+                },
+              ];
+
+              Update_IOU_SecondApprovel(jsonData, (result: any) => {
+
+                if (result == "success") {
+
+                  const prams =
+                  {
+                    "PCRCode": resultiouID[0].ONEOFFSettlement_ID,
+                    "Type": resultiouID[0].IOU_Type,
+                    "StatusID": resultiouID[0].Approve_Status,
+                    "ModifyBy": loggedUserID,
+                    "Remark": remark,
+                    "HOD": resultiouID[0].HOD,
+                    "ActionStep": 2,
+                    "FirstActionBy": "",
+                    "SecondActionBy": resultiouID[0].SecondActionBy,
+                    "FirstActionAt": "",
+                    "SecondActionAt": resultiouID[0].SecondActionAt,
+                    "AIsLimit": "",
+                    "AIouLimit": "",
+                  }
+                  UpdateNew_API(prams);
+                  navigation.navigate('IOU', { status: 'Approved', })
+
+                } else {
+
+                  Alert.alert('Request Approve Failed !', '', [
+                    {
+                      text: 'Ok', onPress: () => console.log("ok Pressed")
+                    },
+                  ]);
+
+                }
+
+              })
+            }
+
+          })
+
 
         })
-        saveApproveRemarkONEOFF(remark, selectedItems[i], (result: any) => {
-          // console.log("Remark", txtRemark);
-
-          if (result == "success") {
-
-            UpdateRequest(selectedItems[i], 'OneOff Settlement', 2, remark);
-
-            navigation.navigate('OneOffScreen', {
-              status: 'Approved',
-            })
 
 
-          } else {
-
-            Alert.alert('Request Approve Failed !', '', [
-              {
-                text: 'Ok', onPress: () => console.log("ok Pressed")
-              },
-            ]);
-
-          }
-        })
-
-        //Alert.alert("Approved Request");
-        // onApprovedNotification(selectedItems[i], type);
 
 
-        //console.log(remark);
+
+        // ApprovedONEOFF(selectedItems[i], (result: any) => {
+        //   setApproveList(selectedItems[i]);
+        //   // console.log(" item list ..............  ", selectedItems[i], " resp ,,,,,,,, ", result)
+
+        // })
+        // saveApproveRemarkONEOFF(remark, selectedItems[i], (result: any) => {
+        //   // console.log("Remark", txtRemark);
+
+        //   if (result == "success") {
+
+        //     UpdateRequest(selectedItems[i], 'OneOff Settlement', 2, remark);
+
+        //     navigation.navigate('OneOffScreen', {
+        //       status: 'Approved',
+        //     })
+
+
+        //   } else {
+
+        //     Alert.alert('Request Approve Failed !', '', [
+        //       {
+        //         text: 'Ok', onPress: () => console.log("ok Pressed")
+        //       },
+        //     ]);
+
+        //   }
+        // })
+
+       
 
 
       }
@@ -1063,11 +1809,55 @@ const PendingList = () => {
 
   );
 
+  const UpdateNew_API = async (prams: any) => {
+
+    const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST';
+
+
+
+    try {
+
+      // console.log(prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+
+      // await axios.get(URL, { headers })
+      axios.put(URL, prams, {
+        headers: headers
+      }).then((response) => {
+        console.log("[s][t][a][t][u][s][]", response);
+        if (response.status == 200) {
+
+          // updateSyncStatus(IOUNo, (result: any) => {
+
+          // });
+
+          // console.log("success ======= ", response.status);
+
+
+          //console.log("success ===222==== ", response.data);
+
+
+        } else {
+
+          console.log(" response code ======= ", response.status);
+
+        }
+      }).catch((error) => {
+
+        console.log("error .....   ", error);
+
+      });
+
+
+    } catch (error) {
+      console.log(error);
+
+    }
+  }
   //--------Update status and remark--------------
   const UpdateRequest = async (ID: any, Rtype: any, status: any, remark: string) => {
 
     // console.log(" status ====  " , status);
-    
+
 
     const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST';
 

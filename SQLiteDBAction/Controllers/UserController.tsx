@@ -139,3 +139,15 @@ export const getAllJobOwners = (callBack: any) => {
         },
     );
 };
+
+export const getAllLoginUserDetails = (uID:any,callBack: any) => {
+
+    DB.searchData(
+        'SELECT IOULimit FROM USER WHERE USER_ID=?',
+        [uID],
+        (resp: any, err: any) => {
+            // console.log("************** All employee ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
