@@ -109,3 +109,15 @@ export const getLoggedUserHOD = (callBack: any) => {
 
 
 };
+
+export const getHODDetailsID = (ID:any,callBack: any) => {
+
+    DB.searchData(
+        'SELECT DEPARTMENTS.HODNo FROM USER join DEPARTMENTS on DEPARTMENTS.DepID = USER.DepartmentId WHERE USER.USER_ID =? ',
+        [ID],
+        (resp: any, err: any) => {
+            //console.log("************** all IOU Types ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};

@@ -499,3 +499,71 @@ export const getIOUdatainfo = (ID:any,callBack: any) => {
         },
     )
 }
+export const saveApproveAllData = (HOD: any,FirstActionBy: any,FirstActionAt: any,AIsLimit:any,AIOULimit:any,Approve_Remark:any,IOUID:any, callBack: any) => {
+
+    // console.log(ID," approve remark ----- " , remark);
+    
+    DB.updateData(
+        'UPDATE IOU SET HOD=?,FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=? WHERE IOU_ID=?',
+        [HOD, FirstActionBy,FirstActionAt,AIsLimit,AIOULimit,Approve_Remark,IOUID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+        },
+    );
+};
+
+
+export const getIOUDataByID = (ID:any,callBack: any) => {
+
+    DB.searchData(
+        'SELECT * FROM IOU WHERE IOU.IOU_ID=?',
+        //WHERE RequestDate <= "2023-05-15 23:59:59" AND RequestDate >= "2023-05-15 00:00:00" AND Approve_Status >= 2',
+        [ID],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+            // console.log(resp);
+        },
+    )
+}
+export const Update_IOU_ValidateAmount = (data: any, callBack: any) => {
+
+    console.log(data,">>>>>>>>>>>>>>>>>>>>>>");
+    console.log(data[0].FirstActionBy,">>>>>>>>>>>>>>>>>>>>>>");
+    console.log(data[0].IOU_ID,">>>>>>>>>>>>>>>>>>>>>>");
+    
+
+    DB.updateData(
+        'UPDATE IOU SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=? WHERE IOU_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+
+export const Update_IOU_FirstApprovel = (data: any, callBack: any) => {
+
+
+    DB.updateData(
+        'UPDATE IOU SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=? WHERE IOU_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+export const Update_IOU_SecondApprovel = (data: any, callBack: any) => {
+
+
+    DB.updateData(
+        'UPDATE IOU SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=? WHERE IOU_ID=?',
+        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};

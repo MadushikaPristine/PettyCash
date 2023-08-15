@@ -343,6 +343,56 @@ export const updateOneOffSyncStatus = (ID: any, callBack: any) => {
         },
     );
 };
+export const getOneOffReAllData = (RequestID: any, callBack: any) => {
+
+    DB.searchData(
+        'SELECT * FROM ONE_OFF_SETTLEMENT WHERE ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID=?',
+        [RequestID],
+        (resp: any, err: any) => {
+            callBack(resp, err);
+        },
+    );
+};
+export const Update_ONE_OF_FirstApprovel = (data: any, callBack: any) => {
+
+
+    DB.updateData(
+        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+export const Update_ONE_OF_ValidateAmount = (data: any, callBack: any) => {
+
+    console.log(data,">>>>>>>>>>>>>>>>>>>>>>");
+    console.log(data[0].FirstActionBy,">>>>>>>>>>>>>>>>>>>>>>");
+    console.log(data[0].IOU_ID,">>>>>>>>>>>>>>>>>>>>>>");
+    
+
+    DB.updateData(
+        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+export const Update_ONE_OF_SecondApprovel = (data: any, callBack: any) => {
+
+
+    DB.updateData(
+        'UPDATE ONE_OFF_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
 
 
 
