@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
+import { Dimensions, Image, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
 //import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ComponentsStyles from "../Constant/Components.styles";
@@ -34,6 +34,8 @@ type ParamTypes = {
 
 }
 
+let width = Dimensions.get("screen").width;
+
 const AttachmentView = ({ Request_ID, Img_url, Status, jobremarks, iou_type, first_name, last_name, user_id, status, date, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, job_no, expense_type, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
     return (
         <SafeAreaView>
@@ -54,8 +56,12 @@ const AttachmentView = ({ Request_ID, Img_url, Status, jobremarks, iou_type, fir
             </View> */}
 
             <View style={styles.list}>
-                <View style={{marginLeft: 10, flexDirection: "row" }}>
-                    <Image source={{ uri: Img_url }} style={{ height: 50, width: 50 }} />
+                <View style={{ marginLeft: 10, flexDirection: "row" }}>
+
+                    <Image
+                        source={{ uri: Img_url }}
+                        style={{ height: width/1.8, width: width/1.8}}
+                    />
 
                 </View>
 
@@ -63,7 +69,7 @@ const AttachmentView = ({ Request_ID, Img_url, Status, jobremarks, iou_type, fir
 
             </View>
 
-            
+
 
         </SafeAreaView>
     )

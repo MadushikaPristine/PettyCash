@@ -10,8 +10,8 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
             [
                 {
                     table: 'IOU_SETTLEMENT',
-                    columns: `IOUSettlement_ID,IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `IOUSettlement_ID,IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -27,6 +27,16 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
                         data[i].REMARK,
                         "",
                         "0",
+                        data[i].FirstActionBy,
+                        data[i].HOD,
+                        data[i].FirstActionBy,
+                        data[i].FirstActionAt,
+                        data[i].RIsLimit,
+                        data[i].AIsLimit,
+                        data[i].RIouLimit,
+                        data[i].AIouLimit,
+                        data[i].SecondActionBy,
+                        data[i].SecondActionAt
 
                     ],
                 },
@@ -288,7 +298,7 @@ export const getDateFilterIOUSETCancelList = (firstDate: any, secondDate: any, c
 export const getIOUSETJobsListByID = (RequestID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_ID, IOU_SETTLEMENT.JobOwner_ID, IOU_SETTLEMENT.IOU_Type,IOU_SETTLEMENT.IOUSettlement_ID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType,  IFNULL(IOU_SETTLEMENT.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark, IOU_SETTLEMENT_JOBS.AccNo, IOU_SETTLEMENT_JOBS.CostCenter, IOU_SETTLEMENT_JOBS.Resource FROM IOU_SETTLEMENT INNER JOIN IOU_SETTLEMENT_JOBS ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT.IOUSettlement_ID=?',
+        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_ID, IOU_SETTLEMENT.JobOwner_ID, IOU_SETTLEMENT.IOU_Type,IOU_SETTLEMENT.IOUSettlement_ID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType,  IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark, IOU_SETTLEMENT_JOBS.AccNo, IOU_SETTLEMENT_JOBS.CostCenter, IOU_SETTLEMENT_JOBS.Resource FROM IOU_SETTLEMENT INNER JOIN IOU_SETTLEMENT_JOBS ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT.IOUSettlement_ID=?',
         [RequestID],
         (resp: any, err: any) => {
             callBack(resp, err);

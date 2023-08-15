@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import ComStyles from "../../Constant/Components.styles";
 import {
     SafeAreaView,
@@ -39,15 +39,15 @@ import InputText from "../../Components/InputText";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getLastOneOffJobID, getOneOffJOBDataBYRequestID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
-import { getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
+import { getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
 import { getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
-import { getAllJobOwners } from "../../SQLiteDBAction/Controllers/JobOwnerController";
+import { getAllJobOwners, getAllJobOwnersBYDep } from "../../SQLiteDBAction/Controllers/JobOwnerController";
 import { BASE_URL, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import { updateSyncStatus } from "../../SQLiteDBAction/Controllers/IOUController";
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
-import { getDepartments } from "../../SQLiteDBAction/Controllers/DepartmentController";
+import { getDepartments, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -137,7 +137,15 @@ const NewOneOffSettlement = () => {
     const [ExpenseTypeList, setExpenseTypeList] = useState([]);
     const [joblist, setJobList]: any = useState([]);
 
-    var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss');
+    const [isEditable, setIsEditable] = useState(true);
+    const [isEditableEmp, setIsEditableEmp] = useState(true);
+    const [isDisableAcc, setIsDisableAcc] = useState(false);
+    const [isDisableRes, setIsDisableRes] = useState(false);
+    const [ownerType, setOwnerType] = useState('Job Owner');
+
+
+    var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
+    var currentDate1 = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss');
 
     const navigation = useNavigation();
 
@@ -149,16 +157,17 @@ const NewOneOffSettlement = () => {
     };
 
     const newFolderPath = `${RNFS.DocumentDirectoryPath}/ImageFolder`;
-    const newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
+    let newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
     const newGalleryPath = `${newFolderPath}/${AttachementNo}.jpg`;
 
-    const imageURI = Platform.OS === 'android'
+    let imageURI = Platform.OS === 'android'
         ? `file://${newFilePath}`
         : `file:///android_asset/${newFilePath}`;
 
     const galleryImageURI = Platform.OS === 'android'
         ? `file://${newGalleryPath}`
         : `file:///android_asset/${newGalleryPath}`;
+
 
 
 
@@ -170,6 +179,17 @@ const NewOneOffSettlement = () => {
             const result = await launchCamera(options);
 
             try {
+
+
+                let atchNo = Date.now();
+                console.log("attno", atchNo);
+
+                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+
+                imageURI = Platform.OS === 'android'
+                    ? `file://${newFilePath}`
+                    : `file:///android_asset/${newFilePath}`;
+
                 await RNFS.mkdir(newFolderPath);
                 await RNFS.moveFile(result.assets[0].uri, newFilePath);
                 // console.log('Picture saved successfully.');
@@ -180,7 +200,6 @@ const NewOneOffSettlement = () => {
             }
 
 
-            //setCameraPhoto(result.assets[0].uri);
             const newCaptureImages = [...cameraPhoto, imageURI];
             setCameraPhoto(newCaptureImages);
             // console.log("Cache URI: ", result.assets[0].uri);
@@ -330,7 +349,10 @@ const NewOneOffSettlement = () => {
             loginError.field = 'EmpName';
             loginError.message = 'Please select Employee to procced'
             setError(loginError);
-        } else {
+        } else if (cameraPhoto.length == 0) {
+            Alert.alert("Please Add Attachments");
+        }
+        else {
             if (amount == 0.0) {
 
 
@@ -363,6 +385,11 @@ const NewOneOffSettlement = () => {
     const addjob = () => {
 
         generateJobNo();
+
+        getExpenseTypeAll((res: any) => {
+            setExpenseTypeList(res);
+        });
+
 
         let loginError = { field: '', message: '' }
 
@@ -412,10 +439,10 @@ const NewOneOffSettlement = () => {
                 RequestedDate: currentDate,
                 Amount: amount,
                 StatusID: 1,
-                RequestedBy: 158,
-                IsSync: 1,
-                Approve_Remark: "approve remark",
-                Reject_Remark: "Reject remark",
+                RequestedBy: userID,
+                IsSync: 0,
+                Approve_Remark: "",
+                Reject_Remark: "",
                 Attachment_Status: 1
             }
         ]
@@ -803,7 +830,7 @@ const NewOneOffSettlement = () => {
                     Amount: response[i].Amount,
                     Remark: response[i].Remark,
                     CreateAt: currentDate,
-                    RequestedBy: 2,
+                    RequestedBy: userID,
                     IsSync: 1
 
 
@@ -949,7 +976,7 @@ const NewOneOffSettlement = () => {
             Amount: requestAmount,
             Remark: remarks,
             CreateAt: currentDate,
-            RequestedBy: 2,
+            RequestedBy: userID,
             IsSync: 1
 
         }
@@ -1091,9 +1118,8 @@ const NewOneOffSettlement = () => {
             CopyRequest().then(resp => {
                 // console.log("Is Copy: ", resp);
                 setIsReOpen(resp);
-                if (resp == 'False') {
+                if (resp == 'true') {
 
-                } else {
                     getRejectedId().then(result => {
                         // console.log("ReOpen Request Id: ", result);
                         setUId(result);
@@ -1102,20 +1128,79 @@ const NewOneOffSettlement = () => {
 
 
                     })
-                }
+
+                } 
             })
 
 
 
 
-            getExpenseTypes();
-            // getJobNo();
-            getVehicleNo();
-            getAllDepartment();
+            getAllIOUTypes();
 
         }, [])
     );
 
+    const getAllIOUTypes = () => {
+
+        setIOUTypeList([]);
+
+        getIOUTypes((result: any) => {
+
+            setIOUTypeList(result);
+
+        });
+
+    }
+
+    const getJJobOwnerTransportHOD = (type: any) => {
+
+        // type = 1 - job owner / 2 - transport officer / 3 - hod
+
+        if (type == 1) {
+            //get job owners
+
+            getAllJobOwnersBYDep((resp1: any) => {
+
+                console.log(" job owners == [][][][]    ", resp1);
+
+
+                setJobOwnerlist(resp1);
+
+            });
+
+
+        } else if (type == 2) {
+            //get transport officer
+
+            getAllTransportOfficers((resp2: any) => {
+
+                console.log(" transport officers == [][][][]    ", resp2);
+
+                setJobOwnerlist(resp2);
+            });
+
+
+
+        } else {
+
+            //get hod
+
+            getLoggedUserHOD((resp3: any) => {
+
+
+                console.log(" hod == [][][][]    ", resp3);
+
+                setJobOwnerlist(resp3);
+                setSelectJobOwner(resp3[0].Name);
+                setJobOwner(resp3[0].ID);
+
+
+            });
+
+        }
+
+
+    }
 
     //--------Get IOU Types Details Data----------------------
 
@@ -1140,7 +1225,7 @@ const NewOneOffSettlement = () => {
 
     const UploadOneOff = async (detailsData: any) => {
 
-        const URL = BASE_URL + 'Mob_PostOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
 
         var obj = [];
         var Fileobj = [];
@@ -1177,7 +1262,7 @@ const NewOneOffSettlement = () => {
             const prams = {
 
                 "OneOffID": OneOffSettlementNo,
-                "RequestedBy": 158,
+                "RequestedBy": userID,
                 "ReqChannel": "Mobile",
                 "Date": currentDate,
                 "IOUtype": parseInt(IOUTypeID),
@@ -1198,7 +1283,7 @@ const NewOneOffSettlement = () => {
             }
 
 
-            console.log("ONE OFF UPLOAD JSON ====   ",prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+            console.log("ONE OFF UPLOAD JSON ====   ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
             // await axios.get(URL, { headers })
             axios.post(URL, prams, {
@@ -1596,7 +1681,7 @@ const NewOneOffSettlement = () => {
 
                 <ViewField
                     title="Request Date"
-                    Value={currentDate}
+                    Value={currentDate1}
                 />
 
                 <View style={ComStyles.separateLine} />
@@ -1627,7 +1712,30 @@ const NewOneOffSettlement = () => {
                             setIOUTypeID(item.IOUType_ID);
                             setSelectIOUType(item.Description);
 
+                            if (item.IOUType_ID == 1) {
 
+                                setOwnerType("Job Owner");
+                                setIsEditable(false);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(1);
+
+
+                            } else if (item.IOUType_ID == 2) {
+
+                                setOwnerType("Transport Officer");
+                                setIsEditable(false);
+                                setIsDisableRes(true);
+                                getJJobOwnerTransportHOD(2);
+                                getVehicleNo();
+
+
+                            } else {
+                                setOwnerType("HOD");
+                                setIsEditable(true);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(3);
+
+                            }
                             setIsFocus(false);
                         }}
                         renderLeftIcon={() => (
@@ -1743,7 +1851,7 @@ const NewOneOffSettlement = () => {
                                 //horizontal={false}
                                 renderItem={({ item }) => {
                                     return (
-                                        <View>
+                                        <View style={{ width: width - 30, padding: 5 }}>
 
                                             <NewJobsView
                                                 IOU_Type={IOUTypeID}

@@ -11,8 +11,8 @@ export const saveIOU = (data: any, callBack: any) => {
             [
                 {
                     table: 'IOU',
-                    columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,FinanceStatus,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -27,6 +27,18 @@ export const saveIOU = (data: any, callBack: any) => {
                         data[i].REMARK,
                         "",
                         "0",
+                        data[i].FinanceStatus,
+                        data[i].FirstActionBy,
+                        data[i].HOD,
+                        data[i].FirstActionBy,
+                        data[i].FirstActionAt,
+                        data[i].RIsLimit,
+                        data[i].AIsLimit,
+                        data[i].RIouLimit,
+                        data[i].AIouLimit,
+                        data[i].SecondActionBy,
+                        data[i].SecondActionAt
+
 
                     ],
                 },
@@ -193,8 +205,8 @@ export const getLastIOU = (callBack: any) => {
 export const getIOU = (callBack: any) => {
 
     DB.searchData(
-        'SELECT * FROM IOU WHERE IOU.Approve_Status=2 ORDER BY IOU._Id DESC',
-        [],
+        'SELECT * FROM IOU WHERE IOU.FinanceStatus=? ORDER BY IOU._Id DESC',
+        ['Approved'],
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
             callBack(resp, err);
@@ -320,6 +332,9 @@ export const getPendingSecondApprovalIOUList = (amount:any, callBack: any) => {
 };
 
 export const getIOUJobsListByID = (RequestID: any, callBack: any) => {
+
+    console.log(" ID SETT === " , RequestID);
+    
 
     DB.searchData(
         'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU.IOU_ID=?',
@@ -474,7 +489,7 @@ export const filterRequestsByStatus = (Date:any, callBack: any) => {
 export const getIOUdatainfo = (ID:any,callBack: any) => {
 
     DB.searchData(
-        'SELECT JobOwner_ID, IOU_Type, EmpId FROM IOU WHERE IOU.IOU_ID=?',
+        'SELECT JobOwner_ID, IOU_Type, EmpId  FROM IOU WHERE IOU.IOU_ID=?',
         //WHERE RequestDate <= "2023-05-15 23:59:59" AND RequestDate >= "2023-05-15 00:00:00" AND Approve_Status >= 2',
         [ID],
         (resp: any, err: any) => {

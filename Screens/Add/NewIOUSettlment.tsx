@@ -30,8 +30,8 @@ import ImageUpload from "../../Components/ImageUpload";
 import { IOUType } from "../../Constant/DummyData";
 import { getIOUSETJobsListByID, getIOUSETReOpenRequest, getLastIOUSettlemnt, saveIOUSettlement, updateIOUSETSyncStatus } from "../../SQLiteDBAction/Controllers/IouSettlementController";
 import moment from "moment";
-import { CopyRequest, getLoginUserID, getLoginUserName, getRejectedId } from "../../Constant/AsynStorageFuntion";
-import { getAllEmployee, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
+import { CopyRequest, getLoginUserID, getLoginUserName, getLoginUserRoll, getRejectedId, get_ASYNC_COST_CENTER, get_ASYNC_EPFNO, get_ASYNC_IS_Auth_Requester } from "../../Constant/AsynStorageFuntion";
+import { getAllEmployee, getEmployeeByID, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
 import { getIOUTypes } from "../../SQLiteDBAction/Controllers/IOUTypeController";
 import { getIOU, getIOUJobsListByID, getIOUReOpenRequest, getIOUdatainfo } from "../../SQLiteDBAction/Controllers/IOUController";
 import RNFS from 'react-native-fs';
@@ -41,18 +41,19 @@ import JobsView from "../../Components/JobsView";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getIOUJOBDataBYRequestID, getIOUJobDetailsByID } from "../../SQLiteDBAction/Controllers/IOUJobController";
-import { getIOUSETJOBDataBYRequestID, getLastIOUSETJobID, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
-import { getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
-import { getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
+import { UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
+import { getAllTransportOfficers, getAllUsers, getJobOwners, getTransportOfficerDetails } from "../../SQLiteDBAction/Controllers/UserController";
+import { getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
-import { getAllJobOwners } from "../../SQLiteDBAction/Controllers/JobOwnerController";
+import { getAllJobOwners, getAllJobOwnersBYDep, getJobOWnerDetails } from "../../SQLiteDBAction/Controllers/JobOwnerController";
 import axios from "axios";
 import { BASE_URL, headers } from "../../Constant/ApiConstants";
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
-import { getDepartments } from "../../SQLiteDBAction/Controllers/DepartmentController";
+import { getDepartments, getHODDetails, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
 import ComponentsStyles from "../../Constant/Components.styles";
+import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -75,10 +76,14 @@ let IOUDetails: any[] = [];
 let IOUJobData: any[] = [];
 let ReOpenData: any[] = [];
 let IOUSETNo = "";
+let loggedUserID: any;
 
 const NewIOUSettlement = () => {
 
-    var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss')
+    var currentDate1 = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss')
+    var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss')
+    // console.log(" date to save ==== " , currentDate);
+
 
     const [isModalVisible, setisModalVisible] = useState(false);
     const navigation = useNavigation();
@@ -90,13 +95,16 @@ const NewIOUSettlement = () => {
     const [cameraPhoto, setCameraPhoto] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [galleryPhoto, setGalleryPhoto] = useState('');
-    const [error, setError] = useState({ field: '', message: '' })
+    const [error, setError] = useState({ field: '', message: '' });
+    const [ownerType, setOwnerType] = useState('Job Owner');
 
     //Job
     const [isJobOrVehicle, setIsJobOrVehicle] = useState(true);
     const [iouTypeJob, setIouTypeJob] = useState('');
     const [searchtxt, setSearchtxt] = useState('');
     const [isEdit, setIsEdit] = useState(false);
+    const [isAmount, setIsAmount] = useState(false);
+    const [saveTitle, setsaveTitle] = useState("Add");
 
     // generate ID 
     const [lastID, setLastID] = useState('');
@@ -137,6 +145,7 @@ const NewIOUSettlement = () => {
     const [selectIOUType, setSelectIOUType] = useState('');
     const [selectEmployee, setSelectEmployee] = useState('');
     const [selectIOU, setSelectIOU] = useState('');
+    const [Id, setId] = useState('');
 
     //save
     const [JobOwner, setJobOwner] = useState('');
@@ -162,6 +171,15 @@ const NewIOUSettlement = () => {
     const [joblist, setJobList]: any = useState([]);
     const [ioujoblist, setiouJobList] = useState([]);
 
+    const [isEditable, setIsEditable] = useState(true);
+    const [isEditableEmp, setIsEditableEmp] = useState(true);
+    const [isDisableAcc, setIsDisableAcc] = useState(false);
+    const [isDisableRes, setIsDisableRes] = useState(false);
+
+    const [AccountList, setAccountList] = useState([]);
+
+
+
     const options = {
         saveToPhotos: true,
         mediaType: 'photo',
@@ -169,11 +187,13 @@ const NewIOUSettlement = () => {
         includeBase64: true,
     };
 
+    var typeID = 0;
+
     const newFolderPath = `${RNFS.DocumentDirectoryPath}/ImageFolder`;
-    const newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
+    let newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
     const newGalleryPath = `${newFolderPath}/${AttachementNo}.jpg`;
 
-    const imageURI = Platform.OS === 'android'
+    let imageURI = Platform.OS === 'android'
         ? `file://${newFilePath}`
         : `file:///android_asset/${newFilePath}`;
 
@@ -191,6 +211,16 @@ const NewIOUSettlement = () => {
             const result = await launchCamera(options);
 
             try {
+
+                let atchNo = Date.now();
+                console.log("attno", atchNo);
+
+                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+
+                imageURI = Platform.OS === 'android'
+                    ? `file://${newFilePath}`
+                    : `file:///android_asset/${newFilePath}`;
+
                 await RNFS.mkdir(newFolderPath);
                 await RNFS.moveFile(result.assets[0].uri, newFilePath);
                 // console.log('Picture saved successfully.');
@@ -214,6 +244,7 @@ const NewIOUSettlement = () => {
             attachmentSave();
         }
     }
+
 
     const naviBack = () => {
         Alert.alert('Go Back !', 'Are you sure you want to Go Back ?', [
@@ -280,10 +311,10 @@ const NewIOUSettlement = () => {
         } else {
             return (
                 <View>
-                    <Image
+                    {/* <Image
                         source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
                         style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                    />
+                    /> */}
                 </View>
             )
         }
@@ -302,10 +333,11 @@ const NewIOUSettlement = () => {
             )
         } else {
             return (
-                <Image
-                    source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                    style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                />
+                // <Image
+                //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
+                //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
+                // />
+                <></>
             )
 
         }
@@ -317,7 +349,7 @@ const NewIOUSettlement = () => {
         // console.log('sampleIn');
 
         Animated.timing(modalStyle, {
-            toValue: height / 6,
+            toValue: height / 8.5,
             duration: 500,
             useNativeDriver: false,
         }).start();
@@ -355,12 +387,14 @@ const NewIOUSettlement = () => {
             loginError.field = 'IOU';
             loginError.message = 'Please select IOU to procced'
             setError(loginError);
+        } else if (cameraPhoto.length == 0) {
+            Alert.alert("Please Add Attachments");
         }
         else {
             if (amount == 0.0) {
 
 
-                Alert.alert("Please Add Job");
+                Alert.alert("Please Add Details");
                 // SweetAlert.showAlertWithOptions({
                 //     title: 'Please Add Job',
                 //     subTitle: '',
@@ -384,28 +418,89 @@ const NewIOUSettlement = () => {
         }
     }
 
-    var typeID = 0;
+    const getAllIOUTypes = () => {
+
+        setIOUTypeList([]);
+
+        getIOUTypes((result: any) => {
+
+            setIOUTypeList(result);
+
+        });
+
+    }
+
+    const getJJobOwnerTransportHOD = (ID: any, type: any) => {
+
+        // type = 1 - job owner / 2 - transport officer / 3 - hod
+
+        if (type == 1) {
+            //get job owners
+
+            console.log(" Owner ID ==  ", ID);
+
+
+            getJobOWnerDetails(ID, (res: any) => {
+
+                // console.log(" response === ", res);
+
+                setSelectJobOwner(res[0].Name);
+                setJobOwner(res[0].ID);
+
+            });
+
+
+
+        } else if (type == 2) {
+            //get transport officer
+
+
+            getTransportOfficerDetails(ID, (resp: any) => {
+                setSelectJobOwner(resp[0].Name);
+                setJobOwner(resp[0].ID);
+            });
+
+
+        } else {
+
+            //get hod
+
+            getHODDetails(ID, (rest: any) => {
+
+                setSelectJobOwner(rest[0].Name);
+                setJobOwner(rest[0].ID);
+
+            });
+
+
+
+        }
+
+
+    }
+
 
     const editJobs = (jobNo: any) => {
 
         setIsEdit(true);
+        setIsAmount(true);
+
+        setsaveTitle("Update");
+
+        setIsSubmit(false);
+        setIsOpen(false);
 
         // console.log(" selected job  ", jobNo);
 
-        getIOUJobsListByID(IOUID, (resp: any) => {
+        getJobDetailsById(jobNo, (res: any) => {
 
-            IOUJobData.push(resp[0])
+            IOUJobData.push(res[0]);
 
-            // console.log(" JOB Details ======= ", resp);
+            typeID = res[0].IOU_TYPEID;
 
-            typeID = resp[0].IOU_Type;
-            // console.log('+++++++type id++++', typeID);
-
-
-            setSelecteJoborVehicle(jobNo);
-            setEditJobNo(jobNo)
-            setEditExpense(resp[0].ExpenseType);
-
+            setEditJobNo(res[0].IOUTypeNo)
+            setEditExpense(res[0].ExpenseType);
+            setId(res[0]._Id);
             checkIOUJobData(typeID, IOUJobData);
 
             if (typeID == 1) {
@@ -436,13 +531,62 @@ const NewIOUSettlement = () => {
 
             }
 
+            slideInModal();
 
         });
 
+        // getIOUJobsListByID(IOUID, (resp: any) => {
 
-        setIsSubmit(false);
-        setIsOpen(false);
-        slideInModal();
+        //     IOUJobData.push(resp[0])
+
+        //     // console.log(" JOB Details ======= ", resp);
+
+        //     typeID = resp[0].IOU_Type;
+        //     // console.log('+++++++type id++++', typeID);
+
+
+        //     // setSelecteJoborVehicle(jobNo);
+        //     setEditJobNo(resp[0].IOUTypeNo)
+        //     setEditExpense(resp[0].ExpenseType);
+        //     setId(resp[0]._Id);
+        //     checkIOUJobData(typeID, IOUJobData);
+
+
+
+        //     if (typeID == 1) {
+
+        //         setIsJobOrVehicle(true);
+        //         setIouTypeJob("Job No");
+        //         setSearchtxt("Select Job");
+        //         // getJobNoAll((result: any) => {
+        //         //     //console.log("Job No............", res);
+        //         //     setJob_NoList(result);
+        //         //     const jobData = result?.filter((a: any) => a.Job_No == editJobNo)[0];
+        //         //     setSelecteJoborVehicle(jobData.Job_No)
+        //         // })
+
+        //         // const joblistarray = data?.filter((a: any) => a.value == resp[0].AssisstanceID)[0];
+
+        //     } else if (typeID == 2) {
+
+        //         setIsJobOrVehicle(true);
+        //         setIouTypeJob("Vehicle No");
+        //         setSearchtxt("Search Vehicle");
+
+        //         // const jobNolistarray = data?.filter((a: any) => a.value == resp[0].AssisstanceID)[0];
+
+        //     } else {
+
+        //         setIsJobOrVehicle(false);
+
+        //     }
+
+
+        // });
+
+
+
+
 
     }
 
@@ -498,7 +642,12 @@ const NewIOUSettlement = () => {
 
         // Add new sett JOB
 
+        setsaveTitle("Add");
         generateJobNo();
+
+        getExpenseTypeAll((res: any) => {
+            setExpenseTypeList(res);
+        });
 
         let loginError = { field: '', message: '' }
 
@@ -591,47 +740,10 @@ const NewIOUSettlement = () => {
     const getSpinnerData = () => {
 
         // console.log("  ----   job array size --------  ", jobArray.length);
-        setJobOwnerlist([]);
-        setIOUTypeList([]);
-        setEmployeeList([]);
+
         setIOUList([]);
 
-        //Job Owner typeID=2
-        // getTypeWiseUsers(2, (res: any) => {
-        //     // console.log(" Job owner ...........  ", result);
 
-        //     setJobOwnerlist(res);
-        // });
-        // getJobOwners(4, (result: any) => {
-        //     console.log(" Job owner ...........  ", result);
-
-        //     setJobOwnerlist(result);
-        // });
-
-        getAllJobOwners((result: any) => {
-            //console.log(" Job owner ...........  ", result);
-
-            setJobOwnerlist(result);
-        })
-
-
-        //IOU Type
-        getIOUTypes((result: any) => {
-            // console.log("IOU types ......... ", result);
-
-            setIOUTypeList(result);
-
-        });
-
-        // Employee
-        // getAllEmployee((resp: any) => {
-        //     // console.log("Employee ......... ", result);
-        //     setEmployeeList(resp);
-        // });
-        getAllUsers((result: any) => {
-            //console.log("Employee ......... ", result);
-            setEmployeeList(result);
-        });
 
         //IOU
         getIOU((result1: any) => {
@@ -651,10 +763,10 @@ const NewIOUSettlement = () => {
                 RequestedDate: currentDate,
                 Amount: amount,
                 StatusID: 1,
-                RequestedBy: 158,
-                IsSync: 1,
-                Approve_Remark: "approve remark",
-                Reject_Remark: "Reject remark",
+                RequestedBy: loggedUserID,
+                IsSync: 0,
+                Approve_Remark: "",
+                Reject_Remark: "",
                 Attachment_Status: 1
             }
         ]
@@ -882,7 +994,7 @@ const NewIOUSettlement = () => {
                     onPress: () => console.log('Cancel Pressed'),
                     style: 'cancel',
                 },
-                { text: 'Yes', onPress: (add) },
+                { text: 'Yes', onPress: () => add() },
             ]);
 
         } else if (data == 2) {
@@ -894,7 +1006,7 @@ const NewIOUSettlement = () => {
                     onPress: () => console.log('Cancel Pressed'),
                     style: 'cancel',
                 },
-                { text: 'Yes', onPress: (saveSubmit) },
+                { text: 'Yes', onPress: () => saveSubmit() },
             ]);
 
         } else if (data == 3) {
@@ -931,14 +1043,13 @@ const NewIOUSettlement = () => {
 
         let jobError = { field: '', message: '' }
 
-        if (SelecteJoborVehicle === '') {
+        if (isJobOrVehicle) {
 
             jobError.field = 'JobOwner'
             jobError.message = 'Job No is required'
             setError(jobError);
 
-        }
-        else
+        } else
             if (expenseTypeID === '') {
 
                 jobError.field = 'TicketID'
@@ -965,94 +1076,139 @@ const NewIOUSettlement = () => {
 
         // console.log("save job ............>>>>>>>>>>> ");
 
-        const saveObject =
-        {
-            Job_ID: jobNo,
-            IOUTypeNo: SelecteJoborVehicle,
-            JobOwner_ID: parseInt(JobOwner),
-            PCRCode: IOUSettlementNo,
-            AccNo: accountNo,
-            CostCenter: costCeneter,
-            Resource: resource,
-            ExpenseType: parseInt(expenseTypeID),
-            Amount: requestAmount,
-            Remark: remarks,
-            CreateAt: currentDate,
-            RequestedBy: 2,
-            IsSync: 1
+        if (saveTitle == "Add") {
+
+            // new job details
+
+            let job_no = Date.now();
+
+            const saveObject =
+            {
+                Job_ID: job_no,
+                IOUTypeNo: SelecteJoborVehicle,
+                JobOwner_ID: parseInt(JobOwner),
+                PCRCode: IOUSettlementNo,
+                AccNo: accountNo,
+                CostCenter: costCeneter,
+                Resource: resource,
+                ExpenseType: parseInt(expenseTypeID),
+                Amount: requestAmount,
+                Remark: remarks,
+                CreateAt: currentDate,
+                RequestedBy: loggedUserID,
+                IsSync: 0,
+                RequestedAmount: requestAmount,
+                IOU_TYPEID: parseInt(copyIOUType)
+
+            }
+
+            const JOBData: any = [];
+            JOBData.push(saveObject);
+
+            saveIOUSETJOB(JOBData, (response: any) => {
+
+                // console.log(" save job .. ", response);
+
+                amount += parseFloat(requestAmount);
+
+                if (response == 3) {
+
+                    jobArray.push(saveObject);
+                    // setJobList(jobArray);
+
+                    // console.log(" JOB List [][][][ ", joblist);
+
+                    Alert.alert("Successfully Added!");
+                    // SweetAlert.showAlertWithOptions({
+                    //     title: 'Successfully Added!',
+                    //     subTitle: '',
+                    //     confirmButtonTitle: 'OK',
+                    //     confirmButtonColor: '#000',
+                    //     otherButtonTitle: 'Cancel',
+                    //     otherButtonColor: '#dedede',
+                    //     style: 'success',
+                    //     cancellable: true
+                    // },
+                    //     //callback => console.log('callback')
+                    // );
+
+                    setSelecteJoborVehicle('');
+                    setExpenseTypeID('');
+                    setrequestAmount('');
+                    setRemarks('');
+                    setAccountNo('');
+                    setCostCenter('');
+                    setResource('');
+                    setSelectExpenseType('');
+
+
+                    slideOutModal();
+                    getAllJobs(IOUSettlementNo);
+
+
+                } else {
+
+                    Alert.alert("Failed!");
+                    // SweetAlert.showAlertWithOptions({
+                    //     title: 'Failed!',
+                    //     subTitle: '',
+                    //     confirmButtonTitle: 'OK',
+                    //     confirmButtonColor: '#000',
+                    //     otherButtonTitle: 'Cancel',
+                    //     otherButtonColor: '#dedede',
+                    //     style: 'success',
+                    //     cancellable: true
+                    // },
+                    //     //callback => console.log('callback')
+                    // );
+                    setSelecteJoborVehicle('');
+                    setExpenseTypeID('');
+                    setrequestAmount('');
+                    setRemarks('');
+                    setAccountNo('');
+                    setCostCenter('');
+                    setResource('');
+                    setSelectExpenseType('');
+
+                    slideOutModal();
+                }
+
+            });
+
+
+        } else {
+
+            //update job details
+
+
+            // AccNo:any,Costcenter:any,Resource:any,Amount:any,Remark:any,ID:any
+
+            console.log(" suto id ===== ", Id);
+
+
+            UpdateSettJobbyId(accountNo, costCeneter, resource, requestAmount, remarks, Id, (result: any) => {
+
+                console.log("result update =======  ", result);
+
+
+                if (result == "success") {
+
+                    Alert.alert("Successfully Updated!");
+                    slideOutModal();
+                    getAllJobs(IOUSettlementNo);
+
+
+                } else {
+
+                    Alert.alert("Failed Update!")
+
+                }
+
+            });
 
         }
 
-        const JOBData: any = [];
-        JOBData.push(saveObject);
 
-        saveIOUSETJOB(JOBData, (response: any) => {
-
-            // console.log(" save job .. ", response);
-
-            amount += parseFloat(requestAmount);
-
-            if (response == 3) {
-
-                jobArray.push(saveObject);
-                setJobList(jobArray);
-
-                // console.log(" JOB List [][][][ ", joblist);
-
-                Alert.alert("Successfully Added!");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Successfully Added!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
-
-                setSelecteJoborVehicle('');
-                setExpenseTypeID('');
-                setrequestAmount('');
-                setRemarks('');
-                setAccountNo('');
-                setCostCenter('');
-                setResource('');
-                setSelectExpenseType('');
-
-
-                slideOutModal();
-
-            } else {
-
-                Alert.alert("Failed!");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Failed!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
-                setSelecteJoborVehicle('');
-                setExpenseTypeID('');
-                setrequestAmount('');
-                setRemarks('');
-                setAccountNo('');
-                setCostCenter('');
-                setResource('');
-                setSelectExpenseType('');
-
-                slideOutModal();
-            }
-
-        });
 
     }
 
@@ -1087,10 +1243,12 @@ const NewIOUSettlement = () => {
 
     const getIOUJobList = (IOUID: any) => {
 
+        console.log(IOUID);
+
         getIOUJobsListByID(IOUID, (response: any) => {
 
-            setiouJobList(response);
-            // console.log(response);
+            // setiouJobList(response);
+            console.log(response);
             //console.log(ioujoblist.Amount);
             for (let i = 0; i < response.length; i++) {
 
@@ -1099,9 +1257,11 @@ const NewIOUSettlement = () => {
                 let randomNum = Math.floor(Math.random() * 1000) + 1;
                 let ID = parseInt(response[0]._Id) + 1;
 
+                let jobId = new Date()
+
                 const saveObject =
                 {
-                    Job_ID: ("JOB_" + randomNum + "_" + ID),
+                    Job_ID: jobId,
                     IOUTypeNo: response[i].IOUTypeNo,
                     JobOwner_ID: response[i].JobOwner_ID,
                     PCRCode: IOUSettlementNo,
@@ -1112,17 +1272,23 @@ const NewIOUSettlement = () => {
                     Amount: response[i].Amount,
                     Remark: response[i].Remark,
                     CreateAt: currentDate,
-                    RequestedBy: 2,
-                    IsSync: 1
+                    RequestedBy: loggedUserID,
+                    IsSync: 0,
+                    RequestedAmount: response[i].Amount,
+                    IstoEdit: 1,
+                    IOU_TYPEID: response[i].IOU_Type
 
                 }
+
+                console.log(" save iou job to set job ", saveObject);
+
 
                 const JOBData: any = [];
                 JOBData.push(saveObject);
 
                 saveIOUSETJOB(JOBData, (response: any) => {
 
-                    // console.log(" save job .. ", response);
+                    console.log(" save job .. ", response);
 
                     amount += parseFloat(newamount);
 
@@ -1130,6 +1296,8 @@ const NewIOUSettlement = () => {
 
                         jobArray.push(saveObject);
                         // setJobList(jobArray);
+
+                        getAllJobs(IOUSettlementNo);
 
                         // console.log(" JOB List [][][][ ", joblist);
 
@@ -1153,63 +1321,78 @@ const NewIOUSettlement = () => {
 
         getIOUSETJobsListByID(IOUID, (response: any) => {
 
+            console.log(IOUID, "============== ", response);
+
             setiouJobList(response);
-            // console.log(response);
+
             //console.log(ioujoblist.Amount);
-            for (let i = 0; i < response.length; i++) {
+            // for (let i = 0; i < response.length; i++) {
 
-                // console.log(response[i].Amount);
-                let newamount = response[i].Amount;
-                let randomNum = Math.floor(Math.random() * 1000) + 1;
-                let ID = parseInt(response[0]._Id) + 1;
+            //     // console.log(response[i].Amount);
+            //     let newamount = response[i].Amount;
+            //     let randomNum = Math.floor(Math.random() * 1000) + 1;
+            //     let ID = parseInt(response[0]._Id) + 1;
 
-                const saveObject =
-                {
-                    Job_ID: ("JOB_" + randomNum + "_" + ID),
-                    IOUTypeNo: response[i].IOUTypeNo,
-                    JobOwner_ID: response[i].JobOwner_ID,
-                    PCRCode: IOUSettlementNo,
-                    AccNo: response[i].AccNo,
-                    CostCenter: response[i].CostCenter,
-                    Resource: response[i].Resource,
-                    ExpenseType: response[i].ExpenseType,
-                    Amount: response[i].Amount,
-                    Remark: response[i].Remark,
-                    CreateAt: currentDate,
-                    RequestedBy: 2,
-                    IsSync: 1
+            //     const saveObject =
+            //     {
+            //         Job_ID: 0,
+            //         IOUTypeNo: response[i].IOUTypeNo,
+            //         JobOwner_ID: response[i].JobOwner_ID,
+            //         PCRCode: IOUSettlementNo,
+            //         AccNo: response[i].AccNo,
+            //         CostCenter: response[i].CostCenter,
+            //         Resource: response[i].Resource,
+            //         ExpenseType: response[i].ExpenseType,
+            //         Amount: response[i].Amount,
+            //         Remark: response[i].Remark,
+            //         CreateAt: currentDate,
+            //         RequestedBy: 2,
+            //         IsSync: 1
 
-                }
+            //     }
 
-                const JOBData: any = [];
-                JOBData.push(saveObject);
+            //     const JOBData: any = [];
+            //     JOBData.push(saveObject);
 
-                saveIOUSETJOB(JOBData, (response: any) => {
+            //     saveIOUSETJOB(JOBData, (response: any) => {
 
-                    // console.log(" save job .. ", response);
+            //         // console.log(" save job .. ", response);
 
-                    amount += parseFloat(newamount);
+            //         amount += parseFloat(newamount);
 
-                    if (response == 3) {
+            //         if (response == 3) {
 
-                        jobArray.push(saveObject);
-                        setJobList(jobArray);
+            //             jobArray.push(saveObject);
+            //             setJobList(jobArray);
 
-                        // console.log(" JOB List [][][][ ", joblist);
+            //             // console.log(" JOB List [][][][ ", joblist);
 
-                        //Alert.alert("Successfully Added!");
-
-
-                    }
+            //             //Alert.alert("Successfully Added!");
 
 
-                });
+            //         }
 
 
-            }
+            //     });
+
+
+            // }
 
         });
 
+
+    }
+
+    const getAllJobs = (IOUSETID: any) => {
+
+        getIOUSETJOBsBYSettlementID(IOUSETID, (result: any) => {
+
+            setiouJobList(result);
+
+            console.log(" settlemnt jobs ==== ", result);
+
+
+        });
 
     }
 
@@ -1364,13 +1547,20 @@ const NewIOUSettlement = () => {
             // const result = await new Promise((resolve, reject) => {
             getIOUdatainfo(id, (result: any) => {
                 //resolve(result);
-                // console.log('await query--------', result[0]);
+                console.log('await query--------', result[0]);
                 IOUDetails.push(result[0]);
                 setCopyJobOwner(result[0].JobOwner_ID);
                 setCopyIOUType(result[0].IOU_Type);
                 setCopyEmployee(result[0].EmpId);
                 // console.log('JobOwnerID---', copyJobOwner, ' --IOUType----', copyIOUType, ' --Employee--', copyEmployee);
                 checkIOUdata(IOUDetails);
+
+                getEmployeeByID(result[0].EmpId, (rest: any) => {
+
+                    console.log(result[0].EmpId, "employee details === [][][][", rest);
+
+
+                });
             });
             // });
 
@@ -1412,19 +1602,63 @@ const NewIOUSettlement = () => {
     }
 
     const checkIOUdata = async (Data: any) => {
-        getAllJobOwners((result: any) => {
-            //console.log(" Job owner ...........  ", result);
 
-            setJobOwnerlist(result);
-            const data = result?.filter((a: any) => a.JobOwner_ID == Data[0].JobOwner_ID)[0];
-            setSelectJobOwner(data.Name);
-            setJobOwner(data.JobOwner_ID);
-            // console.log("-----------------", data.Name);
-            // console.log("-----------------", Data[0].JobOwner_ID);
+        console.log("IOU details ---- ", Data);
 
-            // console.log(selectJobOwner);
-            getJobNo(data.Name);
-        });
+        if (Data[0].IOU_Type == 1) {
+            // Job No
+
+            getAllJobOwners((result: any) => {
+                //console.log(" Job owner ...........  ", result);
+
+                setJobOwnerlist(result);
+                const data = result?.filter((a: any) => a.ID == Data[0].JobOwner_ID)[0];
+                setSelectJobOwner(data.Name);
+                setJobOwner(data.ID);
+                // console.log("-----------------", data.Name);
+                // console.log("-----------------", Data[0].JobOwner_ID);
+
+                // console.log(selectJobOwner);
+                getJobNo(data.Name);
+            });
+
+
+        } else if (Data[0].IOU_Type == 2) {
+            // vehicle no
+
+            getLoginUserID().then(result1 => {
+
+                getAllTransportOfficers((result: any) => {
+
+                    setJobOwnerlist(result);
+                    console.log(" transport officer ----  ", result);
+
+                    const data = result?.filter((a: any) => a.ID == Data[0].JobOwner_ID)[0];
+                    setSelectJobOwner(data.Name);
+                    setJobOwner(data.ID);
+
+                });
+
+            });
+
+
+        } else {
+            // other
+
+            getLoggedUserHOD((res: any) => {
+
+                // console.log(" hod ===" , res);
+
+                setJobOwnerlist(res);
+                setSelectJobOwner(res[0].Name);
+                setJobOwner(res[0].ID);
+
+            });
+
+
+        }
+
+
 
         getIOUTypes((result: any) => {
             // console.log("IOU types ......... ", result);
@@ -1436,16 +1670,26 @@ const NewIOUSettlement = () => {
         });
 
         // // // Employee
-        getAllUsers((result: any) => {
-            //console.log("Employee ......... ", result);
+        // getAllUsers((result: any) => {
+        //     //console.log("Employee ......... ", result);
 
-            setEmployeeList(result);
-            const empdata = result?.filter((a: any) => a.USER_ID == Data[0].EmpId)[0];
-            setSelectEmployee(empdata.UserName);
-            setEmpID(empdata.USER_ID);
+        //     setEmployeeList(result);
+        //     const empdata = result?.filter((a: any) => a.USER_ID == Data[0].EmpId)[0];
+        //     setSelectEmployee(empdata.UserName);
+        //     setEmpID(empdata.USER_ID);
+        // });
+
+        getAllEmployee((eresult: any) => {
+
+            setEmployeeList(eresult);
+            const empdata = eresult?.filter((a: any) => a.Emp_ID == Data[0].EmpId)[0];
+            setSelectEmployee(empdata.EmpName);
+            setEmpID(empdata.Emp_ID);
+
         });
 
-        getCostCenter(JobOwner, IOUTypeID);
+        // getCostCenter(JobOwner, IOUTypeID);
+
     }
 
     //-----------------------------------------------------
@@ -1470,14 +1714,14 @@ const NewIOUSettlement = () => {
 
             getLoginUserID().then(result => {
                 setUserID(result);
+                loggedUserID = result;
             })
 
             CopyRequest().then(resp => {
                 // console.log("Is Copy: ", resp);
                 setIsReOpen(resp);
-                if (resp == 'False') {
+                if (resp == 'true') {
 
-                } else {
                     getRejectedId().then(result => {
                         // console.log("ReOpen Request Id: ", result);
                         setUId(result);
@@ -1486,16 +1730,77 @@ const NewIOUSettlement = () => {
 
 
                     })
+
                 }
             })
-            getExpenseTypes();
-            // getJobNo();
-            getVehicleNo();
-            getAllDepartment();
+            getAllIOUTypes();
+            getSpinnerEmployee();
 
-        }, [])
+        }, [navigation])
     );
 
+    const getSpinnerEmployee = () => {
+
+        console.log(" get employeee ");
+
+
+        getAllEmployee((result: any) => {
+
+            setEmployeeList(result);
+
+            getLoginUserRoll().then(async res => {
+
+                if (res === '1') {
+                    //requester
+
+                    console.log(" requester -----------   ");
+
+                    get_ASYNC_IS_Auth_Requester().then(async resp => {
+
+                        if (resp === '1') {
+                            //auth requester
+
+                            console.log("auth requester -----------   ");
+                            setIsEditableEmp(false);
+
+                        } else {
+                            //requester
+
+                            console.log(" only requester -----------   ");
+
+                            setIsEditableEmp(true);
+
+                            get_ASYNC_EPFNO().then(async resu => {
+
+                                const empdata = result?.filter((a: any) => a.EPFNo == parseInt(resu + ""))[0];
+                                setSelectEmployee(empdata.Name);
+                                setEmpID(empdata.ID);
+
+                            });
+
+
+
+                        }
+
+                    });
+
+                } else {
+                    //
+                    console.log("not a requester -----------   ");
+                    setIsEditableEmp(false);
+                }
+
+
+            });
+
+
+
+
+
+
+        });
+
+    }
 
     //--------Get IOU Types Details Data----------------------
 
@@ -1520,7 +1825,7 @@ const NewIOUSettlement = () => {
 
     const UploadIOU = async (detailsData: any) => {
 
-        const URL = BASE_URL + 'Mob_PostIOUSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=TPL_JOBA8_170723'
 
         var obj = [];
         var Fileobj = [];
@@ -1677,6 +1982,37 @@ const NewIOUSettlement = () => {
 
     }
 
+    const getJobNoByJobOwner = (ID: any) => {
+
+        getJobNOByOwners(ID, (res: any) => {
+
+            setJob_NoList(res);
+
+        });
+
+    }
+
+    const getGL_AccForJobNo = () => {
+        getAccNoForJobNo((res: any) => {
+            setAccountList(res);
+        });
+    }
+
+    const getGL_AccByExpenseType = (type: any) => {
+        getAccNoByExpenseType(type, (res: any) => {
+            setAccountList(res);
+            setAccountNo(res[0].GL_ACCOUNT);
+        });
+    }
+
+    const getEmpDetails = (ID: any) => {
+
+        getEmployeeByID(ID, (res: any) => {
+            setSelectEmployee(res[0].EmpName);
+            setEmpID(ID);
+        });
+    }
+
     return (
 
         <SafeAreaView style={ComStyles.CONTAINER}>
@@ -1793,12 +2129,19 @@ const NewIOUSettlement = () => {
                                                                         setSelecteJoborVehicle(no[0].trim());
 
                                                                         setselectJOBVehicleNo(item.Job_No);
+                                                                        getGL_AccForJobNo();
+                                                                        setIsDisableAcc(false);
 
 
                                                                     } else {
 
                                                                         setSelecteJoborVehicle(item.Vehicle_No);
                                                                         setselectJOBVehicleNo(item.Vehicle_No);
+                                                                        setIsDisableAcc(true);
+                                                                        get_ASYNC_COST_CENTER().then(async res => {
+                                                                            setCostCenter(res);
+                                                                        });
+                                                                        setResource(item.Vehicle_No);
 
                                                                     }
 
@@ -1859,6 +2202,10 @@ const NewIOUSettlement = () => {
                                                         setSelectExpenseType(item.Description);
                                                         setExpenseTypeID(item.ExpType_ID);
 
+                                                        if (IOUTypeID != "1") {
+                                                            getGL_AccByExpenseType(item.Description);
+                                                        }
+
 
                                                         setIsFocus(false);
                                                     }}
@@ -1912,13 +2259,42 @@ const NewIOUSettlement = () => {
                                                         Account No
                                                     </Text>
                                                 </View>
-                                                <InputText
-                                                    placeholderColor={ComStyles.COLORS.HEADER_BLACK}
-                                                    placeholder="Account No"
-                                                    stateValue={accountNo}
-                                                    editable={true}
-                                                    setState={(val: any) => setAccountNo(val)}
-                                                    style={ComStyles.IOUInput}
+                                                <Dropdown
+                                                    style={[
+                                                        styles.dropdown,
+                                                        isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
+                                                    ]}
+                                                    itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
+                                                    placeholderStyle={Style.placeholderStyle}
+                                                    selectedTextStyle={Style.selectedTextStyle}
+                                                    inputSearchStyle={Style.inputSearchStyle}
+                                                    iconStyle={styles.iconStyle}
+                                                    data={AccountList}
+                                                    search
+                                                    disable={isDisableAcc}
+                                                    maxHeight={300}
+                                                    labelField="GL_ACCOUNT"
+                                                    valueField="GL_ACCOUNT"
+                                                    placeholder={!isFocus ? 'Account No* ' : '...'}
+                                                    searchPlaceholder="Search Account No"
+                                                    value={accountNo}
+                                                    onFocus={() => setIsFocus(true)}
+                                                    onBlur={() => setIsFocus(false)}
+                                                    onChange={item => {
+
+                                                        setAccountNo(item.GL_ACCOUNT);
+
+
+                                                        setIsFocus(false);
+                                                    }}
+                                                    renderLeftIcon={() => (
+                                                        <AntDesign
+                                                            style={styles.icon}
+                                                            color={isFocus ? 'blue' : 'black'}
+                                                            name="Safety"
+                                                            size={15}
+                                                        />
+                                                    )}
                                                 />
 
                                                 <View style={{ flexDirection: 'row', }}>
@@ -1926,44 +2302,14 @@ const NewIOUSettlement = () => {
                                                         Cost Center
                                                     </Text>
                                                 </View>
-                                                <Dropdown
-                                                    style={[
-                                                        Style.dropdown,
-                                                        isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                                                    ]}
-                                                    itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                                                    placeholderStyle={Style.placeholderStyle}
-                                                    selectedTextStyle={Style.selectedTextStyle}
-                                                    inputSearchStyle={Style.inputSearchStyle}
-                                                    iconStyle={Style.iconStyle}
-                                                    data={IOUTypeID == "1" ? jobOwnerList : DepartmentList}
-                                                    search
-                                                    maxHeight={300}
-                                                    labelField={IOUTypeID == "1" ? "Name" : "SALESUNITNAME"}
-                                                    valueField={IOUTypeID == "1" ? "Name" : "SALESUNITNAME"}
-                                                    placeholder={!isFocus ? 'Cost Center ' : '...'}
-                                                    searchPlaceholder="Search cost Center"
-                                                    value={costCeneter}
-                                                    onFocus={() => setIsFocus(true)}
-                                                    onBlur={() => setIsFocus(false)}
-                                                    onChange={item => {
 
-                                                        setCostCenter(IOUTypeID == "1" ? item.Name : item.SALESUNITNAME);
-                                                        setCostCenterID(IOUTypeID == "1" ? item.JobOwner_ID : item.SALESUNITCODE);
-
-                                                        setError({ field: '', message: '' });
-                                                        setIsFocus(false);
-                                                        //getJobNo(selectJobOwner);
-
-                                                    }}
-                                                    renderLeftIcon={() => (
-                                                        <AntDesign
-                                                            style={Style.icon}
-                                                            color={isFocus ? 'blue' : 'black'}
-                                                            name="Safety"
-                                                            size={15}
-                                                        />
-                                                    )}
+                                                <InputText
+                                                    placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                                                    placeholder="Cost Center"
+                                                    stateValue={costCeneter}
+                                                    setState={(val: any) => setCostCenter(val)}
+                                                    editable={false}
+                                                    style={ComStyles.IOUInput}
                                                 />
 
                                                 <View style={{ flexDirection: 'row', }}>
@@ -1983,6 +2329,7 @@ const NewIOUSettlement = () => {
                                                     iconStyle={styles.iconStyle}
                                                     data={Vehicle_NoList}
                                                     search
+                                                    disable={isDisableRes}
                                                     maxHeight={300}
                                                     labelField={"Vehicle_No"}
                                                     valueField={"Vehicle_No"}
@@ -2012,7 +2359,7 @@ const NewIOUSettlement = () => {
                                                 <View style={{ flexDirection: 'row' }}>
 
                                                     <ActionButton
-                                                        title="Add"
+                                                        title={saveTitle}
                                                         styletouchable={{ width: '49%' }}
                                                         onPress={() => add_one(1)}
                                                     />
@@ -2069,12 +2416,18 @@ const NewIOUSettlement = () => {
 
                 <ViewField
                     title="Request Date"
-                    Value={currentDate}
+                    Value={currentDate1}
                 />
 
                 <View style={ComStyles.separateLine} />
 
                 <View>
+
+                    <View style={{ flexDirection: 'row', }}>
+                        <Text style={styles.bodyTextLeft}>
+                            IOU *
+                        </Text>
+                    </View>
 
                     <Dropdown
                         style={[
@@ -2098,21 +2451,48 @@ const NewIOUSettlement = () => {
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
 
-                            setIOUID(item.IOU_ID);
-                            setSelectIOU(item.IOU_ID)
-                            setJobOwner(item.JobOwner_ID);
-                            setIOUTypeID(item.IOUType_ID);
-                            setEmpID(item.USER_ID);
+                            setIOUTypeID(item.IOU_Type);
 
+                            getEmpDetails(item.EmpId);
+
+                            if (item.IOU_Type == 1) {
+
+                                // console.log(" job");
+
+
+                                setOwnerType("Job Owner");
+                                setIsEditable(false);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(item.JobOwner_ID, 1);
+                                setSelectIOUType("Job No");
+
+
+                            } else if (item.IOU_Type == 2) {
+
+                                // console.log(" vehicle");
+
+                                setOwnerType("Transport Officer");
+                                setIsEditable(false);
+                                setIsDisableRes(true);
+                                getJJobOwnerTransportHOD(item.JobOwner_ID, 2);
+                                getVehicleNo();
+                                setSelectIOUType("Vehicle No");
+
+
+                            } else {
+
+                                // console.log(" other");
+                                setOwnerType("HOD");
+                                setIsEditable(true);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(item.HOD, 3);
+                                setSelectIOUType("Other");
+
+                            }
+
+
+                            setError({ field: '', message: '' });
                             setIsFocus(false);
-                            getIOUJobList(item.IOU_ID);
-                            getIOUData(item.IOU_ID);
-                            // getIOUJobsListByID(item.IOUID, (response: any) => {
-
-                            //     setiouJobList(response);
-                            //     console.log(response);
-
-                            // });
                         }}
                         renderLeftIcon={() => (
                             <AntDesign
@@ -2127,6 +2507,21 @@ const NewIOUSettlement = () => {
                         <Text style={Style.error}>{error.message}</Text>
                     )}
 
+                    <View style={{ flexDirection: 'row', }}>
+                        <Text style={styles.bodyTextLeft}>
+                            IOU Type
+                        </Text>
+                    </View>
+
+                    <InputText
+                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                        placeholder="IOU Type"
+                        stateValue={selectIOUType}
+                        setState={(val: any) => setSelectIOUType(val)}
+                        editable={false}
+                        style={ComStyles.IOUInput}
+                    />
+                    {/* 
                     <Dropdown
                         style={[
                             Style.dropdown,
@@ -2139,10 +2534,11 @@ const NewIOUSettlement = () => {
                         iconStyle={Style.iconStyle}
                         data={IOUTypeList}
                         search
+                        disable={true}
                         maxHeight={300}
                         labelField="Description"
                         valueField="Description"
-                        placeholder={!isFocus ? 'Select IOU Type' : '...'}
+                        placeholder={!isFocus ? 'IOU Type' : '...'}
                         searchPlaceholder="Search Type"
                         value={selectIOUType}
                         onFocus={() => setIsFocus(true)}
@@ -2163,12 +2559,27 @@ const NewIOUSettlement = () => {
                                 size={15}
                             />
                         )}
-                    />
+                    /> */}
                     {error.field === 'IOUTypeID' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
 
-                    <Dropdown
+                    <View style={{ flexDirection: 'row', }}>
+                        <Text style={styles.bodyTextLeft}>
+                            {ownerType}
+                        </Text>
+                    </View>
+
+                    <InputText
+                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                        placeholder={ownerType}
+                        stateValue={selectJobOwner}
+                        setState={(val: any) => setSelectJobOwner(val)}
+                        editable={false}
+                        style={ComStyles.IOUInput}
+                    />
+
+                    {/* <Dropdown
                         style={[
                             Style.dropdown,
                             isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
@@ -2181,6 +2592,7 @@ const NewIOUSettlement = () => {
                         data={jobOwnerList}
                         search
                         maxHeight={300}
+                        disable={true}
                         labelField="Name"
                         valueField="Name"
                         placeholder={!isFocus ? 'Job Owner' : '...'}
@@ -2206,12 +2618,27 @@ const NewIOUSettlement = () => {
                                 size={15}
                             />
                         )}
-                    />
+                    /> */}
                     {error.field === 'JobOwner' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
 
-                    <Dropdown
+                    <View style={{ flexDirection: 'row', }}>
+                        <Text style={styles.bodyTextLeft}>
+                            Employee
+                        </Text>
+                    </View>
+
+                    <InputText
+                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                        placeholder="Employee"
+                        stateValue={selectEmployee}
+                        setState={(val: any) => setSelectEmployee(val)}
+                        editable={false}
+                        style={ComStyles.IOUInput}
+                    />
+
+                    {/* <Dropdown
                         style={[
                             Style.dropdown,
                             isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
@@ -2224,9 +2651,10 @@ const NewIOUSettlement = () => {
                         data={EmployeeList}
                         search
                         maxHeight={300}
+                        disable={true}
                         labelField="UserName"
                         valueField="UserName"
-                        placeholder={!isFocus ? 'Select Employee ' : '...'}
+                        placeholder={!isFocus ? 'Employee ' : '...'}
                         searchPlaceholder="Search Employee"
                         value={selectEmployee}
                         onFocus={() => setIsFocus(true)}
@@ -2248,7 +2676,7 @@ const NewIOUSettlement = () => {
                                 size={15}
                             />
                         )}
-                    />
+                    /> */}
                     {error.field === 'EmpName' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
@@ -2271,28 +2699,26 @@ const NewIOUSettlement = () => {
                             <FlatList
                                 //nestedScrollEnabled={true}
                                 data={ioujoblist}
-
+                                style={{ width: '100%' }}
                                 //horizontal={false}
                                 renderItem={({ item }) => {
                                     return (
-                                        <View>
+                                        <View style={{ width: width - 30, padding: 5 }}>
 
                                             <NewJobsView
                                                 IOU_Type={IOUTypeID}
-                                                amount={item.Amount}
+                                                amount={item.Requested_Amount}
                                                 IOUTypeNo={item.IOUTypeNo}
                                                 ExpenseType={item.ExpenseType == 1 ? "Meals" : (item.ExpenseType == 2 ? "Batta" : (item.ExpenseType == 3 ? "Labour" : (item.ExpenseType == 4 ? "Project Materials" : (item.ExpenseType == 5 ? "Travelling" : (item.ExpenseType == 6 ? "Other" : "")))))}
                                                 jobremarks={item.Remark}
                                                 accNo={item.AccNo}
                                                 costCenter={item.CostCenter}
                                                 resource={item.Resource}
-                                                isEdit={true}
-                                                onPressIcon={() => editJobs(item.IOUTypeNo)}
+                                                isEdit={item.IstoEdit == "1" ? true : false}
+                                                onPressIcon={() => editJobs(item._Id)}
+                                                settlementAmount={item.Amount}
+                                                isSettlementAmount={true}
                                             />
-
-
-
-
 
 
                                         </View>
@@ -2300,7 +2726,7 @@ const NewIOUSettlement = () => {
                                 }
 
                                 }
-                                keyExtractor={item => `${item.Job_ID}`}
+                                keyExtractor={item => `${item._Id}`}
                             />
 
 
@@ -2324,7 +2750,7 @@ const NewIOUSettlement = () => {
                     title="Add Details"
                     onPress={() => addjob()} />
                 <View style={ComStyles.separateLine} />
-
+                {/* 
                 <View>
 
                     <ScrollView horizontal={true}>
@@ -2371,10 +2797,10 @@ const NewIOUSettlement = () => {
                     </ScrollView>
 
 
-                </View>
+                </View> */}
 
 
-                <View style={ComStyles.separateLine} />
+                {/* <View style={ComStyles.separateLine} /> */}
 
                 <TouchableOpacity onPress={() => attachement()}>
 
@@ -2406,10 +2832,14 @@ const NewIOUSettlement = () => {
                             contentContainerStyle={{ marginTop: 10 }}
                         />
                     ) : (
-                        <Image
-                            source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                            style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                        />
+                        // <Image
+                        //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
+                        //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
+                        // />
+                        <>
+                            <Text style={{ color: ComStyles.COLORS.DETAIL_ASH, fontSize: 13, textAlign: "center", alignItems: "center" }}>No Added Attachments</Text>
+
+                        </>
                     )
                     }
 
@@ -2422,10 +2852,11 @@ const NewIOUSettlement = () => {
                             contentContainerStyle={{ marginTop: 10 }}
                         />
                     ) : (
-                        <Image
-                            source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                            style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                        />
+                        // <Image
+                        //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
+                        //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
+                        // />
+                        <></>
                     )}
 
                 </View>

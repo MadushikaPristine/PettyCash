@@ -14,9 +14,9 @@ export const saveIOUJOB = (data: any, callBack: any) => {
                     values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].Job_ID,
+                        data[i].PCRID,
                         data[i].IOUTypeNo,
-                        data[i].JobOwner_ID,
+                        data[i].JobOwner,
                         data[i].PCRCode,
                         data[i].AccNo,
                         data[i].CostCenter,
@@ -26,7 +26,7 @@ export const saveIOUJOB = (data: any, callBack: any) => {
                         data[i].Remark,
                         data[i].CreateAt,
                         data[i].RequestedBy,
-                        0,
+                        1,
 
                     ],
                 },

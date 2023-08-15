@@ -10,7 +10,7 @@ type ParamTypes = {
     first_name?: string;
     last_name?: string;
     user_id?: any;
-    amount?: Float;
+    amount?: any;
     currency_type?: string;
     status?: string;
     approved_status?: string;
@@ -30,57 +30,131 @@ type ParamTypes = {
     ap_status?: any;
     jobremarks?: any;
     isEdit?: boolean;
+    isSettlementAmount?: boolean;
     onPressIcon?: Function;
     IOU_Type?: any;
     accNo?: any;
     costCenter?: any;
     resource?: any;
+    settlementAmount?: any;
 
 }
 
-const NewJobsView = ({ accNo, costCenter, resource, onPressIcon, isEdit,IOU_Type, jobremarks, first_name, last_name, user_id, status, date, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, IOUTypeNo, ExpenseType, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
+const NewJobsView = ({ settlementAmount, isSettlementAmount, accNo, costCenter, resource, onPressIcon, isEdit, IOU_Type, jobremarks, first_name, last_name, user_id, status, date, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, IOUTypeNo, ExpenseType, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
     return (
-        <SafeAreaView>
+        <View style={styles.maincontainer}>
 
+            <View style={{ backgroundColor: 'white', flex: 4, justifyContent: "center", width: '100%' }}>
 
+                <View style={{ flexDirection: 'row', flex: 4 }}>
 
-            <View style={styles.list}>
-                <View style={{ flex: 1, marginLeft: 10, marginBottom: 10 }}>
-                    <Text style={styles.textHeader}>{IOU_Type==1 ? "Job no" : (IOU_Type==2 ? "Vehicle no" : "")}</Text>
-                    <Text style={styles.textHeader}>Expense type</Text>
-                    <Text style={styles.textHeader}>Request Amount</Text>
-                    <Text style={styles.textHeader}>Remarks</Text>
-                    <Text style={styles.textHeader}>Account No</Text>
-                    <Text style={styles.textHeader}>Cost Center</Text>
-                    <Text style={styles.textHeader}>Resource</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: 100, marginBottom: 10 }}>
+                    <Text style={styles.textHeader}>{IOU_Type == 1 ? "Job no" : (IOU_Type == 2 ? "Vehicle no" : "")}</Text>
+                    <View style={{ flex: 1 }} />
                     <Text style={styles.text}>{IOUTypeNo}</Text>
+
+                </View>
+                {/* <View style={{ flex: 1, marginLeft: 10, marginBottom: 10 }}> */}
+
+                <View style={{ flexDirection: 'row' }}>
+
+                    <Text style={styles.textHeader}>Expense type</Text>
+                    <View style={{ flex: 1 }} />
                     <Text style={styles.text}>{ExpenseType}</Text>
-                    <Text style={styles.text}>{amount}{currency_type}</Text>
-                    <Text style={styles.text}>{jobremarks}</Text>
-                    <Text style={styles.text}>{accNo}</Text>
-                    <Text style={styles.text}>{costCenter}</Text>
-                    <Text style={styles.text}>{resource}</Text>
+
                 </View>
 
+
+                <View style={{ flexDirection: 'row' }}>
+
+                    <Text style={styles.textHeader}>Request Amount</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={styles.text}>{amount = null || '' ? "0.00 LKR" : amount.toLocaleString("en-LK", {
+                        style: "currency",
+                        currency: "LKR",
+                        minimumFractionDigits: 2,
+                    })}</Text>
+
+                </View>
+
+
+                <View style={{ flexDirection: 'row' }}>
+
+                    <Text style={styles.textHeader}>Remarks</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={styles.text}>{jobremarks}</Text>
+
+                </View>
+
+                <View style={{ flexDirection: 'row' }}>
+
+                    <Text style={styles.textHeader}>Account No</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={styles.text}>{accNo}</Text>
+
+                </View>
+
+                <View style={{ flexDirection: 'row' }}>
+
+                    <Text style={styles.textHeader}>Cost Center</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={styles.text}>{costCenter}</Text>
+
+                </View>
+
+                <View style={{ flexDirection: 'row' }}>
+
+                    <Text style={styles.textHeader}>Resource</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={[styles.text,]}>{resource}</Text>
+
+                </View>
+
+                {
+                    isSettlementAmount ?
+
+                        <View style={{ flexDirection: 'row' }}>
+
+                            <Text style={[styles.textHeader,{color:ComponentsStyles.COLORS.RED_COLOR}]}>Settlement Amount</Text>
+                            <View style={{ flex: 1 }} />
+                            <Text style={[styles.text,{color:ComponentsStyles.COLORS.RED_COLOR}]}>{settlementAmount = null || '' ? "0.00 LKR" : settlementAmount.toLocaleString("en-LK", {
+                                style: "currency",
+                                currency: "LKR",
+                                minimumFractionDigits: 2,
+                            })}</Text>
+
+                        </View>
+
+                        :
+
+                        <></>
+
+
+                }
+
+
+                {/* <View style={{ flex: 1, marginLeft: 100, marginBottom: 10 }}> */}
+
+                <View style={{ flexDirection: 'row', justifyContent: "flex-end" }}>
+
+                    {
+                        isEdit ?
+
+                            <TouchableOpacity style={styles.iconView} onPress={onPressIcon}>
+                                <IconMC name='playlist-edit' size={35} color={ComponentsStyles.COLORS.ICON_BLUE} iconStyle={styles.iconStyle} />
+                            </TouchableOpacity>
+
+                            :
+
+                            <></>
+                    }
+
+
+
+                </View>
 
             </View>
 
-            {
-                isEdit ?
-
-                    <TouchableOpacity style={styles.iconView} onPress={onPressIcon}>
-                        <IconMC name='playlist-edit' size={35} color={ComponentsStyles.COLORS.ICON_BLUE} iconStyle={styles.iconStyle} />
-                    </TouchableOpacity>
-
-                    :
-
-                    <></>
-            }
-
-
-        </SafeAreaView>
+        </View >
     )
 }
 
@@ -130,19 +204,35 @@ const styles = StyleSheet.create({
     text: {
         color: ComponentsStyles.COLORS.DETAIL_ASH,
         fontFamily: ComponentsStyles.FONT_FAMILY.MEDIUM,
-        fontSize: 12,
-        lineHeight: 20
+        fontSize: 13,
+        textAlign: "right",
+        marginRight: 5
     },
     textHeader: {
         color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH,
         fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
-        fontSize: 12,
-        lineHeight: 20
+        fontSize: 14,
+        flex: 1.5
     },
     iconView: {
         backgroundColor: 'white',
-        flex: 0.5,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        marginTop: 10
+    },
+    maincontainer: {
+        backgroundColor: 'white',
+        width: '100%',
+        shadowColor: "#000",
+        padding: 7,
+        flexDirection: 'row',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+
     },
 });

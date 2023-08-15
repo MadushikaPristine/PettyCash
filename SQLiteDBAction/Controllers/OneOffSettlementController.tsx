@@ -10,8 +10,8 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
             [
                 {
                     table: 'ONE_OFF_SETTLEMENT',
-                    columns: `ONEOFFSettlement_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `ONEOFFSettlement_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -26,6 +26,17 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
                         data[i].REMARK,
                         "",
                         "0",
+                        data[i].FirstActionBy,
+                        data[i].HOD,
+                        data[i].FirstActionBy,
+                        data[i].FirstActionAt,
+                        data[i].RIsLimit,
+                        data[i].AIsLimit,
+                        data[i].RIouLimit,
+                        data[i].AIouLimit,
+                        data[i].SecondActionBy,
+                        data[i].SecondActionAt
+
 
                     ],
                 },
@@ -134,7 +145,7 @@ export const getLastOneOffSettlement = (callBack: any) => {
 export const getApprovedIOUOFS = (callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, ONE_OFF_SETTLEMENT.Amount as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=2 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(ONE_OFF_SETTLEMENT.Amount , 0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=2 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
         [],
         (resp: any, err: any) => {
 
@@ -146,7 +157,7 @@ export const getApprovedIOUOFS = (callBack: any) => {
 export const getRejectIOUOFS = (callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, ONE_OFF_SETTLEMENT.Amount as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=3 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(ONE_OFF_SETTLEMENT.Amount , 0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=3 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
         [],
         (resp: any, err: any) => {
 
@@ -158,7 +169,7 @@ export const getRejectIOUOFS = (callBack: any) => {
 export const getCancelledIOUOFS = (callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, ONE_OFF_SETTLEMENT.Amount as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=4 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(ONE_OFF_SETTLEMENT.Amount , 0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=4 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
         [],
         (resp: any, err: any) => {
 

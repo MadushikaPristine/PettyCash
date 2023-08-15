@@ -26,11 +26,11 @@ import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
 import * as DB from '../SQLiteDBAction/DBService';
 import { getLoginUserID, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_LOGIN_ROUND } from "../Constant/AsynStorageFuntion";
 import Modal from "react-native-modal";
-import { BASE_URL, headers } from "../Constant/ApiConstants";
+import { BASE_URL, BASE_URL_LOOKUPS, COMMON_BASE_URL, headers } from "../Constant/ApiConstants";
 import axios from "axios";
 import { saveIOUType } from "../SQLiteDBAction/Controllers/IOUTypeController";
 import { saveExpenseType } from "../SQLiteDBAction/Controllers/ExpenseTypeController";
-import { saveUser } from "../SQLiteDBAction/Controllers/UserController";
+import { getAllJobOwners, saveUser } from "../SQLiteDBAction/Controllers/UserController";
 import { saveVehicleNo } from "../SQLiteDBAction/Controllers/VehicleNoController";
 import { saveJobOwners } from "../SQLiteDBAction/Controllers/JobOwnerController";
 import { saveJobNo } from "../SQLiteDBAction/Controllers/JobNoController";
@@ -42,9 +42,12 @@ import { saveDepartment } from "../SQLiteDBAction/Controllers/DepartmentControll
 import { Conection_Checking } from "../Constant/InternetConection_Checking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
+import { saveEmployee } from "../SQLiteDBAction/Controllers/EmployeeController";
+import { saveGLAccount } from "../SQLiteDBAction/Controllers/GLAccountController";
 
 let SyncArray1: any[] = [];
 let arrayindex = 0;
+let userID: any;
 
 const HomeScreen = () => {
 
@@ -71,8 +74,9 @@ const HomeScreen = () => {
     const [TotalIOUSETAmount, setTotalIOUSETAmount] = useState(0);
     const [TotalONEOFFAmount, setTotalONEOFFAmount] = useState(0);
     const [TotalPayableAmount, setTotalPayableAmount] = useState(0);
+    const [HeaderText, setHeaderText] = useState('');
 
-    const [userID, setUserID] = useState('');
+    // const [userID, setUserID] = useState('');
 
     //let TotalIOUAmount = 0.00;
     //let TotalIOUSETAmount = 0.00;
@@ -235,6 +239,29 @@ const HomeScreen = () => {
         }
     }
 
+    const checkCurrentTime = () => {
+        var today = new Date()
+        var curHr = today.getHours()
+
+        if (curHr < 12) {
+
+            setHeaderText('Good Morning !');
+            // console.log('Good Morning!');
+        } else if (curHr < 18) {
+            setHeaderText('Good Afternoon !');
+            // console.log('Good Afternoon!');
+        } else {
+            setHeaderText('Good Evening !');
+            // console.log('Good Evening!');
+        }
+    }
+
+    useEffect(() => {
+
+        checkCurrentTime();
+
+    }, [HeaderText]);
+
     useFocusEffect(
         React.useCallback(() => {
             const backHandler = BackHandler.addEventListener(
@@ -244,12 +271,16 @@ const HomeScreen = () => {
 
 
             getLoginUserID().then(res => {
-                setUserID(res);
 
+                userID = res;
+                // setUserID(res);
+
+                // console.log( ,"logged user id ==== " , res);
                 SetCloseBtnSync(false)
                 SyncArray1 = [];
                 setSyncArray([]);
                 OnLoadData();
+                checkCurrentTime();
             })
 
 
@@ -351,7 +382,10 @@ const HomeScreen = () => {
 
     const Download_IOU_Types = async () => {
 
-        const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=TPL_JOBA8_170723'
+
+        console.log(" iou types ===  ", URL);
+
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -467,7 +501,7 @@ const HomeScreen = () => {
 
     const Download_Expense_Types = async () => {
 
-        const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=TPL_JOBA8_170723&sapDbName=PSLTEST_LIVE_SL'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -585,7 +619,7 @@ const HomeScreen = () => {
     // //----------------------Download Max Amount -------------------------------------
 
     const Download_MaximumAmount = async () => {
-        const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=TPL_REPORT_TEST";
+        const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=TPL_JOBA8_170723";
 
         await axios.get(URL2, { headers }
         ).then(async response => {
@@ -634,7 +668,7 @@ const HomeScreen = () => {
 
     const Download_User_Rolls = async () => {
 
-        const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=TPL_JOBA8_170723'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -754,7 +788,7 @@ const HomeScreen = () => {
 
     const Download_Users = async () => {
 
-        const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=TPL_JOBA8_170723'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -871,7 +905,7 @@ const HomeScreen = () => {
 
     const Download_VehicleNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=TPL_REPORT_TEST&sapDbName=TPL_LIVE_SL&ResType=VEHICLE'
+        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=TPL_JOBA8_170723&sapDbName=PSLTEST_LIVE_SL&ResType=VEHICLE'
 
 
         await axios.get(URL, { headers })
@@ -990,7 +1024,150 @@ const HomeScreen = () => {
 
     const Download_Departments = async () => {
 
-        const URL = 'http://10.10.0.100:8000/TPL_JOB_A8_SAP_SITHIRA/api/lookups/getSalesUnit.xsjs?dbName=TPL_REPORT_TEST&sapDbName=TPL_LIVE_SL'
+        const URL = BASE_URL + '/Mob_GetAllDepartment.xsjs?dbName=TPL_JOBA8_170723'
+
+        console.log("DOWNLOAD DEPARTMENTS ==============  ", URL);
+
+
+        try {
+
+            await axios.get(URL, { headers })
+                .then(response => {
+
+                    if (response.status === 200) {
+
+                        if (response.data.length > 0) {
+
+                            saveDepartment(response.data, (resp: any) => {
+
+                                // console.log(" Vehicle No ======= ", resp);
+
+                                setOnRefresh(false);
+
+                                if (resp == 1) {
+
+                                    arrayindex++;
+
+                                    SyncArray1.push({
+                                        name: 'Departments Downloading...',
+                                        id: arrayindex,
+                                    });
+
+                                    setSyncArray(SyncArray1);
+                                    setOnRefresh(true);
+
+                                } else if (resp == 2) {
+
+                                    arrayindex++;
+
+                                    SyncArray1.push({
+                                        name: 'Departments Download Failed...',
+                                        id: arrayindex,
+                                    });
+
+                                    setSyncArray(SyncArray1);
+                                    setOnRefresh(true);
+                                    Download_Employee();
+
+
+                                } else if (resp == 3) {
+
+                                    arrayindex++;
+
+                                    SyncArray1.push({
+                                        name: 'Departments Download Successfully...',
+                                        id: arrayindex,
+                                    });
+
+                                    setSyncArray(SyncArray1);
+                                    setOnRefresh(true);
+
+                                    Download_Employee();
+                                }
+
+                            });
+
+                        } else {
+
+                            setOnRefresh(false);
+
+                            arrayindex++;
+                            SyncArray1.push({
+                                name: 'No available Departments for download...',
+                                id: arrayindex,
+                            });
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+
+                            Download_Employee();
+
+                        }
+
+                    } else {
+
+                        // console.log(" response code ======= ", response.status);
+
+                        setOnRefresh(false);
+
+                        arrayindex++;
+                        SyncArray1.push({
+                            name: 'Departments Download Failed...',
+                            id: arrayindex,
+                        });
+                        setSyncArray(SyncArray1);
+                        setOnRefresh(true);
+
+                        Download_Employee();
+                    }
+
+
+                })
+                .catch((error) => {
+
+                    // console.log(" Departments error .....   ", error);
+
+                    setOnRefresh(false);
+
+                    arrayindex++;
+                    SyncArray1.push({
+                        name: 'Departments Download Failed...',
+                        id: arrayindex,
+                    });
+                    setSyncArray(SyncArray1);
+                    setOnRefresh(true);
+
+                    Download_Employee();
+
+
+                });
+
+        } catch (error) {
+
+            console.log("error === ", error);
+
+
+            setOnRefresh(false);
+
+            arrayindex++;
+            SyncArray1.push({
+                name: 'Departments Download Failed...',
+                id: arrayindex,
+            });
+            setSyncArray(SyncArray1);
+            setOnRefresh(true);
+
+            Download_Employee();
+
+        }
+
+
+    }
+
+    // -------------------------- Download Employees -------------------------------------
+
+    const Download_Employee = async () => {
+
+        const URL = BASE_URL + '/Mob_GetAllEmployee.xsjs?dbName=TPL_JOBA8_170723';
 
 
         await axios.get(URL, { headers })
@@ -1000,7 +1177,7 @@ const HomeScreen = () => {
 
                     if (response.data.data.length > 0) {
 
-                        saveDepartment(response.data.data, (resp: any) => {
+                        saveEmployee(response.data.data, (resp: any) => {
 
                             // console.log(" Vehicle No ======= ", resp);
 
@@ -1011,7 +1188,7 @@ const HomeScreen = () => {
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'Departments Downloading...',
+                                    name: 'Employees Downloading...',
                                     id: arrayindex,
                                 });
 
@@ -1023,7 +1200,7 @@ const HomeScreen = () => {
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'Departments Download Failed...',
+                                    name: 'Employees Download Failed...',
                                     id: arrayindex,
                                 });
 
@@ -1036,7 +1213,7 @@ const HomeScreen = () => {
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'Departments Download Successfully...',
+                                    name: 'Employees Download Successfully...',
                                     id: arrayindex,
                                 });
 
@@ -1054,7 +1231,7 @@ const HomeScreen = () => {
 
                         arrayindex++;
                         SyncArray1.push({
-                            name: 'No available Departments for download...',
+                            name: 'No available Employees for download...',
                             id: arrayindex,
                         });
                         setSyncArray(SyncArray1);
@@ -1072,7 +1249,7 @@ const HomeScreen = () => {
 
                     arrayindex++;
                     SyncArray1.push({
-                        name: 'Departments Download Failed...',
+                        name: 'Employees Download Failed...',
                         id: arrayindex,
                     });
                     setSyncArray(SyncArray1);
@@ -1092,7 +1269,7 @@ const HomeScreen = () => {
 
                 arrayindex++;
                 SyncArray1.push({
-                    name: 'Departments Download Failed...',
+                    name: 'Employees Download Failed...',
                     id: arrayindex,
                 });
                 setSyncArray(SyncArray1);
@@ -1109,121 +1286,192 @@ const HomeScreen = () => {
 
     const Download_JobOwners = async () => {
 
-        const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=TPL_REPORT_TEST&sapDbName=TPL_LIVE_SL'
+        const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=TPL_JOBA8_170723&sapDbName=PSLTEST_LIVE_SL'
+
+        try {
+
+            getAllJobOwners((response: any) => {
+
+                if (response.length > 0) {
 
 
-        await axios.get(URL, { headers })
-            .then(response => {
-
-                if (response.status === 200) {
-
-                    if (response.data.length > 0) {
-
-                        saveJobOwners(response.data, (resp: any) => {
-
-                            setOnRefresh(false);
-
-                            if (resp == 1) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'Job Owner Downloading...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-
-                            } else if (resp == 2) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'Job Owner Download Failed...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-                                Download_JobNo();
-
-                            } else if (resp == 3) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'Job Owner Download Successfully...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-
-                                Download_JobNo();
-                            }
-
-
-                        });
-
-
-                    } else {
+                    saveJobOwners(response, (resp: any) => {
 
                         setOnRefresh(false);
 
-                        arrayindex++;
-                        SyncArray1.push({
-                            name: 'No available Job Owners for Download...',
-                            id: arrayindex,
-                        });
-                        setSyncArray(SyncArray1);
-                        setOnRefresh(true);
+                        if (resp == 1) {
 
-                        Download_JobNo();
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'Job Owner Downloading...',
+                                id: arrayindex,
+                            });
+
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+
+                        } else if (resp == 2) {
+
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'Job Owner Download Failed...',
+                                id: arrayindex,
+                            });
+
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+                            Download_JobNo();
+
+                        } else if (resp == 3) {
+
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'Job Owner Download Successfully...',
+                                id: arrayindex,
+                            });
+
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+
+                            Download_JobNo();
+                        }
 
 
-                    }
+                    });
 
 
 
                 } else {
 
-                    // console.log(" response code ======= ", response.status);
-
-                    setOnRefresh(false);
-
-                    arrayindex++;
-                    SyncArray1.push({
-                        name: 'Job Owner Download Failed...',
-                        id: arrayindex,
-                    });
-                    setSyncArray(SyncArray1);
-                    setOnRefresh(true);
-
                     Download_JobNo();
 
                 }
 
-
-            })
-            .catch((error) => {
-
-                // console.log(" Vehicle No error .....   ", error);
-
-                setOnRefresh(false);
-
-                arrayindex++;
-                SyncArray1.push({
-                    name: 'Job Owner Download Failed...',
-                    id: arrayindex,
-                });
-                setSyncArray(SyncArray1);
-                setOnRefresh(true);
-
-
-                Download_JobNo();
-
             });
+
+
+        } catch (error) {
+
+            Download_JobNo();
+
+        }
+
+
+        // await axios.get(URL, { headers })
+        //     .then(response => {
+
+        //         if (response.status === 200) {
+
+        //             if (response.data.length > 0) {
+
+        //                 saveJobOwners(response.data, (resp: any) => {
+
+        //                     setOnRefresh(false);
+
+        //                     if (resp == 1) {
+
+        //                         arrayindex++;
+
+        //                         SyncArray1.push({
+        //                             name: 'Job Owner Downloading...',
+        //                             id: arrayindex,
+        //                         });
+
+        //                         setSyncArray(SyncArray1);
+        //                         setOnRefresh(true);
+
+        //                     } else if (resp == 2) {
+
+        //                         arrayindex++;
+
+        //                         SyncArray1.push({
+        //                             name: 'Job Owner Download Failed...',
+        //                             id: arrayindex,
+        //                         });
+
+        //                         setSyncArray(SyncArray1);
+        //                         setOnRefresh(true);
+        //                         Download_JobNo();
+
+        //                     } else if (resp == 3) {
+
+        //                         arrayindex++;
+
+        //                         SyncArray1.push({
+        //                             name: 'Job Owner Download Successfully...',
+        //                             id: arrayindex,
+        //                         });
+
+        //                         setSyncArray(SyncArray1);
+        //                         setOnRefresh(true);
+
+        //                         Download_JobNo();
+        //                     }
+
+
+        //                 });
+
+
+        //             } else {
+
+        //                 setOnRefresh(false);
+
+        //                 arrayindex++;
+        //                 SyncArray1.push({
+        //                     name: 'No available Job Owners for Download...',
+        //                     id: arrayindex,
+        //                 });
+        //                 setSyncArray(SyncArray1);
+        //                 setOnRefresh(true);
+
+        //                 Download_JobNo();
+
+
+        //             }
+
+
+
+        //         } else {
+
+        //             // console.log(" response code ======= ", response.status);
+
+        //             setOnRefresh(false);
+
+        //             arrayindex++;
+        //             SyncArray1.push({
+        //                 name: 'Job Owner Download Failed...',
+        //                 id: arrayindex,
+        //             });
+        //             setSyncArray(SyncArray1);
+        //             setOnRefresh(true);
+
+        //             Download_JobNo();
+
+        //         }
+
+
+        //     })
+        //     .catch((error) => {
+
+        //         // console.log(" Vehicle No error .....   ", error);
+
+        //         setOnRefresh(false);
+
+        //         arrayindex++;
+        //         SyncArray1.push({
+        //             name: 'Job Owner Download Failed...',
+        //             id: arrayindex,
+        //         });
+        //         setSyncArray(SyncArray1);
+        //         setOnRefresh(true);
+
+
+        //         Download_JobNo();
+
+        //     });
 
     }
 
@@ -1232,7 +1480,7 @@ const HomeScreen = () => {
 
     const Download_JobNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=TPL_JOBA8_170723'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1268,7 +1516,7 @@ const HomeScreen = () => {
 
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-                                Download_IOURequest();
+                                Download_GL_ACCOUNT();
 
                             } else if (resp == 3) {
 
@@ -1282,7 +1530,7 @@ const HomeScreen = () => {
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
 
-                                Download_IOURequest();
+                                Download_GL_ACCOUNT();
                             }
 
 
@@ -1303,7 +1551,7 @@ const HomeScreen = () => {
                         setSyncArray(SyncArray1);
                         setOnRefresh(true);
 
-                        Download_IOURequest();
+                        Download_GL_ACCOUNT();
 
                     }
 
@@ -1324,7 +1572,7 @@ const HomeScreen = () => {
                     setSyncArray(SyncArray1);
                     setOnRefresh(true);
 
-                    Download_IOURequest();
+                    Download_GL_ACCOUNT();
                 }
 
 
@@ -1345,6 +1593,128 @@ const HomeScreen = () => {
                 setOnRefresh(true);
 
 
+                Download_GL_ACCOUNT();
+
+            });
+
+    }
+    // -------------------- Download GL Accounts -------------------------------------------
+
+    const Download_GL_ACCOUNT = async () => {
+
+        const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=TPL_JOBA8_170723'
+
+        await axios.get(URL, { headers })
+            .then(response => {
+
+                if (response.status === 200) {
+
+                    if (response.data.length > 0) {
+
+                        saveGLAccount(response.data, (resp: any) => {
+
+                            setOnRefresh(false);
+
+                            if (resp == 1) {
+
+                                arrayindex++;
+
+                                SyncArray1.push({
+                                    name: 'GL Accounts Downloading...',
+                                    id: arrayindex,
+                                });
+
+                                setSyncArray(SyncArray1);
+                                setOnRefresh(true);
+
+                            } else if (resp == 2) {
+
+                                arrayindex++;
+
+                                SyncArray1.push({
+                                    name: 'GL Accounts Download Failed...',
+                                    id: arrayindex,
+                                });
+
+                                setSyncArray(SyncArray1);
+                                setOnRefresh(true);
+                                Download_IOURequest();
+
+                            } else if (resp == 3) {
+
+                                arrayindex++;
+
+                                SyncArray1.push({
+                                    name: 'GL Accounts Download Successfully...',
+                                    id: arrayindex,
+                                });
+
+                                setSyncArray(SyncArray1);
+                                setOnRefresh(true);
+
+                                Download_IOURequest();
+                            }
+
+
+                        });
+
+
+                    } else {
+
+                        setOnRefresh(false);
+
+                        arrayindex++;
+
+                        SyncArray1.push({
+                            name: 'No available GL Accounts for Download...',
+                            id: arrayindex,
+                        });
+
+                        setSyncArray(SyncArray1);
+                        setOnRefresh(true);
+
+                        Download_IOURequest();
+
+                    }
+
+
+
+                } else {
+
+                    // console.log(" response code ======= ", response.status);
+                    setOnRefresh(false);
+
+                    arrayindex++;
+
+                    SyncArray1.push({
+                        name: 'GL Accounts Download Failed...',
+                        id: arrayindex,
+                    });
+
+                    setSyncArray(SyncArray1);
+                    setOnRefresh(true);
+
+                    Download_IOURequest();
+                }
+
+
+            })
+            .catch((error) => {
+
+                // console.log(" JobNo error .....   ", error);
+                setOnRefresh(false);
+
+                arrayindex++;
+
+                SyncArray1.push({
+                    name: 'GL Accounts Download Failed...',
+                    id: arrayindex,
+                });
+
+                setSyncArray(SyncArray1);
+                setOnRefresh(true);
+
+
                 Download_IOURequest();
 
             });
@@ -1356,7 +1726,10 @@ const HomeScreen = () => {
 
     const Download_IOURequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+        console.log(" user ID ==== ", userID);
+
+
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1485,7 +1858,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement Request --------------------------------------
     const Download_IOUSETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1612,7 +1985,7 @@ const HomeScreen = () => {
     // -------------------- Download One-Off Settlement Request --------------------------------------
     const Download_ONE_OFF_SETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1738,7 +2111,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement JOBS Request --------------------------------------
     const Download_IOUSETJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1864,7 +2237,7 @@ const HomeScreen = () => {
     // -------------------- Download OneOff JOBS Request --------------------------------------
     const Download_ONEOFFJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1991,10 +2364,10 @@ const HomeScreen = () => {
     // -------------------- Download IOU Job Data --------------------------------------
     const Download_IOUJobs = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_REPORT_TEST&emp='+ userID;
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
 
-        console.log(" IOU JOBS URL ==== " , URL);
-        
+        console.log(" IOU JOBS URL ==== ", URL);
+
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -2202,7 +2575,7 @@ const HomeScreen = () => {
     return (
 
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
-            <Header title={`Good Morning\n${uName}!`} image={true} isIcon={true} iconOnPress={() => sync()} />
+            <Header title={`${HeaderText}\n${uName}`} image={true} isIcon={true} iconOnPress={() => sync()} />
 
             {/* // --------------- Sync Modal ---------------------------------- */}
 

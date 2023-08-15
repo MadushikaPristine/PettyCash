@@ -11,8 +11,8 @@ export const saveJobNo = (data: any, callBack: any) => {
             [
                 {
                     table: 'JOB_NO',
-                    columns: `DocEntry,Job_No,Title,CustomerName,JobType,Status,OwnerName,OwnerEPFNo`,
-                    values: '?,?,?,?,?,?,?,?',
+                    columns: `DocEntry,Job_No,Title,CustomerName,JobType,Status,OwnerName,OwnerEPFNo,CostCenter,Location`,
+                    values: '?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].DocEntry,
@@ -22,7 +22,9 @@ export const saveJobNo = (data: any, callBack: any) => {
                         data[i].JobType,
                         data[i].Status,
                         data[i].OwnerName,
-                        data[i].OwnerEPFNo
+                        data[i].OwnerEPFNo,
+                        data[i].CostCenter,
+                        data[i].Location
 
                     ],
                 },
@@ -81,17 +83,32 @@ export const getJobNoAll = (Name: any, callBack: any) => {
     );
 };
 
-// export const getAllJobOwners = (callBack: any) => {
+export const getJobNOByOwners = (ID:any , callBack: any) => {
 
-//     DB.searchData(
-//         'SELECT DISTINCT FROM JOB_OWNERS',
-//         [],
-//         (resp: any, err: any) => {
-//             //console.log("************** all IOU Types ************  " + resp.length);
-//             callBack(resp, err);
-//         },
-//     );
-// };
+    DB.searchData(
+        "SELECT ifnull(Job_No || ' - ' || CustomerName,Job_No) as Job_No , DocEntry FROM JOB_NO WHERE OwnerEPFNo=?",
+        [ID],
+        (resp: any, err: any) => {
+            //console.log("************** all IOU Types ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
+
+export const getCostCenterByJobNo = (ID:any , callBack: any) => {
+
+    console.log(" doc entry == " , ID);
+    
+
+    DB.searchData(
+        "SELECT CostCenter FROM JOB_NO WHERE DocEntry=?",
+        [ID],
+        (resp: any, err: any) => {
+            //console.log("************** all IOU Types ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
 
 // export const getJobNoAll = (callBack: any) => {
 

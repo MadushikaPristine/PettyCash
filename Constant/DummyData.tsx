@@ -478,3 +478,14 @@ export const Employee = [
     },
 
 ]
+
+export const Status = [
+
+    {
+        ID: 1,
+        EmpName: "Kumara",
+        EmpType_ID: 2,
+        Status: "1",
+    },
+
+]
