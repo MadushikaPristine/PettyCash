@@ -559,11 +559,11 @@ const NewIOUScreen = () => {
 
                 saveIOU(IOUData, async (response: any) => {
                     // console.log(" save iou .................... ", response);
-        
+
                     if (response == 3) {
-        
-                        getDetailsData(parseInt(res[0].ID),IsLimit);
-        
+
+                        getDetailsData(parseInt(res[0].ID), IsLimit);
+
                         slideOutModal();
                         Alert.alert("Successfully Submitted!");
                         // SweetAlert.showAlertWithOptions({
@@ -578,13 +578,13 @@ const NewIOUScreen = () => {
                         // },
                         //     //callback => console.log('callback')
                         // );
-        
-        
+
+
                         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "IOU");
                         AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-        
+
                         navigation.navigate('PendingList');
-        
+
                     } else {
                         Alert.alert("IOU Request Failed!")
                         // SweetAlert.showAlertWithOptions({
@@ -600,10 +600,10 @@ const NewIOUScreen = () => {
                         //     //callback => console.log('callback')
                         // );
                     }
-        
-        
+
+
                 });
-        
+
 
             } else if (amount > IOULimit) {
 
@@ -643,11 +643,11 @@ const NewIOUScreen = () => {
 
                 saveIOU(IOUData, async (response: any) => {
                     // console.log(" save iou .................... ", response);
-        
+
                     if (response == 3) {
-        
-                        getDetailsData(parseInt(res[0].ID),IsLimit);
-        
+
+                        getDetailsData(parseInt(res[0].ID), IsLimit);
+
                         slideOutModal();
                         Alert.alert("Successfully Submitted!");
                         // SweetAlert.showAlertWithOptions({
@@ -662,13 +662,13 @@ const NewIOUScreen = () => {
                         // },
                         //     //callback => console.log('callback')
                         // );
-        
-        
+
+
                         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "IOU");
                         AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-        
+
                         navigation.navigate('PendingList');
-        
+
                     } else {
                         Alert.alert("IOU Request Failed!")
                         // SweetAlert.showAlertWithOptions({
@@ -684,10 +684,10 @@ const NewIOUScreen = () => {
                         //     //callback => console.log('callback')
                         // );
                     }
-        
-        
+
+
                 });
-        
+
 
             } else {
 
@@ -731,11 +731,11 @@ const NewIOUScreen = () => {
 
                     saveIOU(IOUData, async (response: any) => {
                         // console.log(" save iou .................... ", response);
-            
+
                         if (response == 3) {
-            
-                            getDetailsData(parseInt(res[0].ID),IsLimit);
-            
+
+                            getDetailsData(parseInt(res[0].ID), IsLimit);
+
                             slideOutModal();
                             Alert.alert("Successfully Submitted!");
                             // SweetAlert.showAlertWithOptions({
@@ -750,13 +750,13 @@ const NewIOUScreen = () => {
                             // },
                             //     //callback => console.log('callback')
                             // );
-            
-            
+
+
                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "IOU");
                             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-            
+
                             navigation.navigate('PendingList');
-            
+
                         } else {
                             Alert.alert("IOU Request Failed!")
                             // SweetAlert.showAlertWithOptions({
@@ -772,15 +772,15 @@ const NewIOUScreen = () => {
                             //     //callback => console.log('callback')
                             // );
                         }
-            
-            
+
+
                     });
-            
+
                 } else {
 
 
                     // console.log("job no or vehicle");
-                    
+
                     IsLimit = "NO";
 
                     HODID = '';
@@ -814,11 +814,11 @@ const NewIOUScreen = () => {
 
                     saveIOU(IOUData, async (response: any) => {
                         // console.log(" save iou .................... ", response);
-            
+
                         if (response == 3) {
-            
-                            getDetailsData(HODID,IsLimit);
-            
+
+                            getDetailsData(HODID, IsLimit);
+
                             slideOutModal();
                             Alert.alert("Successfully Submitted!");
                             // SweetAlert.showAlertWithOptions({
@@ -833,13 +833,13 @@ const NewIOUScreen = () => {
                             // },
                             //     //callback => console.log('callback')
                             // );
-            
-            
+
+
                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "IOU");
                             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-            
+
                             navigation.navigate('PendingList');
-            
+
                         } else {
                             Alert.alert("IOU Request Failed!")
                             // SweetAlert.showAlertWithOptions({
@@ -855,10 +855,10 @@ const NewIOUScreen = () => {
                             //     //callback => console.log('callback')
                             // );
                         }
-            
-            
+
+
                     });
-            
+
 
                 }
 
@@ -992,6 +992,8 @@ const NewIOUScreen = () => {
     const getJJobOwnerTransportHOD = (type: any) => {
 
         // type = 1 - job owner / 2 - transport officer / 3 - hod
+
+        setJobOwnerlist([]);
 
         if (type == 1) {
             //get job owners
@@ -2268,7 +2270,7 @@ const NewIOUScreen = () => {
                         onChange={item => {
 
                             setIOUTypeID(item.IOUType_ID);
-                            setSelectIOUType(item.Description);
+                            // setSelectIOUType(item.Description);
                             getVehicleNo();
 
                             if (item.IOUType_ID == 1) {

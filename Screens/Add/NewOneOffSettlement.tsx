@@ -29,7 +29,7 @@ import ImageUpload from "../../Components/ImageUpload";
 import { IOUType } from "../../Constant/DummyData";
 import { getLastOneOffSettlement, getOneOffJobsListByID, getOneOffReOpenRequest, saveOneOffSettlement, updateOneOffSyncStatus } from "../../SQLiteDBAction/Controllers/OneOffSettlementController";
 import moment from "moment";
-import { CopyRequest, getLoginUserID, getLoginUserName, getRejectedId } from "../../Constant/AsynStorageFuntion";
+import { CopyRequest, getLoginUserID, getLoginUserName, getRejectedId, get_ASYNC_COST_CENTER } from "../../Constant/AsynStorageFuntion";
 import { getAllEmployee, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
 import { getIOUTypes } from "../../SQLiteDBAction/Controllers/IOUTypeController";
 import RNFS from 'react-native-fs';
@@ -40,7 +40,7 @@ import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getLastOneOffJobID, getOneOffJOBDataBYRequestID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
 import { getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
-import { getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
+import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
 import { getAllJobOwners, getAllJobOwnersBYDep } from "../../SQLiteDBAction/Controllers/JobOwnerController";
 import { BASE_URL, headers } from "../../Constant/ApiConstants";
@@ -49,6 +49,7 @@ import { updateSyncStatus } from "../../SQLiteDBAction/Controllers/IOUController
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
 import { getDepartments, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
 
@@ -142,6 +143,9 @@ const NewOneOffSettlement = () => {
     const [isDisableAcc, setIsDisableAcc] = useState(false);
     const [isDisableRes, setIsDisableRes] = useState(false);
     const [ownerType, setOwnerType] = useState('Job Owner');
+
+    const [IOULimit, setIOULimit] = useState(0.0);
+    const [HODId, setHODID] = useState('');
 
 
     var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
@@ -335,8 +339,6 @@ const NewOneOffSettlement = () => {
         let loginError = { field: '', message: '' }
 
 
-
-
         if (JobOwner === '') {
             loginError.field = 'JobOwner';
             loginError.message = 'Please select Job Owner to procced'
@@ -345,10 +347,10 @@ const NewOneOffSettlement = () => {
             loginError.field = 'IOUTypeID';
             loginError.message = 'Please fill in fields to procced'
             setError(loginError);
-        } else if (EmpID === '') {
-            loginError.field = 'EmpName';
-            loginError.message = 'Please select Employee to procced'
-            setError(loginError);
+            // } else if (EmpID === '') {
+            //     loginError.field = 'EmpName';
+            //     loginError.message = 'Please select Employee to procced'
+            //     setError(loginError);
         } else if (cameraPhoto.length == 0) {
             Alert.alert("Please Add Attachments");
         }
@@ -429,65 +431,351 @@ const NewOneOffSettlement = () => {
 
     }
 
+    const clearData = () => {
+        setExpenseTypeList([]);
+        setJobList([]);
+        setJobOwnerlist([]);
+        setCameraPhoto('');
+        setIOUTypeList([]);
+      
+    }
+
     const saveSubmit = () => {
-        const OneOffData = [
-            {
-                PCRCode: OneOffSettlementNo,
-                JobOwner: parseInt(JobOwner),
-                IOUType: parseInt(IOUTypeID),
-                EmpId: parseInt(EmpID),
-                RequestedDate: currentDate,
-                Amount: amount,
-                StatusID: 1,
-                RequestedBy: userID,
-                IsSync: 0,
-                Approve_Remark: "",
-                Reject_Remark: "",
-                Attachment_Status: 1
-            }
-        ]
 
-        saveOneOffSettlement(OneOffData, async (Response: any) => {
-            // console.log("Save One-Off Settlement...",Response);
-            // slideOutModal();
-            // Alert.alert("Successfully Submitted!")
-            if (Response == 3) {
-                getDetailsData();
-                slideOutModal();
-                Alert.alert("Successfully Submitted!")
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Successfully Submitted!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
-                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+        let OneOffData: any;
+        let HODID: any;
+        let IsLimit: any;
 
-                navigation.navigate('PendingList');
+        getLoggedUserHOD((res: any) => {
+            console.log(" hod ===  ", OneOffSettlementNo);
+
+            setHODID(res[0].ID);
+            HODID = res[0].ID;
+
+            console.log("iou type ==== " , IOUTypeID);
+            
 
 
+            if (IOUTypeID === '3') {
+
+                console.log("other type == ");
+
+
+                IsLimit = "";
+
+                OneOffData = [
+                    {
+                        PCRCode: OneOffSettlementNo,
+                        JobOwner: parseInt(JobOwner),
+                        IOUType: parseInt(IOUTypeID),
+                        EmpId: '',
+                        RequestedDate: currentDate,
+                        Amount: amount,
+                        StatusID: 1,
+                        RequestedBy: userID,
+                        IsSync: 0,
+                        REMARK: "",
+                        Reject_Remark: "",
+                        Attachment_Status: 1,
+                        HOD: parseInt(res[0].ID),
+                        FirstActionBy: '',
+                        FirstActionAt: '',
+                        RIsLimit: null,
+                        AIsLimit: null,
+                        RIouLimit: '',
+                        AIouLimit: '',
+                        SecondActionBy: '',
+                        SecondActionAt: ''
+                    }
+                ]
+
+                saveOneOffSettlement(OneOffData, async (Response: any) => {
+                    // console.log("Save One-Off Settlement...",Response);
+                    // slideOutModal();
+                    // Alert.alert("Successfully Submitted!")
+                    if (Response == 3) {
+                        getDetailsData(parseInt(res[0].ID), IsLimit);
+                        slideOutModal();
+                        Alert.alert("Successfully Submitted!")
+                        // SweetAlert.showAlertWithOptions({
+                        //     title: 'Successfully Submitted!',
+                        //     subTitle: '',
+                        //     confirmButtonTitle: 'OK',
+                        //     confirmButtonColor: '#000',
+                        //     otherButtonTitle: 'Cancel',
+                        //     otherButtonColor: '#dedede',
+                        //     style: 'success',
+                        //     cancellable: true
+                        // },
+                        //     //callback => console.log('callback')
+                        // );
+                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+                        navigation.navigate('PendingList');
+
+
+                    } else {
+                        Alert.alert("IOU Request Failed!")
+                        // SweetAlert.showAlertWithOptions({
+                        //     title: 'IOU Request Failed!',
+                        //     subTitle: '',
+                        //     confirmButtonTitle: 'OK',
+                        //     confirmButtonColor: '#000',
+                        //     otherButtonTitle: 'Cancel',
+                        //     otherButtonColor: '#dedede',
+                        //     style: 'success',
+                        //     cancellable: true
+                        // },
+                        //     //callback => console.log('callback')
+                        // );
+                    }
+                })
+
+
+            } else if (amount > IOULimit) {
+
+                console.log("limit exceed == ", IOULimit);
+
+                IsLimit = "YES";
+
+                OneOffData = [
+                    {
+                        PCRCode: OneOffSettlementNo,
+                        JobOwner: parseInt(JobOwner),
+                        IOUType: parseInt(IOUTypeID),
+                        EmpId: '',
+                        RequestedDate: currentDate,
+                        Amount: amount,
+                        StatusID: 1,
+                        RequestedBy: userID,
+                        IsSync: 0,
+                        REMARK: "",
+                        Reject_Remark: "",
+                        Attachment_Status: 1,
+                        HOD: parseInt(res[0].ID),
+                        FirstActionBy: '',
+                        FirstActionAt: '',
+                        RIsLimit: 'YES',
+                        AIsLimit: null,
+                        RIouLimit: IOULimit,
+                        AIouLimit: '',
+                        SecondActionBy: '',
+                        SecondActionAt: ''
+                    }
+                ]
+
+                console.log(" json [][][]  ", OneOffData);
+
+
+                saveOneOffSettlement(OneOffData, async (Response: any) => {
+                    console.log("Save One-Off Settlement...", Response);
+                    // slideOutModal();
+                    // Alert.alert("Successfully Submitted!")
+                    if (Response == 3) {
+                        getDetailsData(parseInt(res[0].ID), IsLimit);
+                        slideOutModal();
+                        Alert.alert("Successfully Submitted!")
+                        // SweetAlert.showAlertWithOptions({
+                        //     title: 'Successfully Submitted!',
+                        //     subTitle: '',
+                        //     confirmButtonTitle: 'OK',
+                        //     confirmButtonColor: '#000',
+                        //     otherButtonTitle: 'Cancel',
+                        //     otherButtonColor: '#dedede',
+                        //     style: 'success',
+                        //     cancellable: true
+                        // },
+                        //     //callback => console.log('callback')
+                        // );
+                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+                        navigation.navigate('PendingList');
+
+
+                    } else {
+                        Alert.alert("IOU Request Failed!")
+                        // SweetAlert.showAlertWithOptions({
+                        //     title: 'IOU Request Failed!',
+                        //     subTitle: '',
+                        //     confirmButtonTitle: 'OK',
+                        //     confirmButtonColor: '#000',
+                        //     otherButtonTitle: 'Cancel',
+                        //     otherButtonColor: '#dedede',
+                        //     style: 'success',
+                        //     cancellable: true
+                        // },
+                        //     //callback => console.log('callback')
+                        // );
+                    }
+                })
             } else {
-                Alert.alert("IOU Request Failed!")
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'IOU Request Failed!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
+
+
+                if (IOUTypeID === '3') {
+                    //other type
+
+
+                    console.log("Other type ----  ", HODID);
+
+                    IsLimit = "";
+
+                    OneOffData = [
+                        {
+                            PCRCode: OneOffSettlementNo,
+                            JobOwner: parseInt(JobOwner),
+                            IOUType: parseInt(IOUTypeID),
+                            EmpId: '',
+                            RequestedDate: currentDate,
+                            Amount: amount,
+                            StatusID: 1,
+                            RequestedBy: userID,
+                            IsSync: 0,
+                            REMARK: "",
+                            Reject_Remark: "",
+                            Attachment_Status: 1,
+                            HOD: parseInt(res[0].ID),
+                            FirstActionBy: '',
+                            FirstActionAt: '',
+                            RIsLimit: null,
+                            AIsLimit: null,
+                            RIouLimit: '',
+                            AIouLimit: '',
+                            SecondActionBy: '',
+                            SecondActionAt: ''
+                        }
+                    ]
+
+                    saveOneOffSettlement(OneOffData, async (Response: any) => {
+                        // console.log("Save One-Off Settlement...",Response);
+                        // slideOutModal();
+                        // Alert.alert("Successfully Submitted!")
+                        if (Response == 3) {
+                            getDetailsData(parseInt(res[0].ID), IsLimit);
+                            slideOutModal();
+                            Alert.alert("Successfully Submitted!")
+                            // SweetAlert.showAlertWithOptions({
+                            //     title: 'Successfully Submitted!',
+                            //     subTitle: '',
+                            //     confirmButtonTitle: 'OK',
+                            //     confirmButtonColor: '#000',
+                            //     otherButtonTitle: 'Cancel',
+                            //     otherButtonColor: '#dedede',
+                            //     style: 'success',
+                            //     cancellable: true
+                            // },
+                            //     //callback => console.log('callback')
+                            // );
+                            await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                            navigation.navigate('PendingList');
+
+
+                        } else {
+                            Alert.alert("IOU Request Failed!")
+                            // SweetAlert.showAlertWithOptions({
+                            //     title: 'IOU Request Failed!',
+                            //     subTitle: '',
+                            //     confirmButtonTitle: 'OK',
+                            //     confirmButtonColor: '#000',
+                            //     otherButtonTitle: 'Cancel',
+                            //     otherButtonColor: '#dedede',
+                            //     style: 'success',
+                            //     cancellable: true
+                            // },
+                            //     //callback => console.log('callback')
+                            // );
+                        }
+                    })
+
+                } else {
+
+
+                    console.log("job no or vehicle");
+
+                    IsLimit = "NO";
+
+                    HODID = '';
+                    OneOffData = [
+                        {
+                            PCRCode: OneOffSettlementNo,
+                            JobOwner: parseInt(JobOwner),
+                            IOUType: parseInt(IOUTypeID),
+                            EmpId: '',
+                            RequestedDate: currentDate,
+                            Amount: amount,
+                            StatusID: 1,
+                            RequestedBy: userID,
+                            IsSync: 0,
+                            REMARK: "",
+                            Reject_Remark: "",
+                            Attachment_Status: 1,
+                            HOD: parseInt(res[0].ID),
+                            FirstActionBy: '',
+                            FirstActionAt: '',
+                            RIsLimit: 'NO',
+                            AIsLimit: null,
+                            RIouLimit: IOULimit,
+                            AIouLimit: '',
+                            SecondActionBy: '',
+                            SecondActionAt: ''
+                        }
+                    ]
+
+                    saveOneOffSettlement(OneOffData, async (Response: any) => {
+                        // console.log("Save One-Off Settlement...",Response);
+                        // slideOutModal();
+                        // Alert.alert("Successfully Submitted!")
+                        if (Response == 3) {
+                            getDetailsData(HODID, IsLimit);
+                            slideOutModal();
+                            Alert.alert("Successfully Submitted!")
+                            // SweetAlert.showAlertWithOptions({
+                            //     title: 'Successfully Submitted!',
+                            //     subTitle: '',
+                            //     confirmButtonTitle: 'OK',
+                            //     confirmButtonColor: '#000',
+                            //     otherButtonTitle: 'Cancel',
+                            //     otherButtonColor: '#dedede',
+                            //     style: 'success',
+                            //     cancellable: true
+                            // },
+                            //     //callback => console.log('callback')
+                            // );
+                            await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                            navigation.navigate('PendingList');
+
+
+                        } else {
+                            Alert.alert("IOU Request Failed!")
+                            // SweetAlert.showAlertWithOptions({
+                            //     title: 'IOU Request Failed!',
+                            //     subTitle: '',
+                            //     confirmButtonTitle: 'OK',
+                            //     confirmButtonColor: '#000',
+                            //     otherButtonTitle: 'Cancel',
+                            //     otherButtonColor: '#dedede',
+                            //     style: 'success',
+                            //     cancellable: true
+                            // },
+                            //     //callback => console.log('callback')
+                            // );
+                        }
+                    })
+
+                }
+
+
             }
-        })
+
+
+
+        });
+
+
+
 
     }
 
@@ -695,13 +983,6 @@ const NewOneOffSettlement = () => {
         getJobNoAll(selectJobOwner, (res: any) => {
             //console.log("Job No............", res);
             setJob_NoList(res);
-        })
-    }
-
-    const getVehicleNo = () => {
-        getVehicleNoAll((resp: any) => {
-            // console.log("Vehicle No............", resp);
-            setVehicle_NoList(resp);
         })
     }
 
@@ -977,12 +1258,15 @@ const NewOneOffSettlement = () => {
             Remark: remarks,
             CreateAt: currentDate,
             RequestedBy: userID,
-            IsSync: 1
+            IsSync: 0
 
         }
 
         const JOBData: any = [];
         JOBData.push(saveObject);
+
+        console.log("save one-off job ====  ", saveObject);
+
 
         saveOneOffJOB(JOBData, (response: any) => {
 
@@ -1019,6 +1303,7 @@ const NewOneOffSettlement = () => {
                 setCostCenter('');
                 setResource('');
                 setSelectExpenseType('');
+                setselectJOBVehicleNo('');
 
 
                 slideOutModal();
@@ -1072,20 +1357,20 @@ const NewOneOffSettlement = () => {
 
 
     const getCostCenter = (ID: any) => {
-        getAllJobOwners((result: any) => {
-            // console.log(" Cost Center ...........  ", ID);
 
-            setJobOwnerlist(result);
-            const data = result?.filter((a: any) => a.JobOwner_ID == ID)[0];
-            setCostCenter(data.Name);
-            setCostCenterID(data.JobOwner_ID);
-            // console.log("-----------------", data.Name);
-            // console.log("-----------------", ID);
-
-            // console.log(selectJobOwner);
-
+        getCostCenterByJobNo(ID, (res: any) => {
+            setCostCenter(res[0].CostCenter);
         });
+
     }
+
+    const getVehicleNo = () => {
+        getVehicleNoAll((resp: any) => {
+            //console.log("Vehicle No............", resp);
+            setVehicle_NoList(resp);
+        })
+    }
+
 
 
 
@@ -1099,7 +1384,7 @@ const NewOneOffSettlement = () => {
             amount = 0.0;
             jobArray = [];
 
-            getSpinnerData();
+
             getLastId();
             getLastAttachmentId();
             // console.log("OneOffSetNo:***********", OneOffSettlementNo);
@@ -1129,7 +1414,7 @@ const NewOneOffSettlement = () => {
 
                     })
 
-                } 
+                }
             })
 
 
@@ -1193,6 +1478,7 @@ const NewOneOffSettlement = () => {
                 setJobOwnerlist(resp3);
                 setSelectJobOwner(resp3[0].Name);
                 setJobOwner(resp3[0].ID);
+                setHODID(resp3[0].ID);
 
 
             });
@@ -1204,7 +1490,7 @@ const NewOneOffSettlement = () => {
 
     //--------Get IOU Types Details Data----------------------
 
-    const getDetailsData = () => {
+    const getDetailsData = (HOD: any, IsLimit: any) => {
         getOneOffJOBDataBYRequestID(OneOffSettlementNo, (result: any) => {
 
             // console.log(result, '+++++++++++++++++++++++++++');
@@ -1217,15 +1503,15 @@ const NewOneOffSettlement = () => {
                 JobDetails.push(result[i]);
             }
 
-            UploadOneOff(JobDetails);
+            UploadOneOff(JobDetails, HOD, IsLimit);
         })
     }
 
     //-----------Upload IOU Request------------------
 
-    const UploadOneOff = async (detailsData: any) => {
+    const UploadOneOff = async (detailsData: any, HOD: any, IsLimit: any) => {
 
-        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=TPL_JOBA8_170723';
 
         var obj = [];
         var Fileobj = [];
@@ -1271,14 +1557,10 @@ const NewOneOffSettlement = () => {
                 "TotalAmount": amount,
                 "IOUTypeDetails": obj,
                 "attachments": Fileobj,
-                // [
-                //             {
-                //                 "IOUTypeNo": SelecteJoborVehicle,
-                //                 "FileName": "Guidelines - Leave Application.pdf",
-                //                 "File": "JVBERi0xLjcNCiW1tbW1DQoxIDAgb2JqDQo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFIvTGFuZyhlbi1VUykgL1N0cnVjdFRyZWVSb290IDM0IDAgUi9NYXJrSW5mbzw8L01hcmtlZCB0cnVlPj4vTWV0YWRhdGEgMjAyIDAgUi9WaWV3ZXJQcmVmZXJlbmNlcyAyMDMgMCBSPj4NCmVuZG9iag0KMiAwIG9iag0KPDwvVHlwZS9QYWdlcy9Db3VudCAzL0tpZHNbIDMgMCBSIDIxIDAgUiAyOSAwIFJdID4+DQplbmRvYmoNCjMgMCBvYmoNCjw8L1R5cGUvUGFnZS9QYXJlbnQgMiAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSL0YyIDkgMCBSL0YzIDExIDAgUi9GNCAxMyAwIFI+Pi9FeHRHU3RhdGU8PC9HUzcgNyAwIFIvR1M4IDggMCBSPj4vWE9iamVjdDw8L0ltYWdlMTggMTggMCBSL0ltYWdlMTkgMTkgMCBSPj4vUHJvY1NldFsvUERGL1RleHQvSW1hZ2VCL0ltYWdlQy9JbWFnZUldID4+L01lZGlhQm94WyAwIDAgNjEyIDc5Ml0gL0NvbnRlbnRzIDQgMCBSL0dyb3VwPDwvVHlwZS9Hcm91cC9TL1RyYW5zcGFyZW5jeS9DUy9EZXZpY2VSR0I+Pi9UYWJzL1MvU3RydWN0UGFyZW50cyAwPj4NCmVuZG9iag0KNCAwIG9iag0KPDwvRmlsdGVyL0ZsYXRlRGVjb2RlL0xlbmd0aCA1MzM+Pg0Kc3RyZWFtDQp4nK2XTYvbMBCG7wb/hzm2hU40Gn1CMDTOZtnCwrYN9FB6KGWb07Z0+/+hIztQp5t4d4wM/pCs6H1GGktvYHUH6/Xqtr/Zguk62Gx7+N02Bk05MlkwEOQas4XH+7b5/AZ+ts1m3zarHQERGgf7H21D0s4AQbRorINoMoYE+wdpd/0pwuGP9AmHoZSOpeu2",
-                //                 "FileType": "jpg"
-                //             }
-                //         ]
+                "Hod": parseFloat(HOD),
+                "RIsLimit": IsLimit,
+                "RIouLimit": IOULimit
+
 
             }
 
@@ -1289,48 +1571,75 @@ const NewOneOffSettlement = () => {
             axios.post(URL, prams, {
                 headers: headers
             }).then((response) => {
-                console.log("[s][t][a][t][u][s][]", response.status);
-                console.log("[s][t][a][t][u][s][] one off reponse METHOD   ........  ", response);
+                // console.log("[s][t][a][t][u][s][]", response.status);
+                // console.log("[s][t][a][t][u][s][] one off reponse METHOD   ........  ", response);
                 if (response.status == 200) {
 
                     updateOneOffSyncStatus(OneOffSettlementNo, (result: any) => {
 
                     });
 
+                    clearData();
+
                     // console.log("success ======= ", response.statusText);
 
 
-                    // console.log("success ===222==== ", response.data);
+                    console.log("success ===222==== ", response.data);
 
 
                 } else {
 
                     // console.log(" response code ======= ", response.status);
+                    clearData();
 
                 }
             }).catch((error) => {
 
                 // console.log("error .....   ", error);
-
+                clearData();
 
             });
 
 
         } catch (error) {
             // console.log(error);
-
+            clearData();
         }
 
 
 
     }
 
+    const getJobNoByJobOwner = (ID: any) => {
+
+        getJobNOByOwners(ID, (res: any) => {
+
+            setJob_NoList(res);
+
+        });
+
+    }
 
     const attachement = () => {
         setIsSubmit(false);
         setIsOpen(true);
         slideInModal();
     }
+
+    const getGL_AccForJobNo = () => {
+        getAccNoForJobNo((res: any) => {
+            // setAccountList(res);
+            setAccountNo(res[0].GL_ACCOUNT);
+        });
+    }
+
+    const getGL_AccByExpenseType = (type: any) => {
+        getAccNoByExpenseType(type, (res: any) => {
+
+            setAccountNo(res[0].GL_ACCOUNT);
+        });
+    }
+
 
     return (
 
@@ -1440,17 +1749,22 @@ const NewOneOffSettlement = () => {
                                                                     setSelecteJoborVehicle(no[0].trim());
 
                                                                     setselectJOBVehicleNo(item.Job_No);
+                                                                    getGL_AccForJobNo();
+                                                                    setIsDisableAcc(true);
+                                                                    getCostCenter(item.DocEntry);
 
 
                                                                 } else {
 
                                                                     setSelecteJoborVehicle(item.Vehicle_No);
                                                                     setselectJOBVehicleNo(item.Vehicle_No);
+                                                                    setIsDisableAcc(true);
+                                                                    get_ASYNC_COST_CENTER().then(async res => {
+                                                                        setCostCenter(res);
+                                                                    });
+                                                                    setResource(item.Vehicle_No);
 
                                                                 }
-
-                                                                { IOUTypeID == "1" ? getCostCenter(JobOwner) : '...' }
-
                                                                 setIsFocus(false);
                                                             }}
                                                             renderLeftIcon={() => (
@@ -1498,6 +1812,9 @@ const NewOneOffSettlement = () => {
                                                         setSelectExpenseType(item.Description);
                                                         setExpenseTypeID(item.ExpType_ID);
 
+                                                        if (IOUTypeID != "1") {
+                                                            getGL_AccByExpenseType(item.Description);
+                                                        }
 
                                                         setIsFocus(false);
                                                     }}
@@ -1540,49 +1857,19 @@ const NewOneOffSettlement = () => {
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Account No"
                                                     stateValue={accountNo}
-                                                    editable={true}
+                                                    editable={false}
                                                     setState={(val: any) => setAccountNo(val)}
                                                     style={ComStyles.IOUInput}
                                                 />
 
-                                                <Dropdown
-                                                    style={[
-                                                        Style.dropdown,
-                                                        isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                                                    ]}
-                                                    itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                                                    placeholderStyle={Style.placeholderStyle}
-                                                    selectedTextStyle={Style.selectedTextStyle}
-                                                    inputSearchStyle={Style.inputSearchStyle}
-                                                    iconStyle={Style.iconStyle}
-                                                    data={IOUTypeID == "1" ? jobOwnerList : DepartmentList}
-                                                    search
-                                                    maxHeight={300}
-                                                    labelField={IOUTypeID == "1" ? "Name" : "SALESUNITNAME"}
-                                                    valueField={IOUTypeID == "1" ? "Name" : "SALESUNITNAME"}
-                                                    placeholder={!isFocus ? 'Cost Center ' : '...'}
-                                                    searchPlaceholder="Search cost Center"
-                                                    value={costCeneter}
-                                                    onFocus={() => setIsFocus(true)}
-                                                    onBlur={() => setIsFocus(false)}
-                                                    onChange={item => {
 
-                                                        setCostCenter(IOUTypeID == "1" ? item.Name : item.SALESUNITNAME);
-                                                        setCostCenterID(IOUTypeID == "1" ? item.JobOwner_ID : item.SALESUNITCODE);
-
-                                                        setError({ field: '', message: '' });
-                                                        setIsFocus(false);
-                                                        //getJobNo(selectJobOwner);
-
-                                                    }}
-                                                    renderLeftIcon={() => (
-                                                        <AntDesign
-                                                            style={Style.icon}
-                                                            color={isFocus ? 'blue' : 'black'}
-                                                            name="Safety"
-                                                            size={15}
-                                                        />
-                                                    )}
+                                                <InputText
+                                                    placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                                                    placeholder="Cost Center"
+                                                    stateValue={costCeneter}
+                                                    setState={(val: any) => setCostCenter(val)}
+                                                    editable={false}
+                                                    style={ComStyles.IOUInput}
                                                 />
 
                                                 <Dropdown
@@ -1687,6 +1974,14 @@ const NewOneOffSettlement = () => {
                 <View style={ComStyles.separateLine} />
 
                 <View>
+
+
+                    <View style={{ flexDirection: 'row', }}>
+                        <Text style={Style.bodyTextLeft}>
+                            IOU Type*
+                        </Text>
+                    </View>
+
                     <Dropdown
                         style={[
                             Style.dropdown,
@@ -1702,7 +1997,7 @@ const NewOneOffSettlement = () => {
                         maxHeight={300}
                         labelField="Description"
                         valueField="Description"
-                        placeholder={!isFocus ? (isReOpen == 'False' ? 'Select IOU Type ' : selectIOUType) : '...'}
+                        placeholder={!isFocus ? 'Select IOU Type ' : '...'}
                         searchPlaceholder="Search Type"
                         value={selectIOUType}
                         onFocus={() => setIsFocus(true)}
@@ -1711,6 +2006,11 @@ const NewOneOffSettlement = () => {
 
                             setIOUTypeID(item.IOUType_ID);
                             setSelectIOUType(item.Description);
+
+
+                            setSelectJobOwner('');
+                            setJobOwner('');
+                            getVehicleNo();
 
                             if (item.IOUType_ID == 1) {
 
@@ -1726,7 +2026,7 @@ const NewOneOffSettlement = () => {
                                 setIsEditable(false);
                                 setIsDisableRes(true);
                                 getJJobOwnerTransportHOD(2);
-                                getVehicleNo();
+
 
 
                             } else {
@@ -1751,6 +2051,12 @@ const NewOneOffSettlement = () => {
                         <Text style={Style.error}>{error.message}</Text>
                     )}
 
+                    <View style={{ flexDirection: 'row', }}>
+                        <Text style={Style.bodyTextLeft}>
+                            {ownerType}*
+                        </Text>
+                    </View>
+
                     <Dropdown
                         style={[
                             Style.dropdown,
@@ -1766,7 +2072,8 @@ const NewOneOffSettlement = () => {
                         maxHeight={300}
                         labelField="Name"
                         valueField="Name"
-                        placeholder={!isFocus ? (isReOpen == 'False' ? 'Job Owner ' : selectJobOwner) : '...'}
+                        disable={isEditable}
+                        placeholder={!isFocus ? ownerType : '...'}
                         searchPlaceholder="Search Owner"
                         value={selectJobOwner}
                         onFocus={() => setIsFocus(true)}
@@ -1774,8 +2081,16 @@ const NewOneOffSettlement = () => {
                         onChange={item => {
 
                             setSelectJobOwner(item.Name);
-                            setJobOwner(item.JobOwner_ID);
+                            setJobOwner(item.ID);
 
+                            if (IOUTypeID == '1') {
+
+                                getJobNoByJobOwner(item.EPFNo);
+                                setIOULimit(parseFloat(item.IOULimit));
+
+                            } else if (IOUTypeID == '2') {
+                                setIOULimit(parseFloat(item.IOULimit));
+                            }
 
                             setIsFocus(false);
 
@@ -1793,48 +2108,6 @@ const NewOneOffSettlement = () => {
                         <Text style={Style.error}>{error.message}</Text>
                     )}
 
-
-
-                    <Dropdown
-                        style={[
-                            Style.dropdown,
-                            isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                        ]}
-                        itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                        placeholderStyle={Style.placeholderStyle}
-                        selectedTextStyle={Style.selectedTextStyle}
-                        inputSearchStyle={Style.inputSearchStyle}
-                        iconStyle={Style.iconStyle}
-                        data={EmployeeList}
-                        search
-                        maxHeight={300}
-                        labelField="UserName"
-                        valueField="UserName"
-                        placeholder={!isFocus ? (isReOpen == 'False' ? 'Select Employee ' : selectEmployee) : '...'}
-                        searchPlaceholder="Search Employee"
-                        value={selectEmployee}
-                        onFocus={() => setIsFocus(true)}
-                        onBlur={() => setIsFocus(false)}
-                        onChange={item => {
-
-                            setEmpID(item.USER_ID);
-                            setSelectEmployee(item.UserName)
-
-                            setIsFocus(false);
-                            getJobNo();
-                        }}
-                        renderLeftIcon={() => (
-                            <AntDesign
-                                style={Style.icon}
-                                color={isFocus ? 'blue' : 'black'}
-                                name="Safety"
-                                size={15}
-                            />
-                        )}
-                    />
-                    {error.field === 'EmpName' && (
-                        <Text style={Style.error}>{error.message}</Text>
-                    )}
 
                     <View style={ComStyles.separateLine} />
 
@@ -1921,10 +2194,11 @@ const NewOneOffSettlement = () => {
                             contentContainerStyle={{ marginTop: 10 }}
                         />
                     ) : (
-                        <Image
-                            source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                            style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                        />
+                        // <Image
+                        //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
+                        //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
+                        // />
+                        <></>
                     )
                     }
                     {galleryPhoto.length > 0 ? (
@@ -1936,10 +2210,11 @@ const NewOneOffSettlement = () => {
                             contentContainerStyle={{ marginTop: 10 }}
                         />
                     ) : (
-                        <Image
-                            source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                            style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                        />
+                        // <Image
+                        //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
+                        //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
+                        // />
+                        <></>
                     )}
 
 
@@ -2037,7 +2312,13 @@ const Style = StyleSheet.create({
     },
     error: {
         color: 'red'
-    }
+    },
+    bodyTextLeft: {
+        color: ComStyles.COLORS.SERVISE_HEADER_ASH,
+        fontFamily: ComStyles.FONT_FAMILY.REGULAR,
+        fontSize: 14,
+        flex: 1
+    },
 
 })
 

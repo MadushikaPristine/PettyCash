@@ -65,7 +65,7 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
 
                         response = 2;
                         callBack(response);
-                        // console.log(res, " ..........  error ...  ", err);
+                        console.log(res, " ..........  error ...  ", err);
 
                     }
                 }
