@@ -10,8 +10,8 @@ export const saveUser = (data: any, callBack: any) => {
             [
                 {
                     table: 'USER',
-                    columns: `USER_ID,UserName,DisplayName,ExternalName,Email,RoleID,Status,UserRole,DepartmentId,DepartmentName,IOULimit`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `USER_ID,UserName,DisplayName,ExternalName,Email,RoleID,Status,UserRole,DepartmentId,DepartmentName,IOULimit,SapEmpId,EPFNo`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].UserId,
@@ -25,6 +25,8 @@ export const saveUser = (data: any, callBack: any) => {
                         data[i].DepartmentId,
                         data[i].DepartmentName,
                         data[i].IOULimit,
+                        data[i].SapEmpId,
+                        data[i].EPFNo,
 
                     ],
                 },
@@ -94,6 +96,43 @@ export const getLoginUserDetails = (uID:any,callBack: any) => {
     DB.searchData(
         'SELECT UserName,DisplayName,Email FROM USER WHERE USER_ID=?',
         [uID],
+        (resp: any, err: any) => {
+            // console.log("************** All employee ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
+
+export const getAllTransportOfficers = (callBack: any) => {
+
+    DB.searchData(
+        'SELECT DisplayName as Name , USER_ID as ID , IFNULL(IOULimit,0) as IOULimit FROM USER WHERE RoleID=4',
+        [],
+        (resp: any, err: any) => {
+            // console.log("************** All employee ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
+
+export const getTransportOfficerDetails = (ID:any , callBack: any) => {
+
+    DB.searchData(
+        'SELECT DisplayName as Name , USER_ID as ID , IFNULL(IOULimit,0) as IOULimit FROM USER WHERE USER_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** All employee ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
+
+export const getAllJobOwners = (callBack: any) => {
+
+
+    DB.searchData(
+        'SELECT USER_ID as ID , ExternalName as Name , DepartmentId , DepartmentName, IOULimit ,EPFNo, SapEmpId , DepartmentId , DepartmentName  FROM USER WHERE RoleID=3',
+        [],
         (resp: any, err: any) => {
             // console.log("************** All employee ************  " + resp.length);
             callBack(resp, err);

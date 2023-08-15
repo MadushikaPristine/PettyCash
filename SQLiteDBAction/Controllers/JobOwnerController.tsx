@@ -1,3 +1,4 @@
+import { get_ASYNC_COST_CENTER } from '../../Constant/AsynStorageFuntion';
 import * as DB from '../DBService';
 
 export const saveJobOwners = (data: any, callBack: any) => {
@@ -10,12 +11,17 @@ export const saveJobOwners = (data: any, callBack: any) => {
             [
                 {
                     table: 'JOB_OWNERS',
-                    columns: `JobOwner_ID,Name`,
-                    values: '?,?',
+                    columns: `JobOwner_ID,Name,IOULimit,SapEmpId,EPFNo,DepartmentId,DepartmentName`,
+                    values: '?,?,?,?,?,?,?',
                     params: [
 
                         data[i].ID,
                         data[i].Name,
+                        data[i].IOULimit,
+                        data[i].SapEmpId,
+                        data[i].EPFNo,
+                        data[i].DepartmentId,
+                        data[i].DepartmentName,
 
                         // data[i].Status,
 
@@ -61,11 +67,44 @@ export const saveJobOwners = (data: any, callBack: any) => {
 export const getAllJobOwners = (callBack: any) => {
 
     DB.searchData(
-        'SELECT * FROM JOB_OWNERS',
+        'SELECT JobOwner_ID as ID , Name FROM JOB_OWNERS',
         [],
         (resp: any, err: any) => {
             //console.log("************** all IOU Types ************  " + resp.length);
             callBack(resp, err);
         },
     );
+};
+export const getAllJobOwnersBYDep = (callBack: any) => {
+
+
+    get_ASYNC_COST_CENTER().then(async res => {
+
+        // console.log(" dep ===   " , res);
+        
+
+        DB.searchData(
+            'SELECT JobOwner_ID as ID , Name , EPFNo ,IFNULL(IOULimit,0) as IOULimit FROM JOB_OWNERS WHERE DepartmentName=?',
+            [res],
+            (resp: any, err: any) => {
+                //console.log("************** all IOU Types ************  " + resp.length);
+                callBack(resp, err);
+            },
+        );
+
+    })
+
+    
+};
+export const getJobOWnerDetails = (ID:any,callBack: any) => {
+
+        DB.searchData(
+            'SELECT JobOwner_ID as ID , Name , EPFNo ,IFNULL(IOULimit,0) as IOULimit FROM JOB_OWNERS WHERE JobOwner_ID=?',
+            [ID],
+            (resp: any, err: any) => {
+                //console.log("************** all IOU Types ************  " + resp.length);
+                callBack(resp, err);
+            },
+        );
+    
 };

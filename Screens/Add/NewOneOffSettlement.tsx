@@ -39,15 +39,15 @@ import InputText from "../../Components/InputText";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getLastOneOffJobID, getOneOffJOBDataBYRequestID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
-import { getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
+import { getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
 import { getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
-import { getAllJobOwners } from "../../SQLiteDBAction/Controllers/JobOwnerController";
+import { getAllJobOwners, getAllJobOwnersBYDep } from "../../SQLiteDBAction/Controllers/JobOwnerController";
 import { BASE_URL, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import { updateSyncStatus } from "../../SQLiteDBAction/Controllers/IOUController";
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
-import { getDepartments } from "../../SQLiteDBAction/Controllers/DepartmentController";
+import { getDepartments, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -136,6 +136,13 @@ const NewOneOffSettlement = () => {
     const [selectExpenseType, setSelectExpenseType] = useState('');
     const [ExpenseTypeList, setExpenseTypeList] = useState([]);
     const [joblist, setJobList]: any = useState([]);
+
+    const [isEditable, setIsEditable] = useState(true);
+    const [isEditableEmp, setIsEditableEmp] = useState(true);
+    const [isDisableAcc, setIsDisableAcc] = useState(false);
+    const [isDisableRes, setIsDisableRes] = useState(false);
+    const [ownerType, setOwnerType] = useState('Job Owner');
+
 
     var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
     var currentDate1 = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss');
@@ -378,6 +385,11 @@ const NewOneOffSettlement = () => {
     const addjob = () => {
 
         generateJobNo();
+
+        getExpenseTypeAll((res: any) => {
+            setExpenseTypeList(res);
+        });
+
 
         let loginError = { field: '', message: '' }
 
@@ -1106,9 +1118,8 @@ const NewOneOffSettlement = () => {
             CopyRequest().then(resp => {
                 // console.log("Is Copy: ", resp);
                 setIsReOpen(resp);
-                if (resp == 'False') {
+                if (resp == 'true') {
 
-                } else {
                     getRejectedId().then(result => {
                         // console.log("ReOpen Request Id: ", result);
                         setUId(result);
@@ -1117,20 +1128,79 @@ const NewOneOffSettlement = () => {
 
 
                     })
-                }
+
+                } 
             })
 
 
 
 
-            getExpenseTypes();
-            // getJobNo();
-            getVehicleNo();
-            getAllDepartment();
+            getAllIOUTypes();
 
         }, [])
     );
 
+    const getAllIOUTypes = () => {
+
+        setIOUTypeList([]);
+
+        getIOUTypes((result: any) => {
+
+            setIOUTypeList(result);
+
+        });
+
+    }
+
+    const getJJobOwnerTransportHOD = (type: any) => {
+
+        // type = 1 - job owner / 2 - transport officer / 3 - hod
+
+        if (type == 1) {
+            //get job owners
+
+            getAllJobOwnersBYDep((resp1: any) => {
+
+                console.log(" job owners == [][][][]    ", resp1);
+
+
+                setJobOwnerlist(resp1);
+
+            });
+
+
+        } else if (type == 2) {
+            //get transport officer
+
+            getAllTransportOfficers((resp2: any) => {
+
+                console.log(" transport officers == [][][][]    ", resp2);
+
+                setJobOwnerlist(resp2);
+            });
+
+
+
+        } else {
+
+            //get hod
+
+            getLoggedUserHOD((resp3: any) => {
+
+
+                console.log(" hod == [][][][]    ", resp3);
+
+                setJobOwnerlist(resp3);
+                setSelectJobOwner(resp3[0].Name);
+                setJobOwner(resp3[0].ID);
+
+
+            });
+
+        }
+
+
+    }
 
     //--------Get IOU Types Details Data----------------------
 
@@ -1642,7 +1712,30 @@ const NewOneOffSettlement = () => {
                             setIOUTypeID(item.IOUType_ID);
                             setSelectIOUType(item.Description);
 
+                            if (item.IOUType_ID == 1) {
 
+                                setOwnerType("Job Owner");
+                                setIsEditable(false);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(1);
+
+
+                            } else if (item.IOUType_ID == 2) {
+
+                                setOwnerType("Transport Officer");
+                                setIsEditable(false);
+                                setIsDisableRes(true);
+                                getJJobOwnerTransportHOD(2);
+                                getVehicleNo();
+
+
+                            } else {
+                                setOwnerType("HOD");
+                                setIsEditable(true);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(3);
+
+                            }
                             setIsFocus(false);
                         }}
                         renderLeftIcon={() => (

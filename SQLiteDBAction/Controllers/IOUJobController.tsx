@@ -16,7 +16,7 @@ export const saveIOUJOB = (data: any, callBack: any) => {
 
                         data[i].PCRID,
                         data[i].IOUTypeNo,
-                        data[i].JobOwner_ID,
+                        data[i].JobOwner,
                         data[i].PCRCode,
                         data[i].AccNo,
                         data[i].CostCenter,

@@ -30,8 +30,8 @@ import ImageUpload from "../../Components/ImageUpload";
 import { IOUType } from "../../Constant/DummyData";
 import { getIOUSETJobsListByID, getIOUSETReOpenRequest, getLastIOUSettlemnt, saveIOUSettlement, updateIOUSETSyncStatus } from "../../SQLiteDBAction/Controllers/IouSettlementController";
 import moment from "moment";
-import { CopyRequest, getLoginUserID, getLoginUserName, getRejectedId } from "../../Constant/AsynStorageFuntion";
-import { getAllEmployee, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
+import { CopyRequest, getLoginUserID, getLoginUserName, getLoginUserRoll, getRejectedId, get_ASYNC_COST_CENTER, get_ASYNC_EPFNO, get_ASYNC_IS_Auth_Requester } from "../../Constant/AsynStorageFuntion";
+import { getAllEmployee, getEmployeeByID, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
 import { getIOUTypes } from "../../SQLiteDBAction/Controllers/IOUTypeController";
 import { getIOU, getIOUJobsListByID, getIOUReOpenRequest, getIOUdatainfo } from "../../SQLiteDBAction/Controllers/IOUController";
 import RNFS from 'react-native-fs';
@@ -42,17 +42,18 @@ import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getIOUJOBDataBYRequestID, getIOUJobDetailsByID } from "../../SQLiteDBAction/Controllers/IOUJobController";
 import { UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
-import { getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
-import { getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
+import { getAllTransportOfficers, getAllUsers, getJobOwners, getTransportOfficerDetails } from "../../SQLiteDBAction/Controllers/UserController";
+import { getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
-import { getAllJobOwners } from "../../SQLiteDBAction/Controllers/JobOwnerController";
+import { getAllJobOwners, getAllJobOwnersBYDep, getJobOWnerDetails } from "../../SQLiteDBAction/Controllers/JobOwnerController";
 import axios from "axios";
 import { BASE_URL, headers } from "../../Constant/ApiConstants";
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
-import { getDepartments } from "../../SQLiteDBAction/Controllers/DepartmentController";
+import { getDepartments, getHODDetails, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
 import ComponentsStyles from "../../Constant/Components.styles";
+import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -94,7 +95,8 @@ const NewIOUSettlement = () => {
     const [cameraPhoto, setCameraPhoto] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [galleryPhoto, setGalleryPhoto] = useState('');
-    const [error, setError] = useState({ field: '', message: '' })
+    const [error, setError] = useState({ field: '', message: '' });
+    const [ownerType, setOwnerType] = useState('Job Owner');
 
     //Job
     const [isJobOrVehicle, setIsJobOrVehicle] = useState(true);
@@ -168,6 +170,15 @@ const NewIOUSettlement = () => {
     const [ExpenseTypeList, setExpenseTypeList] = useState([]);
     const [joblist, setJobList]: any = useState([]);
     const [ioujoblist, setiouJobList] = useState([]);
+
+    const [isEditable, setIsEditable] = useState(true);
+    const [isEditableEmp, setIsEditableEmp] = useState(true);
+    const [isDisableAcc, setIsDisableAcc] = useState(false);
+    const [isDisableRes, setIsDisableRes] = useState(false);
+
+    const [AccountList, setAccountList] = useState([]);
+
+
 
     const options = {
         saveToPhotos: true,
@@ -407,6 +418,66 @@ const NewIOUSettlement = () => {
         }
     }
 
+    const getAllIOUTypes = () => {
+
+        setIOUTypeList([]);
+
+        getIOUTypes((result: any) => {
+
+            setIOUTypeList(result);
+
+        });
+
+    }
+
+    const getJJobOwnerTransportHOD = (ID: any, type: any) => {
+
+        // type = 1 - job owner / 2 - transport officer / 3 - hod
+
+        if (type == 1) {
+            //get job owners
+
+            console.log(" Owner ID ==  ", ID);
+
+
+            getJobOWnerDetails(ID, (res: any) => {
+
+                // console.log(" response === ", res);
+
+                setSelectJobOwner(res[0].Name);
+                setJobOwner(res[0].ID);
+
+            });
+
+
+
+        } else if (type == 2) {
+            //get transport officer
+
+
+            getTransportOfficerDetails(ID, (resp: any) => {
+                setSelectJobOwner(resp[0].Name);
+                setJobOwner(resp[0].ID);
+            });
+
+
+        } else {
+
+            //get hod
+
+            getHODDetails(ID, (rest: any) => {
+
+                setSelectJobOwner(rest[0].Name);
+                setJobOwner(rest[0].ID);
+
+            });
+
+
+
+        }
+
+
+    }
 
 
     const editJobs = (jobNo: any) => {
@@ -574,6 +645,10 @@ const NewIOUSettlement = () => {
         setsaveTitle("Add");
         generateJobNo();
 
+        getExpenseTypeAll((res: any) => {
+            setExpenseTypeList(res);
+        });
+
         let loginError = { field: '', message: '' }
 
         // if (IOUTypeID === '') {
@@ -665,47 +740,10 @@ const NewIOUSettlement = () => {
     const getSpinnerData = () => {
 
         // console.log("  ----   job array size --------  ", jobArray.length);
-        setJobOwnerlist([]);
-        setIOUTypeList([]);
-        setEmployeeList([]);
+
         setIOUList([]);
 
-        //Job Owner typeID=2
-        // getTypeWiseUsers(2, (res: any) => {
-        //     // console.log(" Job owner ...........  ", result);
 
-        //     setJobOwnerlist(res);
-        // });
-        // getJobOwners(4, (result: any) => {
-        //     console.log(" Job owner ...........  ", result);
-
-        //     setJobOwnerlist(result);
-        // });
-
-        getAllJobOwners((result: any) => {
-            //console.log(" Job owner ...........  ", result);
-
-            setJobOwnerlist(result);
-        })
-
-
-        //IOU Type
-        getIOUTypes((result: any) => {
-            // console.log("IOU types ......... ", result);
-
-            setIOUTypeList(result);
-
-        });
-
-        // Employee
-        // getAllEmployee((resp: any) => {
-        //     // console.log("Employee ......... ", result);
-        //     setEmployeeList(resp);
-        // });
-        getAllUsers((result: any) => {
-            //console.log("Employee ......... ", result);
-            setEmployeeList(result);
-        });
 
         //IOU
         getIOU((result1: any) => {
@@ -1509,13 +1547,20 @@ const NewIOUSettlement = () => {
             // const result = await new Promise((resolve, reject) => {
             getIOUdatainfo(id, (result: any) => {
                 //resolve(result);
-                // console.log('await query--------', result[0]);
+                console.log('await query--------', result[0]);
                 IOUDetails.push(result[0]);
                 setCopyJobOwner(result[0].JobOwner_ID);
                 setCopyIOUType(result[0].IOU_Type);
                 setCopyEmployee(result[0].EmpId);
                 // console.log('JobOwnerID---', copyJobOwner, ' --IOUType----', copyIOUType, ' --Employee--', copyEmployee);
                 checkIOUdata(IOUDetails);
+
+                getEmployeeByID(result[0].EmpId, (rest: any) => {
+
+                    console.log(result[0].EmpId, "employee details === [][][][", rest);
+
+
+                });
             });
             // });
 
@@ -1557,19 +1602,63 @@ const NewIOUSettlement = () => {
     }
 
     const checkIOUdata = async (Data: any) => {
-        getAllJobOwners((result: any) => {
-            //console.log(" Job owner ...........  ", result);
 
-            setJobOwnerlist(result);
-            const data = result?.filter((a: any) => a.JobOwner_ID == Data[0].JobOwner_ID)[0];
-            setSelectJobOwner(data.Name);
-            setJobOwner(data.JobOwner_ID);
-            // console.log("-----------------", data.Name);
-            // console.log("-----------------", Data[0].JobOwner_ID);
+        console.log("IOU details ---- ", Data);
 
-            // console.log(selectJobOwner);
-            getJobNo(data.Name);
-        });
+        if (Data[0].IOU_Type == 1) {
+            // Job No
+
+            getAllJobOwners((result: any) => {
+                //console.log(" Job owner ...........  ", result);
+
+                setJobOwnerlist(result);
+                const data = result?.filter((a: any) => a.ID == Data[0].JobOwner_ID)[0];
+                setSelectJobOwner(data.Name);
+                setJobOwner(data.ID);
+                // console.log("-----------------", data.Name);
+                // console.log("-----------------", Data[0].JobOwner_ID);
+
+                // console.log(selectJobOwner);
+                getJobNo(data.Name);
+            });
+
+
+        } else if (Data[0].IOU_Type == 2) {
+            // vehicle no
+
+            getLoginUserID().then(result1 => {
+
+                getAllTransportOfficers((result: any) => {
+
+                    setJobOwnerlist(result);
+                    console.log(" transport officer ----  ", result);
+
+                    const data = result?.filter((a: any) => a.ID == Data[0].JobOwner_ID)[0];
+                    setSelectJobOwner(data.Name);
+                    setJobOwner(data.ID);
+
+                });
+
+            });
+
+
+        } else {
+            // other
+
+            getLoggedUserHOD((res: any) => {
+
+                // console.log(" hod ===" , res);
+
+                setJobOwnerlist(res);
+                setSelectJobOwner(res[0].Name);
+                setJobOwner(res[0].ID);
+
+            });
+
+
+        }
+
+
 
         getIOUTypes((result: any) => {
             // console.log("IOU types ......... ", result);
@@ -1581,16 +1670,26 @@ const NewIOUSettlement = () => {
         });
 
         // // // Employee
-        getAllUsers((result: any) => {
-            //console.log("Employee ......... ", result);
+        // getAllUsers((result: any) => {
+        //     //console.log("Employee ......... ", result);
 
-            setEmployeeList(result);
-            const empdata = result?.filter((a: any) => a.USER_ID == Data[0].EmpId)[0];
-            setSelectEmployee(empdata.UserName);
-            setEmpID(empdata.USER_ID);
+        //     setEmployeeList(result);
+        //     const empdata = result?.filter((a: any) => a.USER_ID == Data[0].EmpId)[0];
+        //     setSelectEmployee(empdata.UserName);
+        //     setEmpID(empdata.USER_ID);
+        // });
+
+        getAllEmployee((eresult: any) => {
+
+            setEmployeeList(eresult);
+            const empdata = eresult?.filter((a: any) => a.Emp_ID == Data[0].EmpId)[0];
+            setSelectEmployee(empdata.EmpName);
+            setEmpID(empdata.Emp_ID);
+
         });
 
-        getCostCenter(JobOwner, IOUTypeID);
+        // getCostCenter(JobOwner, IOUTypeID);
+
     }
 
     //-----------------------------------------------------
@@ -1621,9 +1720,8 @@ const NewIOUSettlement = () => {
             CopyRequest().then(resp => {
                 // console.log("Is Copy: ", resp);
                 setIsReOpen(resp);
-                if (resp == 'False') {
+                if (resp == 'true') {
 
-                } else {
                     getRejectedId().then(result => {
                         // console.log("ReOpen Request Id: ", result);
                         setUId(result);
@@ -1632,16 +1730,77 @@ const NewIOUSettlement = () => {
 
 
                     })
+
                 }
             })
-            getExpenseTypes();
-            // getJobNo();
-            getVehicleNo();
-            getAllDepartment();
+            getAllIOUTypes();
+            getSpinnerEmployee();
 
         }, [navigation])
     );
 
+    const getSpinnerEmployee = () => {
+
+        console.log(" get employeee ");
+
+
+        getAllEmployee((result: any) => {
+
+            setEmployeeList(result);
+
+            getLoginUserRoll().then(async res => {
+
+                if (res === '1') {
+                    //requester
+
+                    console.log(" requester -----------   ");
+
+                    get_ASYNC_IS_Auth_Requester().then(async resp => {
+
+                        if (resp === '1') {
+                            //auth requester
+
+                            console.log("auth requester -----------   ");
+                            setIsEditableEmp(false);
+
+                        } else {
+                            //requester
+
+                            console.log(" only requester -----------   ");
+
+                            setIsEditableEmp(true);
+
+                            get_ASYNC_EPFNO().then(async resu => {
+
+                                const empdata = result?.filter((a: any) => a.EPFNo == parseInt(resu + ""))[0];
+                                setSelectEmployee(empdata.Name);
+                                setEmpID(empdata.ID);
+
+                            });
+
+
+
+                        }
+
+                    });
+
+                } else {
+                    //
+                    console.log("not a requester -----------   ");
+                    setIsEditableEmp(false);
+                }
+
+
+            });
+
+
+
+
+
+
+        });
+
+    }
 
     //--------Get IOU Types Details Data----------------------
 
@@ -1666,7 +1825,7 @@ const NewIOUSettlement = () => {
 
     const UploadIOU = async (detailsData: any) => {
 
-        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=TPL_REPORT_TEST'
+        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=TPL_JOBA8_170723'
 
         var obj = [];
         var Fileobj = [];
@@ -1823,6 +1982,37 @@ const NewIOUSettlement = () => {
 
     }
 
+    const getJobNoByJobOwner = (ID: any) => {
+
+        getJobNOByOwners(ID, (res: any) => {
+
+            setJob_NoList(res);
+
+        });
+
+    }
+
+    const getGL_AccForJobNo = () => {
+        getAccNoForJobNo((res: any) => {
+            setAccountList(res);
+        });
+    }
+
+    const getGL_AccByExpenseType = (type: any) => {
+        getAccNoByExpenseType(type, (res: any) => {
+            setAccountList(res);
+            setAccountNo(res[0].GL_ACCOUNT);
+        });
+    }
+
+    const getEmpDetails = (ID: any) => {
+
+        getEmployeeByID(ID, (res: any) => {
+            setSelectEmployee(res[0].EmpName);
+            setEmpID(ID);
+        });
+    }
+
     return (
 
         <SafeAreaView style={ComStyles.CONTAINER}>
@@ -1939,12 +2129,19 @@ const NewIOUSettlement = () => {
                                                                         setSelecteJoborVehicle(no[0].trim());
 
                                                                         setselectJOBVehicleNo(item.Job_No);
+                                                                        getGL_AccForJobNo();
+                                                                        setIsDisableAcc(false);
 
 
                                                                     } else {
 
                                                                         setSelecteJoborVehicle(item.Vehicle_No);
                                                                         setselectJOBVehicleNo(item.Vehicle_No);
+                                                                        setIsDisableAcc(true);
+                                                                        get_ASYNC_COST_CENTER().then(async res => {
+                                                                            setCostCenter(res);
+                                                                        });
+                                                                        setResource(item.Vehicle_No);
 
                                                                     }
 
@@ -2005,6 +2202,10 @@ const NewIOUSettlement = () => {
                                                         setSelectExpenseType(item.Description);
                                                         setExpenseTypeID(item.ExpType_ID);
 
+                                                        if (IOUTypeID != "1") {
+                                                            getGL_AccByExpenseType(item.Description);
+                                                        }
+
 
                                                         setIsFocus(false);
                                                     }}
@@ -2058,13 +2259,42 @@ const NewIOUSettlement = () => {
                                                         Account No
                                                     </Text>
                                                 </View>
-                                                <InputText
-                                                    placeholderColor={ComStyles.COLORS.HEADER_BLACK}
-                                                    placeholder="Account No"
-                                                    stateValue={accountNo}
-                                                    editable={true}
-                                                    setState={(val: any) => setAccountNo(val)}
-                                                    style={ComStyles.IOUInput}
+                                                <Dropdown
+                                                    style={[
+                                                        styles.dropdown,
+                                                        isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
+                                                    ]}
+                                                    itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
+                                                    placeholderStyle={Style.placeholderStyle}
+                                                    selectedTextStyle={Style.selectedTextStyle}
+                                                    inputSearchStyle={Style.inputSearchStyle}
+                                                    iconStyle={styles.iconStyle}
+                                                    data={AccountList}
+                                                    search
+                                                    disable={isDisableAcc}
+                                                    maxHeight={300}
+                                                    labelField="GL_ACCOUNT"
+                                                    valueField="GL_ACCOUNT"
+                                                    placeholder={!isFocus ? 'Account No* ' : '...'}
+                                                    searchPlaceholder="Search Account No"
+                                                    value={accountNo}
+                                                    onFocus={() => setIsFocus(true)}
+                                                    onBlur={() => setIsFocus(false)}
+                                                    onChange={item => {
+
+                                                        setAccountNo(item.GL_ACCOUNT);
+
+
+                                                        setIsFocus(false);
+                                                    }}
+                                                    renderLeftIcon={() => (
+                                                        <AntDesign
+                                                            style={styles.icon}
+                                                            color={isFocus ? 'blue' : 'black'}
+                                                            name="Safety"
+                                                            size={15}
+                                                        />
+                                                    )}
                                                 />
 
                                                 <View style={{ flexDirection: 'row', }}>
@@ -2072,44 +2302,14 @@ const NewIOUSettlement = () => {
                                                         Cost Center
                                                     </Text>
                                                 </View>
-                                                <Dropdown
-                                                    style={[
-                                                        Style.dropdown,
-                                                        isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                                                    ]}
-                                                    itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                                                    placeholderStyle={Style.placeholderStyle}
-                                                    selectedTextStyle={Style.selectedTextStyle}
-                                                    inputSearchStyle={Style.inputSearchStyle}
-                                                    iconStyle={Style.iconStyle}
-                                                    data={IOUTypeID == "1" ? jobOwnerList : DepartmentList}
-                                                    search
-                                                    maxHeight={300}
-                                                    labelField={IOUTypeID == "1" ? "Name" : "SALESUNITNAME"}
-                                                    valueField={IOUTypeID == "1" ? "Name" : "SALESUNITNAME"}
-                                                    placeholder={!isFocus ? 'Cost Center ' : '...'}
-                                                    searchPlaceholder="Search cost Center"
-                                                    value={costCeneter}
-                                                    onFocus={() => setIsFocus(true)}
-                                                    onBlur={() => setIsFocus(false)}
-                                                    onChange={item => {
 
-                                                        setCostCenter(IOUTypeID == "1" ? item.Name : item.SALESUNITNAME);
-                                                        setCostCenterID(IOUTypeID == "1" ? item.JobOwner_ID : item.SALESUNITCODE);
-
-                                                        setError({ field: '', message: '' });
-                                                        setIsFocus(false);
-                                                        //getJobNo(selectJobOwner);
-
-                                                    }}
-                                                    renderLeftIcon={() => (
-                                                        <AntDesign
-                                                            style={Style.icon}
-                                                            color={isFocus ? 'blue' : 'black'}
-                                                            name="Safety"
-                                                            size={15}
-                                                        />
-                                                    )}
+                                                <InputText
+                                                    placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                                                    placeholder="Cost Center"
+                                                    stateValue={costCeneter}
+                                                    setState={(val: any) => setCostCenter(val)}
+                                                    editable={false}
+                                                    style={ComStyles.IOUInput}
                                                 />
 
                                                 <View style={{ flexDirection: 'row', }}>
@@ -2129,6 +2329,7 @@ const NewIOUSettlement = () => {
                                                     iconStyle={styles.iconStyle}
                                                     data={Vehicle_NoList}
                                                     search
+                                                    disable={isDisableRes}
                                                     maxHeight={300}
                                                     labelField={"Vehicle_No"}
                                                     valueField={"Vehicle_No"}
@@ -2250,21 +2451,48 @@ const NewIOUSettlement = () => {
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
 
-                            setIOUID(item.IOU_ID);
-                            setSelectIOU(item.IOU_ID)
-                            setJobOwner(item.JobOwner_ID);
-                            setIOUTypeID(item.IOUType_ID);
-                            setEmpID(item.USER_ID);
+                            setIOUTypeID(item.IOU_Type);
 
+                            getEmpDetails(item.EmpId);
+
+                            if (item.IOU_Type == 1) {
+
+                                // console.log(" job");
+
+
+                                setOwnerType("Job Owner");
+                                setIsEditable(false);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(item.JobOwner_ID, 1);
+                                setSelectIOUType("Job No");
+
+
+                            } else if (item.IOU_Type == 2) {
+
+                                // console.log(" vehicle");
+
+                                setOwnerType("Transport Officer");
+                                setIsEditable(false);
+                                setIsDisableRes(true);
+                                getJJobOwnerTransportHOD(item.JobOwner_ID, 2);
+                                getVehicleNo();
+                                setSelectIOUType("Vehicle No");
+
+
+                            } else {
+
+                                // console.log(" other");
+                                setOwnerType("HOD");
+                                setIsEditable(true);
+                                setIsDisableRes(false);
+                                getJJobOwnerTransportHOD(item.HOD, 3);
+                                setSelectIOUType("Other");
+
+                            }
+
+
+                            setError({ field: '', message: '' });
                             setIsFocus(false);
-                            getIOUJobList(item.IOU_ID);
-                            getIOUData(item.IOU_ID);
-                            // getIOUJobsListByID(item.IOUID, (response: any) => {
-
-                            //     setiouJobList(response);
-                            //     console.log(response);
-
-                            // });
                         }}
                         renderLeftIcon={() => (
                             <AntDesign
@@ -2284,6 +2512,16 @@ const NewIOUSettlement = () => {
                             IOU Type
                         </Text>
                     </View>
+
+                    <InputText
+                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                        placeholder="IOU Type"
+                        stateValue={selectIOUType}
+                        setState={(val: any) => setSelectIOUType(val)}
+                        editable={false}
+                        style={ComStyles.IOUInput}
+                    />
+                    {/* 
                     <Dropdown
                         style={[
                             Style.dropdown,
@@ -2321,18 +2559,27 @@ const NewIOUSettlement = () => {
                                 size={15}
                             />
                         )}
-                    />
+                    /> */}
                     {error.field === 'IOUTypeID' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
 
                     <View style={{ flexDirection: 'row', }}>
                         <Text style={styles.bodyTextLeft}>
-                            Job owner *
+                            {ownerType}
                         </Text>
                     </View>
 
-                    <Dropdown
+                    <InputText
+                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                        placeholder={ownerType}
+                        stateValue={selectJobOwner}
+                        setState={(val: any) => setSelectJobOwner(val)}
+                        editable={false}
+                        style={ComStyles.IOUInput}
+                    />
+
+                    {/* <Dropdown
                         style={[
                             Style.dropdown,
                             isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
@@ -2371,7 +2618,7 @@ const NewIOUSettlement = () => {
                                 size={15}
                             />
                         )}
-                    />
+                    /> */}
                     {error.field === 'JobOwner' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
@@ -2381,7 +2628,17 @@ const NewIOUSettlement = () => {
                             Employee
                         </Text>
                     </View>
-                    <Dropdown
+
+                    <InputText
+                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                        placeholder="Employee"
+                        stateValue={selectEmployee}
+                        setState={(val: any) => setSelectEmployee(val)}
+                        editable={false}
+                        style={ComStyles.IOUInput}
+                    />
+
+                    {/* <Dropdown
                         style={[
                             Style.dropdown,
                             isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
@@ -2419,7 +2676,7 @@ const NewIOUSettlement = () => {
                                 size={15}
                             />
                         )}
-                    />
+                    /> */}
                     {error.field === 'EmpName' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}

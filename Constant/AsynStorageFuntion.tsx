@@ -99,6 +99,27 @@ export const get_ASYNC_IS_Auth_Requester = async () => {
     // console.log('Failed to fetch the data from storage')
   }
 }
+
+export const get_ASYNC_COST_CENTER = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_COSTCENTER)
+    return value
+
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
+
+export const get_ASYNC_EPFNO = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_EPFNO)
+    return value
+
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
+
 export const get_ASYNC_MAX_AMOUNT = async () => {
   try {
     const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_MAXIMUM_REQUEST_AMOUNT)

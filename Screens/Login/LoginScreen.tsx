@@ -118,7 +118,7 @@ const LoginScreen = () => {
             var u_name = "dinushkam";
             var p_word = "GdBzSuV6mAdEyA6/H4plMQ==";
 
-            const URL = LOGIN_BASE_URL + "Login.xsjs?dbName=TPL_JOBA8_170723&username=" + uName + "&password=" + encryptedPassword + "&sap=PSLTEST_LIVE_SL";
+            const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=TPL_JOBA8_170723&username=" + uName + "&password=" + encryptedPassword + "&sap=PSLTEST_LIVE_SL";
 
             console.log("Login URL === ", URL);
 
@@ -146,9 +146,13 @@ const LoginScreen = () => {
 
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_NAME, response.data.displayName);
 
-                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserID, response.data.userId)
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserID, response.data.userId);
 
-                                    // awai                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         t AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser)
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser);
+                                    
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_COSTCENTER, response.data.costCenter);
+
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_EPFNO, response.data.epfno);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 
                                     get_ASYNC_LOGIN_ROUND().then(async res => {

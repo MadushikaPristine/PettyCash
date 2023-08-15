@@ -23,7 +23,7 @@ import IconA from 'react-native-vector-icons/FontAwesome';
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
-
+let loggedUserID: any;
 
 const PendingList = () => {
 
@@ -1048,9 +1048,12 @@ const PendingList = () => {
 
       getLoginUserID().then(result => {
         setUid(result + "");
+        loggedUserID = result;
         // console.log("User ID: ", result);
 
       })
+
+
 
       setSelectedItems([]);
       // approveRemark(remarks);
@@ -1063,6 +1066,9 @@ const PendingList = () => {
   //--------Update status and remark--------------
   const UpdateRequest = async (ID: any, Rtype: any, status: any, remark: string) => {
 
+    // console.log(" status ====  " , status);
+    
+
     const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=TPL_REPORT_TEST';
 
     const prams =
@@ -1070,9 +1076,8 @@ const PendingList = () => {
       "PCRCode": ID,
       "Type": Rtype,
       "StatusID": status,
-      "ModifyBy": 158,
+      "ModifyBy": loggedUserID,
       "Remark": remark,
-
     }
 
     try {
@@ -1104,7 +1109,6 @@ const PendingList = () => {
       }).catch((error) => {
 
         console.log("error .....   ", error);
-
 
       });
 
@@ -1202,8 +1206,8 @@ const PendingList = () => {
                   remarks={item.Approve_Remark}
                   //requestDate = {requestDate}
                   date={item.RequestDate}
-                  //isCheckBoxVisible={roll == 'Requester' ? false : true}
-                  isCheckBoxVisible={true}
+                  isCheckBoxVisible={roll == '1' ? false : true}
+                  // isCheckBoxVisible={true}
                   RequestID={item.ID}
                 />
 
@@ -1221,7 +1225,7 @@ const PendingList = () => {
 
         <View>
 
-          <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10,marginBottom:5 }}>
+          <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10, marginBottom: 5 }}>
 
             <ActionButton
               title="Approve Request"
@@ -1233,7 +1237,7 @@ const PendingList = () => {
           </View>
 
 
-          <View style={{ flexDirection: "row",marginLeft: 5, marginRight: 5 }}>
+          <View style={{ flexDirection: "row", marginLeft: 5, marginRight: 5 }}>
 
 
             <ActionButton
@@ -1246,10 +1250,10 @@ const PendingList = () => {
 
             <ActionButton
               title="Cancel Request"
-              styletouchable={{ width: '48%', marginLeft: 5}}
+              styletouchable={{ width: '48%', marginLeft: 5 }}
               onPress={() => cancel()}
               //styletouchable={{ marginLeft: 5, width: '100%' }}
-              style={{ flexDirection: 'row', justifyContent: "center",backgroundColor: ComponentsStyles.COLORS.BROWN }}
+              style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: ComponentsStyles.COLORS.BROWN }}
             //disabled={roll=='Requester' ? true : false}
             />
 

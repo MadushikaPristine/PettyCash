@@ -269,11 +269,11 @@ export const CreateTableIndexKey = () => {
     );
 
 
-    // ........................................ JOB IDX ................................
+    // ........................................ JOB NO IDX ................................
 
     db.transaction(
       (tx: any) => {
-        const query_idx_JOB = `CREATE UNIQUE INDEX IF NOT EXISTS idx_JOB ON  JOB(Job_NO) `;
+        const query_idx_JOB = `CREATE UNIQUE INDEX IF NOT EXISTS idx_JOB ON JOB_NO(DocEntry)`;
 
         tx.executeSql(
           query_idx_JOB,
@@ -345,7 +345,7 @@ export const CreateTableIndexKey = () => {
         // console.log('table create query transaction:', 'success');
       },
     );
-    // ...................................... DEpartments IDX ................................
+    // ...................................... Departments IDX ................................
 
     db.transaction(
       (tx: any) => {
@@ -353,6 +353,30 @@ export const CreateTableIndexKey = () => {
 
         tx.executeSql(
           query_idx_IOU_JOB,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success EXPENSE_TYPE: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error EXPENSE_TYPE: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+    // ...................................... GL_ACCOUNT IDX ................................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_GL_ACC = `CREATE UNIQUE INDEX IF NOT EXISTS idx_GL ON  GL_ACCOUNT(ID) `;
+
+        tx.executeSql(
+          query_idx_GL_ACC,
           [],
           (tx: any, response: any) => {
             // console.log(`create table index success EXPENSE_TYPE: `, response);
@@ -547,7 +571,7 @@ export const searchData = (query: any, params: any, callBack: any) => {
 
 
 
-          // console.log('search data ................. : ', tx.rows.raw());
+          // console.log('search data ................. : ', query);
 
           return callBack(tx.rows.raw(), null); //notify caller
 

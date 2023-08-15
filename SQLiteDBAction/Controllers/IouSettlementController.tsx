@@ -10,8 +10,8 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
             [
                 {
                     table: 'IOU_SETTLEMENT',
-                    columns: `IOUSettlement_ID,IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `IOUSettlement_ID,IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -27,6 +27,16 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
                         data[i].REMARK,
                         "",
                         "0",
+                        data[i].FirstActionBy,
+                        data[i].HOD,
+                        data[i].FirstActionBy,
+                        data[i].FirstActionAt,
+                        data[i].RIsLimit,
+                        data[i].AIsLimit,
+                        data[i].RIouLimit,
+                        data[i].AIouLimit,
+                        data[i].SecondActionBy,
+                        data[i].SecondActionAt
 
                     ],
                 },

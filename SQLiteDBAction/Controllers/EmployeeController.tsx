@@ -1,3 +1,4 @@
+import { get_ASYNC_COST_CENTER } from '../../Constant/AsynStorageFuntion';
 import * as DB from '../DBService';
 
 export const saveEmployee = (data: any, callBack: any) => {
@@ -10,13 +11,15 @@ export const saveEmployee = (data: any, callBack: any) => {
             [
                 {
                     table: 'EMPLOYEE',
-                    columns: `Emp_ID,EmpName,CostCenter,Status`,
-                    values: '?,?,?,?',
+                    columns: `Emp_ID,EmpName,EPFNo,Designation,DEP_ID,Status`,
+                    values: '?,?,?,?,?,?',
                     params: [
 
-                        data[i].ID,
-                        data[i].Name,
-                        data[i].CostCenter,
+                        data[i].UserID,
+                        data[i].DisplayName,
+                        data[i].EPFNo,
+                        data[i].Designation,
+                        data[i].DEP_ID,
                         1,
 
                     ],
@@ -74,12 +77,33 @@ export const getTypeWiseUsers = (TypeID: any, callBack: any) => {
 
 export const getAllEmployee = (callBack: any) => {
 
-    DB.searchData(
-        'SELECT * FROM EMPLOYEE',
-        [],
-        (resp: any, err: any) => {
-            // console.log("************** All employee ************  " + resp.length);
-            callBack(resp, err);
-        },
-    );
+    get_ASYNC_COST_CENTER().then(async res => {
+
+        DB.searchData(
+            'SELECT Emp_ID as ID , EmpName as Name , EPFNo FROM EMPLOYEE WHERE DEP_ID=?',
+            [res],
+            (resp: any, err: any) => {
+                // console.log("************** All employee ************  " + resp.length);
+                callBack(resp, err);
+            },
+        );
+
+    });
+
+  
+};
+
+export const getEmployeeByID = (ID:any,callBack: any) => {
+
+        DB.searchData(
+            'SELECT * FROM EMPLOYEE WHERE Emp_ID=?',
+            [ID],
+            (resp: any, err: any) => {
+                // console.log("************** All employee ************  " + resp.length);
+                callBack(resp, err);
+            },
+        );
+
+
+  
 };

@@ -9,6 +9,7 @@ import base64 from 'react-native-base64';
 export const BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/api/PettyCash_Mobile";
 export const BASE_URL_LOOKUPS = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/api/lookups";
 export const LOGIN_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/api/CommonLogin/";
+export const COMMON_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/api/PettyCash/";
 
 // http://10.10.0.100:8000/TPL_JOB_A8_SAP_MERGE/api/CommonLogin/Login.xsjs?dbName=TPL_JOBA8_170723&username=dinushkam&password=GdBzSuV6mAdEyA6/H4plMQ==&sap=PSLTEST_LIVE_SL
 

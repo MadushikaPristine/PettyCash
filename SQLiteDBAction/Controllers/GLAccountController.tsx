@@ -1,7 +1,6 @@
-import { get_ASYNC_COST_CENTER } from '../../Constant/AsynStorageFuntion';
 import * as DB from '../DBService';
 
-export const saveDepartment = (data: any, callBack: any) => {
+export const saveGLAccount = (data: any, callBack: any) => {
 
     var response: any;
 
@@ -10,20 +9,17 @@ export const saveDepartment = (data: any, callBack: any) => {
         DB.insertOrReplace(
             [
                 {
-                    table: 'DEPARTMENTS',
-                    columns: `DepID,DepName,CostCenter,HODNo,HODName,isSubAuth,SubNo,SubstiveName,Status`,
-                    values: '?,?,?,?,?,?,?,?,?',
+                    table: 'GL_ACCOUNT',
+                    columns: `ID,ANALYSIS_CODE,GL_ACCOUNT,TYPE,JOB_RELATED,Code`,
+                    values: '?,?,?,?,?,?',
                     params: [
 
                         data[i].ID,
-                        data[i].DepName,
-                        data[i].CostCenter,
-                        data[i].HODNo,
-                        data[i].HODName,
-                        data[i].isSubAuth,
-                        data[i].SubNo,
-                        data[i].SubstiveName,
-                        data[i].Status,
+                        data[i].ANALYSIS_CODE,
+                        data[i].GL_ACCOUNT,
+                        data[i].TYPE,
+                        data[i].JOB_RELATED,
+                        data[i].Code,
 
                         // data[i].Status,
 
@@ -66,46 +62,26 @@ export const saveDepartment = (data: any, callBack: any) => {
 
 };
 
-export const getDepartments = (callBack: any) => {
+
+export const getAccNoForJobNo = (callBack: any) => {
 
     DB.searchData(
-        'SELECT * FROM DEPARTMENTS',
-        [],
+        'SELECT * FROM GL_ACCOUNT WHERE JOB_RELATED=? AND Code=?',
+        [1,"ALL"],
         (resp: any, err: any) => {
             //console.log("************** all IOU Types ************  " + resp.length);
             callBack(resp, err);
         },
     );
 };
-
-export const getHODDetails = (ID:any,callBack: any) => {
+export const getAccNoByExpenseType = (type:any,callBack: any) => {
 
     DB.searchData(
-        'SELECT HODName as Name , HODNo as ID FROM DEPARTMENTS WHERE HODNo=? ',
-        [],
+        'SELECT * FROM GL_ACCOUNT WHERE Code=?',
+        [type],
         (resp: any, err: any) => {
             //console.log("************** all IOU Types ************  " + resp.length);
             callBack(resp, err);
         },
     );
-};
-export const getLoggedUserHOD = (callBack: any) => {
-
-    get_ASYNC_COST_CENTER().then(async res => {
-
-        console.log(" center ====  " , res);
-        
-
-        DB.searchData(
-            'SELECT HODName as Name , HODNo as ID FROM DEPARTMENTS WHERE CostCenter=?',
-            [res],
-            (resp: any, err: any) => {
-                //console.log("************** all IOU Types ************  " + resp.length);
-                callBack(resp, err);
-            },
-        );
-
-    });
-
-
 };
