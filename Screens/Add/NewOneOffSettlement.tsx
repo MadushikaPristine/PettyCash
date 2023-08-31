@@ -27,9 +27,9 @@ import ImagePicker, { launchCamera, launchImageLibrary } from 'react-native-imag
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import ImageUpload from "../../Components/ImageUpload";
 import { IOUType } from "../../Constant/DummyData";
-import { getLastOneOffSettlement, getOneOffJobsListByID, getOneOffReOpenRequest, saveOneOffSettlement, updateOneOffSyncStatus } from "../../SQLiteDBAction/Controllers/OneOffSettlementController";
+import { getLastOneOffSettlement, getOneOffJobsListByID, getOneOffReOpenRequest, saveOneOffSettlement, updateIDwithStatusOneOff, updateOneOffSyncStatus } from "../../SQLiteDBAction/Controllers/OneOffSettlementController";
 import moment from "moment";
-import { CopyRequest, getLoginUserID, getLoginUserName, getRejectedId, get_ASYNC_COST_CENTER } from "../../Constant/AsynStorageFuntion";
+import { CopyRequest, getLoginUserID, getLoginUserName, getLoginUserRoll, getRejectedId, get_ASYNC_COST_CENTER } from "../../Constant/AsynStorageFuntion";
 import { getAllEmployee, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
 import { getIOUTypes } from "../../SQLiteDBAction/Controllers/IOUTypeController";
 import RNFS from 'react-native-fs';
@@ -39,7 +39,7 @@ import InputText from "../../Components/InputText";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getLastOneOffJobID, getOneOffJOBDataBYRequestID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
-import { getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
+import { getAllLoginUserDetails, getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
 import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
 import { getAllJobOwners, getAllJobOwnersBYDep } from "../../SQLiteDBAction/Controllers/JobOwnerController";
@@ -50,6 +50,7 @@ import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Control
 import { getDepartments, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
+import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
 
@@ -69,6 +70,8 @@ var jobArray: any = [];
 let JobDetails: any[] = [];
 let ReOpenData: any[] = [];
 let ONEOFFID = "";
+
+let userRole: any;
 
 const NewOneOffSettlement = () => {
 
@@ -146,6 +149,7 @@ const NewOneOffSettlement = () => {
 
     const [IOULimit, setIOULimit] = useState(0.0);
     const [HODId, setHODID] = useState('');
+    const [RequesterLimit, setRequesterLimit] = useState(0.0);
 
 
     var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
@@ -319,7 +323,7 @@ const NewOneOffSettlement = () => {
         // console.log('sampleIn');
 
         Animated.timing(modalStyle, {
-            toValue: height / 2.5,
+            toValue: height / 8.5,
             duration: 500,
             useNativeDriver: false,
         }).start();
@@ -432,12 +436,27 @@ const NewOneOffSettlement = () => {
     }
 
     const clearData = () => {
-        setExpenseTypeList([]);
-        setJobList([]);
+
+
+        setJobOwner('');
         setJobOwnerlist([]);
+        setIOUTypeID('');
+        setEmpID('');
+        setEmployeeList([]);
+        setIOULimit(0.0);
         setCameraPhoto('');
-        setIOUTypeList([]);
-      
+        setjobNo('');
+        setSelecteJoborVehicle('');
+        setSelectExpenseType('');
+        setJobList([]);
+        setResource('');
+        setCostCenter('');
+        setAccountNo('');
+        setrequestAmount('');
+        setExpenseTypeID('');
+        setSelectEmployee('');
+        setSelectIOUType('');
+        setSelectJobOwner('');
     }
 
     const saveSubmit = () => {
@@ -452,170 +471,33 @@ const NewOneOffSettlement = () => {
             setHODID(res[0].ID);
             HODID = res[0].ID;
 
-            console.log("iou type ==== " , IOUTypeID);
-            
+            console.log("iou type ==== ", IOUTypeID);
 
 
-            if (IOUTypeID === '3') {
+            if (userRole == "1" && amount > RequesterLimit) {
 
-                console.log("other type == ");
+                //Requester limit exceed
+
+                console.log(" requester logged ---  limit exceed ");
 
 
-                IsLimit = "";
-
-                OneOffData = [
+                Alert.alert('Limit Exceed!', 'Requested amount is limit exceeded.', [
                     {
-                        PCRCode: OneOffSettlementNo,
-                        JobOwner: parseInt(JobOwner),
-                        IOUType: parseInt(IOUTypeID),
-                        EmpId: '',
-                        RequestedDate: currentDate,
-                        Amount: amount,
-                        StatusID: 1,
-                        RequestedBy: userID,
-                        IsSync: 0,
-                        REMARK: "",
-                        Reject_Remark: "",
-                        Attachment_Status: 1,
-                        HOD: parseInt(res[0].ID),
-                        FirstActionBy: '',
-                        FirstActionAt: '',
-                        RIsLimit: null,
-                        AIsLimit: null,
-                        RIouLimit: '',
-                        AIouLimit: '',
-                        SecondActionBy: '',
-                        SecondActionAt: ''
-                    }
-                ]
-
-                saveOneOffSettlement(OneOffData, async (Response: any) => {
-                    // console.log("Save One-Off Settlement...",Response);
-                    // slideOutModal();
-                    // Alert.alert("Successfully Submitted!")
-                    if (Response == 3) {
-                        getDetailsData(parseInt(res[0].ID), IsLimit);
-                        slideOutModal();
-                        Alert.alert("Successfully Submitted!")
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'Successfully Submitted!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'success',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
-                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-                        navigation.navigate('PendingList');
+                        text: 'Ok',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                    // { text: 'Yes', onPress: (back) },
+                ]);
 
 
-                    } else {
-                        Alert.alert("IOU Request Failed!")
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'IOU Request Failed!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'success',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-                    }
-                })
 
-
-            } else if (amount > IOULimit) {
-
-                console.log("limit exceed == ", IOULimit);
-
-                IsLimit = "YES";
-
-                OneOffData = [
-                    {
-                        PCRCode: OneOffSettlementNo,
-                        JobOwner: parseInt(JobOwner),
-                        IOUType: parseInt(IOUTypeID),
-                        EmpId: '',
-                        RequestedDate: currentDate,
-                        Amount: amount,
-                        StatusID: 1,
-                        RequestedBy: userID,
-                        IsSync: 0,
-                        REMARK: "",
-                        Reject_Remark: "",
-                        Attachment_Status: 1,
-                        HOD: parseInt(res[0].ID),
-                        FirstActionBy: '',
-                        FirstActionAt: '',
-                        RIsLimit: 'YES',
-                        AIsLimit: null,
-                        RIouLimit: IOULimit,
-                        AIouLimit: '',
-                        SecondActionBy: '',
-                        SecondActionAt: ''
-                    }
-                ]
-
-                console.log(" json [][][]  ", OneOffData);
-
-
-                saveOneOffSettlement(OneOffData, async (Response: any) => {
-                    console.log("Save One-Off Settlement...", Response);
-                    // slideOutModal();
-                    // Alert.alert("Successfully Submitted!")
-                    if (Response == 3) {
-                        getDetailsData(parseInt(res[0].ID), IsLimit);
-                        slideOutModal();
-                        Alert.alert("Successfully Submitted!")
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'Successfully Submitted!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'success',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
-                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-                        navigation.navigate('PendingList');
-
-
-                    } else {
-                        Alert.alert("IOU Request Failed!")
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'IOU Request Failed!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'success',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-                    }
-                })
             } else {
 
-
                 if (IOUTypeID === '3') {
-                    //other type
 
+                    console.log("other type == ");
 
-                    console.log("Other type ----  ", HODID);
 
                     IsLimit = "";
 
@@ -667,7 +549,6 @@ const NewOneOffSettlement = () => {
                             // );
                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
                             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
                             navigation.navigate('PendingList');
 
 
@@ -688,14 +569,13 @@ const NewOneOffSettlement = () => {
                         }
                     })
 
-                } else {
 
+                } else if (amount > IOULimit) {
 
-                    console.log("job no or vehicle");
+                    console.log("limit exceed == ", IOULimit);
 
-                    IsLimit = "NO";
+                    IsLimit = "YES";
 
-                    HODID = '';
                     OneOffData = [
                         {
                             PCRCode: OneOffSettlementNo,
@@ -713,7 +593,7 @@ const NewOneOffSettlement = () => {
                             HOD: parseInt(res[0].ID),
                             FirstActionBy: '',
                             FirstActionAt: '',
-                            RIsLimit: 'NO',
+                            RIsLimit: 'YES',
                             AIsLimit: null,
                             RIouLimit: IOULimit,
                             AIouLimit: '',
@@ -722,12 +602,15 @@ const NewOneOffSettlement = () => {
                         }
                     ]
 
+                    console.log(" json [][][]  ", OneOffData);
+
+
                     saveOneOffSettlement(OneOffData, async (Response: any) => {
-                        // console.log("Save One-Off Settlement...",Response);
+                        console.log("Save One-Off Settlement...", Response);
                         // slideOutModal();
                         // Alert.alert("Successfully Submitted!")
                         if (Response == 3) {
-                            getDetailsData(HODID, IsLimit);
+                            getDetailsData(parseInt(res[0].ID), IsLimit);
                             slideOutModal();
                             Alert.alert("Successfully Submitted!")
                             // SweetAlert.showAlertWithOptions({
@@ -744,7 +627,6 @@ const NewOneOffSettlement = () => {
                             // );
                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
                             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
                             navigation.navigate('PendingList');
 
 
@@ -764,11 +646,172 @@ const NewOneOffSettlement = () => {
                             // );
                         }
                     })
+                } else {
+
+
+                    if (IOUTypeID === '3') {
+                        //other type
+
+
+                        console.log("Other type ----  ", HODID);
+
+                        IsLimit = "";
+
+                        OneOffData = [
+                            {
+                                PCRCode: OneOffSettlementNo,
+                                JobOwner: parseInt(JobOwner),
+                                IOUType: parseInt(IOUTypeID),
+                                EmpId: '',
+                                RequestedDate: currentDate,
+                                Amount: amount,
+                                StatusID: 1,
+                                RequestedBy: userID,
+                                IsSync: 0,
+                                REMARK: "",
+                                Reject_Remark: "",
+                                Attachment_Status: 1,
+                                HOD: parseInt(res[0].ID),
+                                FirstActionBy: '',
+                                FirstActionAt: '',
+                                RIsLimit: null,
+                                AIsLimit: null,
+                                RIouLimit: '',
+                                AIouLimit: '',
+                                SecondActionBy: '',
+                                SecondActionAt: ''
+                            }
+                        ]
+
+                        saveOneOffSettlement(OneOffData, async (Response: any) => {
+                            // console.log("Save One-Off Settlement...",Response);
+                            // slideOutModal();
+                            // Alert.alert("Successfully Submitted!")
+                            if (Response == 3) {
+                                getDetailsData(parseInt(res[0].ID), IsLimit);
+                                slideOutModal();
+                                Alert.alert("Successfully Submitted!")
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'Successfully Submitted!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'success',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+                                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                                navigation.navigate('PendingList');
+
+
+                            } else {
+                                Alert.alert("IOU Request Failed!")
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'IOU Request Failed!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'success',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+                            }
+                        })
+
+                    } else {
+
+
+                        console.log("job no or vehicle");
+
+                        IsLimit = "NO";
+
+                        HODID = '';
+                        OneOffData = [
+                            {
+                                PCRCode: OneOffSettlementNo,
+                                JobOwner: parseInt(JobOwner),
+                                IOUType: parseInt(IOUTypeID),
+                                EmpId: '',
+                                RequestedDate: currentDate,
+                                Amount: amount,
+                                StatusID: 1,
+                                RequestedBy: userID,
+                                IsSync: 0,
+                                REMARK: "",
+                                Reject_Remark: "",
+                                Attachment_Status: 1,
+                                HOD: parseInt(res[0].ID),
+                                FirstActionBy: '',
+                                FirstActionAt: '',
+                                RIsLimit: 'NO',
+                                AIsLimit: null,
+                                RIouLimit: IOULimit,
+                                AIouLimit: '',
+                                SecondActionBy: '',
+                                SecondActionAt: ''
+                            }
+                        ]
+
+                        saveOneOffSettlement(OneOffData, async (Response: any) => {
+                            // console.log("Save One-Off Settlement...",Response);
+                            // slideOutModal();
+                            // Alert.alert("Successfully Submitted!")
+                            if (Response == 3) {
+                                getDetailsData(HODID, IsLimit);
+                                slideOutModal();
+                                Alert.alert("Successfully Submitted!")
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'Successfully Submitted!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'success',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+                                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "ONEOFF");
+                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                                navigation.navigate('PendingList');
+
+
+                            } else {
+                                Alert.alert("IOU Request Failed!")
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'IOU Request Failed!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'success',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+                            }
+                        })
+
+                    }
+
 
                 }
 
 
             }
+
+
 
 
 
@@ -1073,7 +1116,7 @@ const NewOneOffSettlement = () => {
         } else {
             // addbtn 
 
-            // console.log("insert  /////////// ");
+            console.log("Expense Type --- ", expenseTypeID, " - ", selectExpenseType, "  Job No ---- ", selectJOBVehicleNo, "Resource ----- ", resource);
             saveJob();
         }
 
@@ -1265,7 +1308,7 @@ const NewOneOffSettlement = () => {
         const JOBData: any = [];
         JOBData.push(saveObject);
 
-        console.log("save one-off job ====  ", saveObject);
+        console.log("save one-off job ====  ", JOBData);
 
 
         saveOneOffJOB(JOBData, (response: any) => {
@@ -1282,18 +1325,7 @@ const NewOneOffSettlement = () => {
                 // console.log(" JOB List [][][][ ", joblist);
 
                 Alert.alert("Successfully Added!");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Successfully Added!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
+
 
                 setSelecteJoborVehicle('');
                 setExpenseTypeID('');
@@ -1311,18 +1343,7 @@ const NewOneOffSettlement = () => {
             } else {
 
                 Alert.alert("Failed!");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Failed!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
+
                 setSelecteJoborVehicle('');
                 setExpenseTypeID('');
                 setrequestAmount('');
@@ -1350,6 +1371,7 @@ const NewOneOffSettlement = () => {
         setCostCenter('');
         setResource('');
         setSelectExpenseType('');
+        setselectJOBVehicleNo('');
 
         slideOutModal();
 
@@ -1370,8 +1392,6 @@ const NewOneOffSettlement = () => {
             setVehicle_NoList(resp);
         })
     }
-
-
 
 
     //-----------------------------------------------------
@@ -1398,6 +1418,17 @@ const NewOneOffSettlement = () => {
 
             getLoginUserID().then(result => {
                 setUserID(result);
+
+                getLoginUserRoll().then(res => {
+                    userRole = res;
+
+                    if (res == '1') {
+
+                        getAllLoginUserDetails(result, (resp: any) => {
+                            setRequesterLimit(parseFloat(resp[0].IOULimit));
+                        });
+                    }
+                });
             })
 
             CopyRequest().then(resp => {
@@ -1503,7 +1534,13 @@ const NewOneOffSettlement = () => {
                 JobDetails.push(result[i]);
             }
 
-            UploadOneOff(JobDetails, HOD, IsLimit);
+            Conection_Checking(async (res: any) => {
+                if (res != false) {
+                    UploadOneOff(JobDetails, HOD, IsLimit);
+                }
+            })
+
+
         })
     }
 
@@ -1511,34 +1548,58 @@ const NewOneOffSettlement = () => {
 
     const UploadOneOff = async (detailsData: any, HOD: any, IsLimit: any) => {
 
-        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=TPL_JOBA8_170723';
+        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=PC_UAT_WM';
 
         var obj = [];
         var Fileobj = [];
         try {
-            for (let i = 0; i < detailsData.length; i++) {
 
-                const arr = {
-                    "IOUTypeID": detailsData[i].IOUTypeID,
-                    "IOUTypeNo": detailsData[i].IOUTypeNo,
-                    "ExpenseType": detailsData[i].ExpenseType,
-                    "Amount": detailsData[i].Amount,
-                    "Remark": detailsData[i].Remark,
-                    "ID": 2,
-                    "AccNo": detailsData[i].AccNo,
-                    "CostCenter": detailsData[i].CostCenter,
-                    "Resource": detailsData[i].Resource
+            if (parseInt(IOUTypeID) == 1) {
+
+                for (let i = 0; i < detailsData.length; i++) {
+
+                    const arr = {
+                        "IOUTypeID": detailsData[i].IOUTypeID,
+                        "IOUTypeNo": detailsData[i].IOUTypeNo,
+                        "ExpenseType": detailsData[i].ExpenseType,
+                        "Amount": detailsData[i].Amount,
+                        "Remark": detailsData[i].Remark,
+                        "ID": 2,
+                        "AccNo": detailsData[i].AccNo,
+                        "CostCenter": detailsData[i].CostCenter,
+                        "Resource": detailsData[i].Resource
+                    }
+
+                    obj.push(arr);
+                }
+            } else {
+
+                for (let i = 0; i < detailsData.length; i++) {
+
+                    const arr = {
+                        "IOUTypeID": detailsData[i].IOUTypeID,
+                        "IOUTypeNo": "",
+                        "ExpenseType": detailsData[i].ExpenseType,
+                        "Amount": detailsData[i].Amount,
+                        "Remark": detailsData[i].Remark,
+                        "ID": 2,
+                        "AccNo": detailsData[i].AccNo,
+                        "CostCenter": detailsData[i].CostCenter,
+                        "Resource": detailsData[i].Resource
+                    }
+
+                    obj.push(arr);
                 }
 
-                obj.push(arr);
             }
+
             for (let i = 0; i < detailsData.length; i++) {
 
                 const arr = {
-                    "IOUTypeNo": SelecteJoborVehicle,
+                    "IOUTypeNo": IOUTypeID,
                     "FileName": detailsData[i].Img_url,
                     "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
-                    "FileType": "jpg"
+                    "FileType": "image/jepg"
                 }
 
                 Fileobj.push(arr);
@@ -1575,16 +1636,21 @@ const NewOneOffSettlement = () => {
                 // console.log("[s][t][a][t][u][s][] one off reponse METHOD   ........  ", response);
                 if (response.status == 200) {
 
-                    updateOneOffSyncStatus(OneOffSettlementNo, (result: any) => {
-
-                    });
-
-                    clearData();
-
                     // console.log("success ======= ", response.statusText);
 
+                    if (response.data.ErrorId == 0) {
 
-                    console.log("success ===222==== ", response.data);
+                        console.log("success ===222==== ", response.data);
+
+                        updateIDwithStatusOneOff(OneOffSettlementNo, response.data.ID, (resp: any) => {
+
+                        });
+
+
+                    }
+
+
+                    clearData();
 
 
                 } else {
@@ -1609,6 +1675,8 @@ const NewOneOffSettlement = () => {
 
 
     }
+
+
 
     const getJobNoByJobOwner = (ID: any) => {
 
@@ -1705,7 +1773,7 @@ const NewOneOffSettlement = () => {
 
                                                 <View style={{ justifyContent: 'center', alignItems: 'center', alignContent: 'center', flexDirection: 'row' }}>
 
-                                                    <TouchableOpacity style={styles.dashStyle} onPress={slideOutModal} />
+                                                    <TouchableOpacity style={styles.dashStyle} onPress={() => cancelJob()} />
 
                                                 </View>
 
@@ -2130,7 +2198,7 @@ const NewOneOffSettlement = () => {
                                                 IOU_Type={IOUTypeID}
                                                 amount={item.Amount}
                                                 IOUTypeNo={item.IOUTypeNo}
-                                                ExpenseType={item.ExpenseType == 1 ? "Meals" : (item.ExpenseType == 2 ? "Batta" : (item.ExpenseType == 3 ? "Labour" : (item.ExpenseType == 4 ? "Project Materials" : (item.ExpenseType == 5 ? "Travelling" : (item.ExpenseType == 6 ? "Other" : "")))))}
+                                                ExpenseType={item.ExpenseType}
                                                 jobremarks={item.Remark}
                                                 accNo={item.AccNo}
                                                 costCenter={item.CostCenter}
@@ -2147,7 +2215,7 @@ const NewOneOffSettlement = () => {
                                 }
 
                                 }
-                                keyExtractor={item => `${item.Job_ID}`}
+                                keyExtractor={item => `${item._Id}`}
                             />
 
 

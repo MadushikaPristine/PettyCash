@@ -10,8 +10,8 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
             [
                 {
                     table: 'ONE_OFF_SETTLEMENT',
-                    columns: `ONEOFFSettlement_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `ONEOFFSettlement_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt,ActionStep,WebRefID,FStatus`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -23,7 +23,7 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
                         data[i].StatusID,
                         data[i].RequestedBy,
                         0,
-                        data[i].REMARK,
+                        data[i].Remark,
                         "",
                         "0",
                         data[i].FirstActionBy,
@@ -35,7 +35,10 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
                         data[i].RIouLimit,
                         data[i].AIouLimit,
                         data[i].SecondActionBy,
-                        data[i].SecondActionAt
+                        data[i].SecondActionAt,
+                        data[i].ActionStep,
+                        data[i].ID,
+                        data[i].FStatus,
 
 
                     ],
@@ -219,6 +222,32 @@ export const getPendingOneOffSetList = (callBack: any) => {
 
 };
 
+
+export const getAllPendingOneOffSetList = (callBack: any) => {
+
+    DB.searchData(
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID,IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=1 OR ONE_OFF_SETTLEMENT.Approve_Status=5 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        [],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+        },
+    );
+
+};
+export const getHODPendingOneOffSetList = (callBack: any) => {
+
+    DB.searchData(
+        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID,IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=5 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+        [],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+        },
+    );
+
+};
+
 //------IOU PENDING LIST FILTER BY DATE-------
 
 export const getDateFilterONEOFFList = (firstDate: any, secondDate: any, callBack: any) => {
@@ -295,7 +324,7 @@ export const getDateFilterONEOFFCancelList = (firstDate: any, secondDate: any, c
 export const getOneOffJobsListByID = (RequestID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT_JOBS._Id,ONE_OFF_SETTLEMENT_JOBS.Job_ID, ONE_OFF_SETTLEMENT.JobOwner_ID,ONE_OFF_SETTLEMENT.IOU_Type, ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID, ONE_OFF_SETTLEMENT_JOBS.Job_NO as IOUTypeNo, ONE_OFF_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT_JOBS.Remark, ONE_OFF_SETTLEMENT_JOBS.AccNo, ONE_OFF_SETTLEMENT_JOBS.CostCenter, ONE_OFF_SETTLEMENT_JOBS.Resource FROM ONE_OFF_SETTLEMENT INNER JOIN ONE_OFF_SETTLEMENT_JOBS ON ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID WHERE ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID=?',
+        'SELECT ONE_OFF_SETTLEMENT_JOBS._Id,ONE_OFF_SETTLEMENT_JOBS.Job_ID, ONE_OFF_SETTLEMENT.JobOwner_ID,ONE_OFF_SETTLEMENT.IOU_Type, ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID, ONE_OFF_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,  e.Description as ExpenseType, IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT_JOBS.Remark, ONE_OFF_SETTLEMENT_JOBS.AccNo, ONE_OFF_SETTLEMENT_JOBS.CostCenter, ONE_OFF_SETTLEMENT_JOBS.Resource FROM ONE_OFF_SETTLEMENT INNER JOIN ONE_OFF_SETTLEMENT_JOBS ON ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = ONE_OFF_SETTLEMENT_JOBS.Expences_Type WHERE ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID=?',
         [RequestID],
         (resp: any, err: any) => {
             callBack(resp, err);
@@ -343,6 +372,20 @@ export const updateOneOffSyncStatus = (ID: any, callBack: any) => {
         },
     );
 };
+
+export const updateIDwithStatusOneOff = (ID: any, refID: any, callBack: any) => {
+
+    DB.updateData(
+        'UPDATE ONE_OFF_SETTLEMENT SET IsSync=1 , WebRefID=? WHERE ONEOFFSettlement_ID=?',
+        [refID,ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+
+
 export const getOneOffReAllData = (RequestID: any, callBack: any) => {
 
     DB.searchData(
@@ -357,8 +400,8 @@ export const Update_ONE_OF_FirstApprovel = (data: any, callBack: any) => {
 
 
     DB.updateData(
-        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=? WHERE ONEOFFSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -373,8 +416,8 @@ export const Update_ONE_OF_ValidateAmount = (data: any, callBack: any) => {
     
 
     DB.updateData(
-        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=? WHERE ONEOFFSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -385,14 +428,42 @@ export const Update_ONE_OF_SecondApprovel = (data: any, callBack: any) => {
 
 
     DB.updateData(
-        'UPDATE ONE_OFF_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=? WHERE ONEOFFSettlement_ID=?',
-        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        'UPDATE ONE_OFF_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
         },
     );
 };
+
+export const checkOpenRequests = (ID: any, callBack: any) => {
+
+    DB.searchData(
+        'SELECT * FROM ONE_OFF_SETTLEMENT WHERE CreatedBy=? AND (Approve_Status=? OR Approve_Status=?)',
+        //WHERE RequestDate <= "2023-05-15 23:59:59" AND RequestDate >= "2023-05-15 00:00:00" AND Approve_Status >= 2',
+        [ID, 1, 5],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+            // console.log(resp);
+        },
+    )
+}
+
+export const checkOpenRequestsOneOff = (ID: any, callBack: any) => {
+
+    DB.searchData(
+        'SELECT * FROM ONE_OFF_SETTLEMENT WHERE CreatedBy=? AND FStatus=?',
+        //WHERE RequestDate <= "2023-05-15 23:59:59" AND RequestDate >= "2023-05-15 00:00:00" AND Approve_Status >= 2',
+        [ID, 0],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+            // console.log(resp);
+        },
+    )
+}
 
 
 

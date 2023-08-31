@@ -131,7 +131,7 @@ export const getAllJobOwners = (callBack: any) => {
 
 
     DB.searchData(
-        'SELECT USER_ID as ID , ExternalName as Name , DepartmentId , DepartmentName, IOULimit ,EPFNo, SapEmpId , DepartmentId , DepartmentName  FROM USER WHERE RoleID=3',
+        'SELECT USER_ID as ID , DisplayName as Name , DepartmentId , DepartmentName, IOULimit ,EPFNo, SapEmpId , DepartmentId , DepartmentName  FROM USER WHERE RoleID=3',
         [],
         (resp: any, err: any) => {
             // console.log("************** All employee ************  " + resp.length);
@@ -143,7 +143,7 @@ export const getAllJobOwners = (callBack: any) => {
 export const getAllLoginUserDetails = (uID:any,callBack: any) => {
 
     DB.searchData(
-        'SELECT IOULimit FROM USER WHERE USER_ID=?',
+        'SELECT IFNULL(IOULimit , 0) as IOULimit FROM USER WHERE USER_ID=?',
         [uID],
         (resp: any, err: any) => {
             // console.log("************** All employee ************  " + resp.length);

@@ -10,8 +10,8 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
             [
                 {
                     table: 'IOU_SETTLEMENT',
-                    columns: `IOUSettlement_ID,IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `IOUSettlement_ID,IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt,ActionStep,WebRefID`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].PCRCode,
@@ -24,7 +24,7 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
                         data[i].StatusID,
                         data[i].RequestedBy,
                         1,
-                        data[i].REMARK,
+                        data[i].Remark,
                         "",
                         "0",
                         data[i].FirstActionBy,
@@ -36,12 +36,17 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
                         data[i].RIouLimit,
                         data[i].AIouLimit,
                         data[i].SecondActionBy,
-                        data[i].SecondActionAt
+                        data[i].SecondActionAt,
+                        data[i].ActionStep,
+                        data[i].ID
 
                     ],
                 },
             ],
             (res: any, err: any) => {
+
+                console.log(" save response ===  " , res);
+                
                 if (res === 'success') {
 
                     if (i + 1 == data.length) {
@@ -220,6 +225,30 @@ export const getPendingIOUSetList = (callBack: any) => {
     );
 
 };
+export const getAllPendingIOUSetList = (callBack: any) => {
+
+    DB.searchData(
+        'SELECT IOU_SETTLEMENT._Id as Id ,IOU_SETTLEMENT.IOUSettlement_ID as ID ,USER.DisplayName as employee, USER.USER_ID,  IFNULL(IOU_SETTLEMENT.Amount,0) as Amount,IOU_SETTLEMENT.Approve_Status,IOU_SETTLEMENT.Approve_Remark, RequestDate FROM IOU_SETTLEMENT INNER JOIN USER ON IOU_SETTLEMENT.CreatedBy = USER.USER_ID WHERE IOU_SETTLEMENT.Approve_Status=1 OR IOU_SETTLEMENT.Approve_Status=5 ORDER BY IOU_SETTLEMENT._Id DESC',
+        [],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+        },
+    );
+
+};
+export const getHODPendingIOUSetList = (callBack: any) => {
+
+    DB.searchData(
+        'SELECT IOU_SETTLEMENT._Id as Id ,IOU_SETTLEMENT.IOUSettlement_ID as ID ,USER.DisplayName as employee, USER.USER_ID,  IFNULL(IOU_SETTLEMENT.Amount,0) as Amount,IOU_SETTLEMENT.Approve_Status,IOU_SETTLEMENT.Approve_Remark, RequestDate FROM IOU_SETTLEMENT INNER JOIN USER ON IOU_SETTLEMENT.CreatedBy = USER.USER_ID WHERE IOU_SETTLEMENT.Approve_Status=5 ORDER BY IOU_SETTLEMENT._Id DESC',
+        [],
+        (resp: any, err: any) => {
+
+            callBack(resp, err);
+        },
+    );
+
+};
 
 //------IOUSET PENDING LIST FILTER BY DATE-------
 
@@ -298,7 +327,7 @@ export const getDateFilterIOUSETCancelList = (firstDate: any, secondDate: any, c
 export const getIOUSETJobsListByID = (RequestID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_ID, IOU_SETTLEMENT.JobOwner_ID, IOU_SETTLEMENT.IOU_Type,IOU_SETTLEMENT.IOUSettlement_ID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType,  IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark, IOU_SETTLEMENT_JOBS.AccNo, IOU_SETTLEMENT_JOBS.CostCenter, IOU_SETTLEMENT_JOBS.Resource FROM IOU_SETTLEMENT INNER JOIN IOU_SETTLEMENT_JOBS ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT.IOUSettlement_ID=?',
+        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_ID, IOU_SETTLEMENT.JobOwner_ID, IOU_SETTLEMENT.IOU_Type,IOU_SETTLEMENT.IOUSettlement_ID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo, e.Description as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark, IOU_SETTLEMENT_JOBS.AccNo, IOU_SETTLEMENT_JOBS.CostCenter, IOU_SETTLEMENT_JOBS.Resource FROM IOU_SETTLEMENT INNER JOIN IOU_SETTLEMENT_JOBS ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = IOU_SETTLEMENT_JOBS.Expences_Type WHERE IOU_SETTLEMENT.IOUSettlement_ID=?',
         [RequestID],
         (resp: any, err: any) => {
             callBack(resp, err);
@@ -374,8 +403,8 @@ export const Update_IOUSettlement_FirstApprovel = (data: any, callBack: any) => 
 
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=? WHERE IOUSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE IOUSettlement_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -391,8 +420,8 @@ export const Update_IOUSettelment_ValidateAmount = (data: any, callBack: any) =>
     
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=? WHERE IOUSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE IOUSettlement_ID=?',
+        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -404,14 +433,27 @@ export const Update_IOUSettlement_SecondApprovel = (data: any, callBack: any) =>
 
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=? WHERE IOUSettlement_ID=?',
-        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].IOU_ID],
+        'UPDATE IOU_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE IOUSettlement_ID=?',
+        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
         },
     );
 };
+
+export const updateIDwithStatusSET = (IOUSETID: any, refID: any, callBack: any) => {
+
+    DB.updateData(
+        'UPDATE IOU_SETTLEMENT SET IsSync=1 , WebRefID=? WHERE IOUSettlement_ID=?',
+        [refID,IOUSETID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
+
 
 
 

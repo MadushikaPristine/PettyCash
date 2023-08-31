@@ -27,7 +27,7 @@ import * as  DB_EmpType from "../../SQLiteDBAction/Controllers/EmployeeTypeContr
 import * as  DB_Emp from "../../SQLiteDBAction/Controllers/EmployeeController"
 import { Employee, EmpType, ExpenseType, IOUType } from "../../Constant/DummyData";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
-import { getLoginRound, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_LOGIN_ROUND } from "../../Constant/AsynStorageFuntion";
+import { getLoginPassword, getLoginRound, getLoginUName, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_LOGIN_ROUND } from "../../Constant/AsynStorageFuntion";
 import { BASE_URL, LOGIN_BASE_URL, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import * as CryptoJS from 'crypto-js';
@@ -35,6 +35,7 @@ import Spinner from "react-native-loading-spinner-overlay";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import RNVPNDetect from "react-native-vpn-detect";
+import { getStatusBarHeight } from "react-native-status-bar-height";
 
 
 const LoginScreen = () => {
@@ -45,6 +46,8 @@ const LoginScreen = () => {
     const [pword, setPword] = useState('');
     const [error, setError] = useState({ field: '', message: '' });
     const [loandingspinner, setloandingspinner] = useState(false);
+    const [isEditUName, setisEditUName] = useState(true);
+    const [isEditPW, setisEditPW] = useState(true);
 
 
     const saveDBData = () => {
@@ -85,6 +88,7 @@ const LoginScreen = () => {
             setError(loginError);
         } else {
 
+
             setloandingspinner(true);
 
             setError({ field: '', message: '' });
@@ -118,7 +122,7 @@ const LoginScreen = () => {
             var u_name = "dinushkam";
             var p_word = "GdBzSuV6mAdEyA6/H4plMQ==";
 
-            const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=TPL_JOBA8_170723&username=" + uName + "&password=" + encryptedPassword + "&sap=PSLTEST_LIVE_SL";
+            const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=PC_UAT_WM&username=" + uName + "&password=" + encryptedPassword + "&sap=PSLTEST_LIVE_SL";
 
             console.log("Login URL === ", URL);
 
@@ -134,7 +138,7 @@ const LoginScreen = () => {
                         await axios.get(URL, { headers }
                         ).then(async response => {
 
-                            console.log(" login response ==== ", response);
+                            console.log(" login response ==== ", response.data);
 
                             if (response.status === 200) {
 
@@ -149,10 +153,14 @@ const LoginScreen = () => {
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserID, response.data.userId);
 
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser);
-                                    
+
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_COSTCENTER, response.data.costCenter);
 
-                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_EPFNO, response.data.epfno);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_EPFNO, response.data.epfno);
+
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_USER_NAME, uName);
+
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_PASSWORD, pword);
 
 
                                     get_ASYNC_LOGIN_ROUND().then(async res => {
@@ -346,11 +354,68 @@ const LoginScreen = () => {
             setuName('');
             setPword('');
 
+
+            getLoginUName().then(res => {
+                console.log(" user name >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
+
+                if (res != null) {
+
+                    getLoginPassword().then(resp => {
+
+                        console.log(" pword >>>>>>>>>>>>>>>>>>>>>>>>>>     ", resp);
+
+                        if (resp != null) {
+
+                            setisEditUName(false);
+                            setisEditPW(false);
+
+                            setuName(res + "");
+                            setPword(resp + "");
+
+
+
+                            console.log(" un and pw already added ====  ");
+
+
+                        } else {
+
+                            setisEditUName(true);
+                            setisEditPW(true);
+
+
+                            setuName('');
+                            setPword('');
+
+                        }
+
+                    });
+
+
+                } else {
+
+
+                    
+                    setisEditUName(true);
+                    setisEditPW(true);
+
+
+
+                    setuName('');
+                    setPword('');
+
+
+                }
+
+            })
+
+
         }, [navigation])
     )
 
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
+
+            {/* <View style={{ backgroundColor: comStyles.COLORS.WHITE, paddingTop: getStatusBarHeight(true), flex: 1 }}> */}
 
             <ImageBackground source={require('../../assets/images/Login.png')} style={comStyles.CONTAINER}>
 
@@ -393,7 +458,7 @@ const LoginScreen = () => {
                                 is_clr_icon={true}
                                 iconClr={comStyles.COLORS.WHITE}
                                 icon_name1="user"
-                                editable={true}
+                                editable={isEditUName}
                                 placeholder="ENTER USER NAME"
                                 stateValue={uName}
                                 setState={(val: any) => setuName(val)}
@@ -408,7 +473,7 @@ const LoginScreen = () => {
                                 is_clr_icon={true}
                                 iconClr={comStyles.COLORS.WHITE}
                                 icon_name1="lock"
-                                editable={true}
+                                editable={isEditPW}
                                 stateValue={pword}
                                 setState={(val: any) => setPword(val)}
                                 placeholder="ENTER PASSWORD"
@@ -444,6 +509,8 @@ const LoginScreen = () => {
 
 
                 </ScrollView>
+
+                {/* </View> */}
 
             </ImageBackground>
 

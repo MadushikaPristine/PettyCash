@@ -382,7 +382,7 @@ const HomeScreen = () => {
 
     const Download_IOU_Types = async () => {
 
-        const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=PC_UAT_WM'
 
         console.log(" iou types ===  ", URL);
 
@@ -501,7 +501,7 @@ const HomeScreen = () => {
 
     const Download_Expense_Types = async () => {
 
-        const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=TPL_JOBA8_170723&sapDbName=PSLTEST_LIVE_SL'
+        const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=PC_UAT_WM&sapDbName=PC_UAT_SAP'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -619,7 +619,7 @@ const HomeScreen = () => {
     // //----------------------Download Max Amount -------------------------------------
 
     const Download_MaximumAmount = async () => {
-        const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=TPL_JOBA8_170723";
+        const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=PC_UAT_WM";
 
         await axios.get(URL2, { headers }
         ).then(async response => {
@@ -668,7 +668,7 @@ const HomeScreen = () => {
 
     const Download_User_Rolls = async () => {
 
-        const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=PC_UAT_WM'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -788,7 +788,7 @@ const HomeScreen = () => {
 
     const Download_Users = async () => {
 
-        const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=PC_UAT_WM'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -905,7 +905,7 @@ const HomeScreen = () => {
 
     const Download_VehicleNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=TPL_JOBA8_170723&sapDbName=PSLTEST_LIVE_SL&ResType=VEHICLE'
+        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=PC_UAT_WM&sapDbName=PC_UAT_SAP&ResType=VEHICLE'
 
 
         await axios.get(URL, { headers })
@@ -1024,7 +1024,7 @@ const HomeScreen = () => {
 
     const Download_Departments = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllDepartment.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = BASE_URL + '/Mob_GetAllDepartment.xsjs?dbName=PC_UAT_WM'
 
         console.log("DOWNLOAD DEPARTMENTS ==============  ", URL);
 
@@ -1167,7 +1167,7 @@ const HomeScreen = () => {
 
     const Download_Employee = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllEmployee.xsjs?dbName=TPL_JOBA8_170723';
+        const URL = BASE_URL + '/Mob_GetAllEmployee.xsjs?dbName=PC_UAT_WM';
 
 
         await axios.get(URL, { headers })
@@ -1286,7 +1286,7 @@ const HomeScreen = () => {
 
     const Download_JobOwners = async () => {
 
-        const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=TPL_JOBA8_170723&sapDbName=PSLTEST_LIVE_SL'
+        const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=PC_UAT_WM&sapDbName=PC_UAT_SAP'
 
         try {
 
@@ -1480,7 +1480,7 @@ const HomeScreen = () => {
 
     const Download_JobNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=PC_UAT_WM'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1602,7 +1602,7 @@ const HomeScreen = () => {
 
     const Download_GL_ACCOUNT = async () => {
 
-        const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=PC_UAT_WM'
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1729,7 +1729,7 @@ const HomeScreen = () => {
         console.log(" user ID ==== ", userID);
 
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=PC_UAT_WM&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1858,7 +1858,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement Request --------------------------------------
     const Download_IOUSETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1985,7 +1985,7 @@ const HomeScreen = () => {
     // -------------------- Download One-Off Settlement Request --------------------------------------
     const Download_ONE_OFF_SETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -2111,7 +2111,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement JOBS Request --------------------------------------
     const Download_IOUSETJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -2237,7 +2237,7 @@ const HomeScreen = () => {
     // -------------------- Download OneOff JOBS Request --------------------------------------
     const Download_ONEOFFJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -2364,7 +2364,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Job Data --------------------------------------
     const Download_IOUJobs = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=TPL_JOBA8_170723&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=PC_UAT_WM&emp=' + userID;
 
         console.log(" IOU JOBS URL ==== ", URL);
 

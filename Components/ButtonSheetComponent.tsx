@@ -6,7 +6,9 @@ import comStyles from '../Constant/Components.styles'
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Modal from 'react-native-modal';
 import ActionButton from "./ActionButton";
-import { getLoginUserRoll } from "../Constant/AsynStorageFuntion";
+import { getLoginUserID, getLoginUserRoll } from "../Constant/AsynStorageFuntion";
+import { checkOpenRequests } from "../SQLiteDBAction/Controllers/IOUController";
+import { checkOpenRequestsOneOff } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
 
 const ButtonSheetComponent = () => {
 
@@ -26,23 +28,103 @@ const ButtonSheetComponent = () => {
     }
 
     const newIOU = () => {
-        
-        setModalVisible(false);
-        navigation.navigate('NewIOU');
-        
+
+
+        getLoginUserRoll().then(res => {
+            if (res == '1') {
+
+                getLoginUserID().then(result => {
+
+                    checkOpenRequests(parseInt(result + ""), (resp: any) => {
+
+                        if (resp.length > 0) {
+
+                            Alert.alert('Can not create a new Request', 'You already have an open status request', [
+                                {
+                                    text: 'Ok',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                    style: 'cancel',
+                                },
+                                // { text: 'Yes', onPress: (back) },
+                            ]);
+
+                            setModalVisible(false);
+
+                        } else {
+
+                            setModalVisible(false);
+                            navigation.navigate('NewIOU');
+
+                        }
+
+                    });
+
+                })
+
+            } else {
+
+                setModalVisible(false);
+                navigation.navigate('NewIOU');
+
+            }
+        });
+
+
+
     }
-    const NewIOUSettlement = () =>{
-        
+    const NewIOUSettlement = () => {
+
         setModalVisible(false);
         navigation.navigate('NewIOUSettlement');
-        
+
     }
 
-    const NewOneOffSettlement = () =>{
-        
-        setModalVisible(false);
-        navigation.navigate('NewOneOffSettlement');
-        
+    const NewOneOffSettlement = () => {
+
+        getLoginUserRoll().then(res => {
+            if (res == '1') {
+
+                getLoginUserID().then(result => {
+
+                    checkOpenRequestsOneOff(parseInt(result + ""), (resp: any) => {
+
+                        if (resp.length > 0) {
+
+                            Alert.alert('Can not create a new Request', 'You already have an open status request', [
+                                {
+                                    text: 'Ok',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                    style: 'cancel',
+                                },
+                                // { text: 'Yes', onPress: (back) },
+                            ]);
+
+                            setModalVisible(false);
+
+                        } else {
+
+                            setModalVisible(false);
+                            navigation.navigate('NewOneOffSettlement');
+
+                        }
+
+                    });
+
+                })
+
+            } else {
+
+                setModalVisible(false);
+                navigation.navigate('NewOneOffSettlement');
+
+            }
+        });
+
+        // setModalVisible(false);
+        // navigation.navigate('NewOneOffSettlement');
+
+       
+
     }
 
     useFocusEffect(
@@ -85,7 +167,7 @@ const ButtonSheetComponent = () => {
                                 iconColor={comStyles.COLORS.ICON_BLUE}
                                 icon_name='square'
                                 onPress={() => newIOU()}
-                                
+
                             />
                             <ActionButton
                                 title="Add New IOU Settlement"
@@ -94,8 +176,8 @@ const ButtonSheetComponent = () => {
                                 is_icon={true}
                                 iconColor={comStyles.COLORS.ICON_BLUE}
                                 icon_name='square'
-                                onPress={() => NewIOUSettlement()} 
-                                />
+                                onPress={() => NewIOUSettlement()}
+                            />
                             <ActionButton
                                 title="Add New One-Off Settlement"
                                 style={styles.loginBtn}
@@ -103,9 +185,9 @@ const ButtonSheetComponent = () => {
                                 is_icon={true}
                                 iconColor={comStyles.COLORS.ICON_BLUE}
                                 icon_name='square'
-                                onPress={() => NewOneOffSettlement()} 
-                                //disabled={roll=='Requester' ? false : true}
-                                />
+                                onPress={() => NewOneOffSettlement()}
+                            //disabled={roll=='Requester' ? false : true}
+                            />
 
                             <ActionButton title="Cancel" style={styles.ActionButton} onPress={() => modalClose()} />
                         </View>

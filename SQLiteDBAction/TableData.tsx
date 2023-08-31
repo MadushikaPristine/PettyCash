@@ -181,7 +181,7 @@ export const TableData = [
                 isPrimaryKey: false,
                 autoIncrement: false,
                 shouldNotAllowNull: false,
-            }, 
+            },
             {
                 name: 'UserRole',
                 dataType: 'Text',
@@ -243,6 +243,13 @@ export const TableData = [
                 isPrimaryKey: false,
                 autoIncrement: false,
                 shouldNotAllowNull: true,
+            },
+            {
+                name: 'WebRefID',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
             },
             {
                 name: 'JobOwner_ID',
@@ -392,6 +399,20 @@ export const TableData = [
                 shouldNotAllowNull: false,
             },
             {
+                name: 'ActionStep',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
+                name: 'FStatus',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
                 name: 'IsSync',
                 dataType: 'INTEGER',
                 isPrimaryKey: false,
@@ -417,6 +438,13 @@ export const TableData = [
                 isPrimaryKey: false,
                 autoIncrement: false,
                 shouldNotAllowNull: true,
+            },
+            {
+                name: 'WebRefID',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
             },
             {
                 name: 'IOU_ID',
@@ -566,6 +594,13 @@ export const TableData = [
                 shouldNotAllowNull: false,
             },
             {
+                name: 'ActionStep',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
                 name: 'IsSync',
                 dataType: 'INTEGER',
                 isPrimaryKey: false,
@@ -591,6 +626,13 @@ export const TableData = [
                 isPrimaryKey: false,
                 autoIncrement: false,
                 shouldNotAllowNull: true,
+            },
+            {
+                name: 'WebRefID',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
             },
             {
                 name: 'JobOwner_ID',
@@ -727,6 +769,20 @@ export const TableData = [
             },
             {
                 name: 'Attachment_Status',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
+                name: 'ActionStep',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
+                name: 'FStatus',
                 dataType: 'INTEGER',
                 isPrimaryKey: false,
                 autoIncrement: false,
@@ -1402,7 +1458,7 @@ export const TableData = [
                 autoIncrement: false,
                 shouldNotAllowNull: false,
             },
-            
+
 
         ]
     },
@@ -1513,7 +1569,7 @@ export const TableData = [
                 autoIncrement: false,
                 shouldNotAllowNull: false,
             },
-            
+
 
         ]
     },

@@ -178,7 +178,7 @@ const IOUScreen = () => {
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
             <View style={styles.screen}>
 
-                <Header title="IOU Requests11111" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
+                <Header title="IOU Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
 
 
                 {/* <View style={{ flexDirection: 'row' }}>

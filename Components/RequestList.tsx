@@ -129,6 +129,9 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
         // console.log("Maximum Amount: ", resp);
       })
 
+     
+      
+
     }, [])
   );
 
@@ -140,6 +143,10 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
   }
 
   const getJobList = () => {
+
+    // console.log("status [][][][] ==  " , status);
+
+
     if (request_type == "IOU Request") {
       getIOUJobsListByID(Request_ID, (response: any) => {
 
@@ -157,7 +164,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
       getIOUSETJobsListByID(Request_ID, (response: any) => {
 
         // console.log(" Request ID ==== " , Request_ID);
-        
+
 
         setDetailList(response);
 
@@ -393,6 +400,27 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
             </View>
           </View>
 
+
+          {
+            request_type == "IOU Request" ?
+
+              <View style={styles.list}>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.textHeader}>IOU Type</Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 100 }}>
+                  <Text style={styles.text}>{iou_type}</Text>
+                </View>
+              </View>
+
+              :
+
+              <></>
+
+          }
+
+
+
           <View style={styles.list}>
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.textHeader}>Request Channel</Text>
@@ -450,13 +478,13 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
               horizontal={false}
               renderItem={({ item }) => {
                 return (
-                  <View style={{ width: width-50, padding: 5 }}>
+                  <View style={{ width: width - 50, padding: 5 }}>
 
                     <JobsView
                       IOU_Type={item.IOU_Type}
                       amount={item.Amount}
                       job_no={item.IOUTypeNo}
-                      ExpenseType={item.ExpenseType == "1" ? "Meals" : (item.ExpenseType == "2" ? "Batta" : (item.ExpenseType == "3" ? "Labour" : (item.ExpenseType == "4" ? "Project Materials" : (item.ExpenseType == "5" ? "Travelling" : (item.ExpenseType == "6" ? "Other" : "")))))}
+                      ExpenseType={item.ExpenseType}
                       jobremarks={item.Remark}
                       accNo={item.AccNo}
                       costCenter={item.CostCenter}
@@ -528,7 +556,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
               <View>
 
-                <Text style={{ marginLeft: 10, marginTop:15 ,color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12 }}>Attachments</Text>
+                <Text style={{ marginLeft: 10, marginTop: 15, color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD, fontSize: 12 }}>Attachments</Text>
 
 
                 <ScrollView horizontal={false}

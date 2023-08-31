@@ -4,6 +4,10 @@ export const saveIOUJOB = (data: any, callBack: any) => {
 
     var response: any;
 
+
+    console.log(" save object IOU ===============    "  , data);
+    
+
     for (let i = 0; i < data.length; ++i) {
 
         DB.insertOrReplace(
@@ -38,14 +42,14 @@ export const saveIOUJOB = (data: any, callBack: any) => {
                         response = 3;
 
                         callBack(response);
-                        // console.log(" end");
+                        console.log(" end");
 
 
                     } else if (i == 0) {
 
                         response = 1;
                         callBack(response);
-                        // console.log(" first  .....");
+                        console.log(" first  .....");
                     }
 
 
@@ -55,7 +59,7 @@ export const saveIOUJOB = (data: any, callBack: any) => {
 
                         response = 2;
                         callBack(response);
-                        // console.log(res, " ..........  error ...  ", err);
+                        console.log(res, " ..........  error ...  ", err);
 
                     }
                 }
@@ -80,6 +84,21 @@ export const getLastIOUJobID = (callBack: any) => {
 
 
 }
+
+export const getIOUJobsByID = (ID:any ,callBack: any) => {
+
+    DB.searchData(
+        'SELECT io._Id,io.Job_No,io.AccNo,io.CostCenter,io.Resource,e.Description,io.Amount,io.Remark FROM IOU_JOBS io LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = io.Expences_Type WHERE io.Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+
+
+}
+
 export const getIOUJobDetailsByID = (jobID: any, callBack: any) => {
 
     DB.searchData(
@@ -97,7 +116,7 @@ export const getIOUJobDetailsByID = (jobID: any, callBack: any) => {
 export const getIOUJOBDataBYRequestID = (ID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT IOU.IOU_Type as IOUTypeID, IOU_JOBS.Job_No as IOUTypeNo,IOU_JOBS.AccNo,IOU_JOBS.CostCenter,IOU_JOBS.Resource, IOU_JOBS.Expences_Type as ExpenseType, IOU_JOBS.Amount as Amount, IOU_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM IOU_JOBS INNER JOIN IOU ON IOU.IOU_ID = IOU_JOBS.Request_ID INNER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = IOU_JOBS.Request_ID WHERE IOU_JOBS.Request_ID=?',
+        'SELECT IOU.IOU_Type as IOUTypeID, IOU_JOBS.Job_No as IOUTypeNo,IOU_JOBS.AccNo,IOU_JOBS.CostCenter,IOU_JOBS.Resource, IOU_JOBS.Expences_Type as ExpenseType, IOU_JOBS.Amount as Amount, IOU_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM IOU_JOBS INNER JOIN IOU ON IOU.IOU_ID = IOU_JOBS.Request_ID LEFT OUTER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = IOU_JOBS.Request_ID WHERE IOU_JOBS.Request_ID=?',
         [ID],
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);

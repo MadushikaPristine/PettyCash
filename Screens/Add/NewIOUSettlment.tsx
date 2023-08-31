@@ -28,7 +28,7 @@ import SubmitCancelModal from "../../Components/SubmitCancelComponent";
 import ImagePicker, { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ImageUpload from "../../Components/ImageUpload";
 import { IOUType } from "../../Constant/DummyData";
-import { getIOUSETJobsListByID, getIOUSETReOpenRequest, getLastIOUSettlemnt, saveIOUSettlement, updateIOUSETSyncStatus } from "../../SQLiteDBAction/Controllers/IouSettlementController";
+import { getIOUSETJobsListByID, getIOUSETReOpenRequest, getLastIOUSettlemnt, saveIOUSettlement, updateIDwithStatusSET, updateIOUSETSyncStatus } from "../../SQLiteDBAction/Controllers/IouSettlementController";
 import moment from "moment";
 import { CopyRequest, getLoginUserID, getLoginUserName, getLoginUserRoll, getRejectedId, get_ASYNC_COST_CENTER, get_ASYNC_EPFNO, get_ASYNC_IS_Auth_Requester } from "../../Constant/AsynStorageFuntion";
 import { getAllEmployee, getEmployeeByID, getTypeWiseUsers } from "../../SQLiteDBAction/Controllers/EmployeeController";
@@ -41,7 +41,7 @@ import JobsView from "../../Components/JobsView";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getIOUJOBDataBYRequestID, getIOUJobDetailsByID } from "../../SQLiteDBAction/Controllers/IOUJobController";
-import { UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
+import { UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, getSettlementJobAmount, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
 import { getAllTransportOfficers, getAllUsers, getJobOwners, getTransportOfficerDetails } from "../../SQLiteDBAction/Controllers/UserController";
 import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
@@ -54,6 +54,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
 import ComponentsStyles from "../../Constant/Components.styles";
 import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
+import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -775,187 +776,15 @@ const NewIOUSettlement = () => {
             setHODID(res[0].ID);
             HODID = res[0].ID;
 
-            if (IOUTypeID === '3') {
+            getSettlementJobAmount(IOUSettlementNo, (res1: any) => {
 
-                IsLimit = "";
-
-                // console.log(" hod other ---  ", res[0].ID);
-
-                IOUSettlementData = [
-                    {
-                        PCRCode: IOUSettlementNo,
-                        IOU: IOUID,
-                        JobOwner: parseInt(JobOwner),
-                        IOUType: parseInt(IOUTypeID),
-                        EmpId: parseInt(EmpID),
-                        RequestedDate: currentDate,
-                        Amount: amount,
-                        StatusID: 1,
-                        RequestedBy: loggedUserID,
-                        IsSync: 0,
-                        Approve_Remark: "",
-                        Reject_Remark: "",
-                        Attachment_Status: 1,
-                        HOD: parseInt(res[0].ID),
-                        FirstActionBy: '',
-                        FirstActionAt: '',
-                        RIsLimit: 'YES',
-                        AIsLimit: null,
-                        RIouLimit: IOULimit,
-                        AIouLimit: '',
-                        SecondActionBy: '',
-                        SecondActionAt: ''
-
-
-                    }
-                ]
-
-
-                saveIOUSettlement(IOUSettlementData, async (response: any) => {
-                    // console.log(" save iou .................... ", response);
-
-                    if (response == 3) {
-
-                        getDetailsData(parseInt(res[0].ID), IsLimit);
-
-                        slideOutModal();
-                        Alert.alert("Successfully Submitted!");
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'Successfully Submitted!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'success',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-
-
-                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                        navigation.navigate('PendingList');
-
-                    } else {
-                        Alert.alert("IOU Request Failed!")
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'IOU Request Failed!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'error',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-                    }
-
-
-                });
-
-
-            } else if (amount > IOULimit) {
-
-                // limit exceed
-
-                // console.log("limit exceed job no or vehicle type ----  ", res[0].ID);
-
-                IsLimit = "YES";
-
-                IOUSettlementData = [
-                    {
-                        PCRCode: IOUSettlementNo,
-                        IOU: IOUID,
-                        JobOwner: parseInt(JobOwner),
-                        IOUType: parseInt(IOUTypeID),
-                        EmpId: parseInt(EmpID),
-                        RequestedDate: currentDate,
-                        Amount: amount,
-                        StatusID: 1,
-                        RequestedBy: loggedUserID,
-                        IsSync: 0,
-                        Approve_Remark: "",
-                        Reject_Remark: "",
-                        Attachment_Status: 1,
-                        HOD: parseInt(res[0].ID),
-                        FirstActionBy: '',
-                        FirstActionAt: '',
-                        RIsLimit: 'YES',
-                        AIsLimit: null,
-                        RIouLimit: IOULimit,
-                        AIouLimit: '',
-                        SecondActionBy: '',
-                        SecondActionAt: ''
-
-
-
-                    }
-                ]
-
-                saveIOUSettlement(IOUSettlementData, async (response: any) => {
-                    // console.log(" save iou .................... ", response);
-
-                    if (response == 3) {
-
-                        getDetailsData(parseInt(res[0].ID), IsLimit);
-
-                        slideOutModal();
-                        Alert.alert("Successfully Submitted!");
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'Successfully Submitted!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'success',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-
-
-                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                        navigation.navigate('PendingList');
-
-                    } else {
-                        Alert.alert("IOU Request Failed!")
-                        // SweetAlert.showAlertWithOptions({
-                        //     title: 'IOU Request Failed!',
-                        //     subTitle: '',
-                        //     confirmButtonTitle: 'OK',
-                        //     confirmButtonColor: '#000',
-                        //     otherButtonTitle: 'Cancel',
-                        //     otherButtonColor: '#dedede',
-                        //     style: 'error',
-                        //     cancellable: true
-                        // },
-                        //     //callback => console.log('callback')
-                        // );
-                    }
-
-
-                });
-
-
-            } else {
-
-                // limit  not exceed
+                amount = parseFloat(res1[0].totAmount);
 
                 if (IOUTypeID === '3') {
-                    //other type
-
-
-                    // console.log("Other type ----  ", HODID);
 
                     IsLimit = "";
+
+                    // console.log(" hod other ---  ", res[0].ID);
 
                     IOUSettlementData = [
                         {
@@ -975,12 +804,101 @@ const NewIOUSettlement = () => {
                             HOD: parseInt(res[0].ID),
                             FirstActionBy: '',
                             FirstActionAt: '',
-                            RIsLimit: null,
+                            RIsLimit: 'YES',
                             AIsLimit: null,
                             RIouLimit: IOULimit,
                             AIouLimit: '',
                             SecondActionBy: '',
-                            SecondActionAt: ''
+                            SecondActionAt: '',
+                            ID: 0
+
+
+                        }
+                    ]
+
+
+                    saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                        // console.log(" save iou .................... ", response);
+
+                        if (response == 3) {
+
+                            getDetailsData(parseInt(res[0].ID), IsLimit);
+
+                            slideOutModal();
+                            Alert.alert("Successfully Submitted!");
+                            // SweetAlert.showAlertWithOptions({
+                            //     title: 'Successfully Submitted!',
+                            //     subTitle: '',
+                            //     confirmButtonTitle: 'OK',
+                            //     confirmButtonColor: '#000',
+                            //     otherButtonTitle: 'Cancel',
+                            //     otherButtonColor: '#dedede',
+                            //     style: 'success',
+                            //     cancellable: true
+                            // },
+                            //     //callback => console.log('callback')
+                            // );
+
+
+                            await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                            navigation.navigate('PendingList');
+
+                        } else {
+                            Alert.alert("IOU Request Failed!")
+                            // SweetAlert.showAlertWithOptions({
+                            //     title: 'IOU Request Failed!',
+                            //     subTitle: '',
+                            //     confirmButtonTitle: 'OK',
+                            //     confirmButtonColor: '#000',
+                            //     otherButtonTitle: 'Cancel',
+                            //     otherButtonColor: '#dedede',
+                            //     style: 'error',
+                            //     cancellable: true
+                            // },
+                            //     //callback => console.log('callback')
+                            // );
+                        }
+
+
+                    });
+
+
+                } else if (amount > IOULimit) {
+
+                    // limit exceed
+
+                    // console.log("limit exceed job no or vehicle type ----  ", res[0].ID);
+
+                    IsLimit = "YES";
+
+                    IOUSettlementData = [
+                        {
+                            PCRCode: IOUSettlementNo,
+                            IOU: IOUID,
+                            JobOwner: parseInt(JobOwner),
+                            IOUType: parseInt(IOUTypeID),
+                            EmpId: parseInt(EmpID),
+                            RequestedDate: currentDate,
+                            Amount: amount,
+                            StatusID: 1,
+                            RequestedBy: loggedUserID,
+                            IsSync: 0,
+                            Approve_Remark: "",
+                            Reject_Remark: "",
+                            Attachment_Status: 1,
+                            HOD: parseInt(res[0].ID),
+                            FirstActionBy: '',
+                            FirstActionAt: '',
+                            RIsLimit: 'YES',
+                            AIsLimit: null,
+                            RIouLimit: IOULimit,
+                            AIouLimit: '',
+                            SecondActionBy: '',
+                            SecondActionAt: '',
+                            ID: 0
+
 
 
                         }
@@ -1033,97 +951,192 @@ const NewIOUSettlement = () => {
 
                     });
 
+
                 } else {
 
+                    // limit  not exceed
 
-                    // console.log("job no or vehicle");
-
-                    IsLimit = "NO";
-
-                    HODID = '';
-
-                    IOUSettlementData = [
-                        {
-                            PCRCode: IOUSettlementNo,
-                            IOU: IOUID,
-                            JobOwner: parseInt(JobOwner),
-                            IOUType: parseInt(IOUTypeID),
-                            EmpId: parseInt(EmpID),
-                            RequestedDate: currentDate,
-                            Amount: amount,
-                            StatusID: 1,
-                            RequestedBy: loggedUserID,
-                            IsSync: 0,
-                            Approve_Remark: "",
-                            Reject_Remark: "",
-                            Attachment_Status: 1,
-                            HOD: '',
-                            FirstActionBy: '',
-                            FirstActionAt: '',
-                            RIsLimit: 'NO',
-                            AIsLimit: null,
-                            RIouLimit: IOULimit,
-                            AIouLimit: '',
-                            SecondActionBy: '',
-                            SecondActionAt: ''
+                    if (IOUTypeID === '3') {
+                        //other type
 
 
-                        }
-                    ]
+                        // console.log("Other type ----  ", HODID);
 
-                    saveIOUSettlement(IOUSettlementData, async (response: any) => {
-                        // console.log(" save iou .................... ", response);
+                        IsLimit = "";
 
-                        if (response == 3) {
-
-                            getDetailsData(HODID, IsLimit);
-
-                            slideOutModal();
-                            Alert.alert("Successfully Submitted!");
-                            // SweetAlert.showAlertWithOptions({
-                            //     title: 'Successfully Submitted!',
-                            //     subTitle: '',
-                            //     confirmButtonTitle: 'OK',
-                            //     confirmButtonColor: '#000',
-                            //     otherButtonTitle: 'Cancel',
-                            //     otherButtonColor: '#dedede',
-                            //     style: 'success',
-                            //     cancellable: true
-                            // },
-                            //     //callback => console.log('callback')
-                            // );
-
-
-                            await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                            navigation.navigate('PendingList');
-
-                        } else {
-                            Alert.alert("IOU Request Failed!")
-                            // SweetAlert.showAlertWithOptions({
-                            //     title: 'IOU Request Failed!',
-                            //     subTitle: '',
-                            //     confirmButtonTitle: 'OK',
-                            //     confirmButtonColor: '#000',
-                            //     otherButtonTitle: 'Cancel',
-                            //     otherButtonColor: '#dedede',
-                            //     style: 'error',
-                            //     cancellable: true
-                            // },
-                            //     //callback => console.log('callback')
-                            // );
-                        }
+                        IOUSettlementData = [
+                            {
+                                PCRCode: IOUSettlementNo,
+                                IOU: IOUID,
+                                JobOwner: parseInt(JobOwner),
+                                IOUType: parseInt(IOUTypeID),
+                                EmpId: parseInt(EmpID),
+                                RequestedDate: currentDate,
+                                Amount: amount,
+                                StatusID: 1,
+                                RequestedBy: loggedUserID,
+                                IsSync: 0,
+                                Approve_Remark: "",
+                                Reject_Remark: "",
+                                Attachment_Status: 1,
+                                HOD: parseInt(res[0].ID),
+                                FirstActionBy: '',
+                                FirstActionAt: '',
+                                RIsLimit: null,
+                                AIsLimit: null,
+                                RIouLimit: IOULimit,
+                                AIouLimit: '',
+                                SecondActionBy: '',
+                                SecondActionAt: '',
+                                ID: 0
 
 
-                    });
+                            }
+                        ]
+
+                        saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                            // console.log(" save iou .................... ", response);
+
+                            if (response == 3) {
+
+                                getDetailsData(parseInt(res[0].ID), IsLimit);
+
+                                slideOutModal();
+                                Alert.alert("Successfully Submitted!");
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'Successfully Submitted!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'success',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+
+
+                                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                                navigation.navigate('PendingList');
+
+                            } else {
+                                Alert.alert("IOU Request Failed!")
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'IOU Request Failed!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'error',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+                            }
+
+
+                        });
+
+                    } else {
+
+
+                        // console.log("job no or vehicle");
+
+                        IsLimit = "NO";
+
+                        HODID = '';
+
+                        IOUSettlementData = [
+                            {
+                                PCRCode: IOUSettlementNo,
+                                IOU: IOUID,
+                                JobOwner: parseInt(JobOwner),
+                                IOUType: parseInt(IOUTypeID),
+                                EmpId: parseInt(EmpID),
+                                RequestedDate: currentDate,
+                                Amount: amount,
+                                StatusID: 1,
+                                RequestedBy: loggedUserID,
+                                IsSync: 0,
+                                Approve_Remark: "",
+                                Reject_Remark: "",
+                                Attachment_Status: 1,
+                                HOD: '',
+                                FirstActionBy: '',
+                                FirstActionAt: '',
+                                RIsLimit: 'NO',
+                                AIsLimit: null,
+                                RIouLimit: IOULimit,
+                                AIouLimit: '',
+                                SecondActionBy: '',
+                                SecondActionAt: '',
+                                ID: 0
+
+
+                            }
+                        ]
+
+                        saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                            // console.log(" save iou .................... ", response);
+
+                            if (response == 3) {
+
+                                getDetailsData(HODID, IsLimit);
+
+                                slideOutModal();
+                                Alert.alert("Successfully Submitted!");
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'Successfully Submitted!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'success',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+
+
+                                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+
+                                navigation.navigate('PendingList');
+
+                            } else {
+                                Alert.alert("IOU Request Failed!")
+                                // SweetAlert.showAlertWithOptions({
+                                //     title: 'IOU Request Failed!',
+                                //     subTitle: '',
+                                //     confirmButtonTitle: 'OK',
+                                //     confirmButtonColor: '#000',
+                                //     otherButtonTitle: 'Cancel',
+                                //     otherButtonColor: '#dedede',
+                                //     style: 'error',
+                                //     cancellable: true
+                                // },
+                                //     //callback => console.log('callback')
+                                // );
+                            }
+
+
+                        });
+
+
+                    }
+
 
 
                 }
 
 
+            });
 
-            }
 
 
         });
@@ -1497,6 +1510,10 @@ const NewIOUSettlement = () => {
             //update job details
 
 
+
+            // amount += parseFloat(requestAmount);
+
+
             // AccNo:any,Costcenter:any,Resource:any,Amount:any,Remark:any,ID:any
 
             console.log(" suto id ===== ", Id);
@@ -1539,6 +1556,7 @@ const NewIOUSettlement = () => {
         setCostCenter('');
         setResource('');
         setSelectExpenseType('');
+        setselectJOBVehicleNo('');
 
         slideOutModal();
 
@@ -1635,6 +1653,8 @@ const NewIOUSettlement = () => {
 
     const getIOUSETJobList = (IOUID: any) => {
 
+        setiouJobList([]);
+
         getIOUSETJobsListByID(IOUID, (response: any) => {
 
             console.log(IOUID, "============== ", response);
@@ -1700,6 +1720,8 @@ const NewIOUSettlement = () => {
     }
 
     const getAllJobs = (IOUSETID: any) => {
+
+        setiouJobList([]);
 
         getIOUSETJOBsBYSettlementID(IOUSETID, (result: any) => {
 
@@ -2107,7 +2129,13 @@ const NewIOUSettlement = () => {
                 JobDetails.push(result[i]);
             }
 
-            UploadIOU(JobDetails, HOD, IsLimit);
+            Conection_Checking(async (res: any) => {
+                if (res != false) {
+                    UploadIOU(JobDetails, HOD, IsLimit);
+                }
+            })
+
+
         })
     }
 
@@ -2115,7 +2143,7 @@ const NewIOUSettlement = () => {
 
     const UploadIOU = async (detailsData: any, HOD: any, IsLimit: any) => {
 
-        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=TPL_JOBA8_170723'
+        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=PC_UAT_WM'
 
         var obj = [];
         var Fileobj = [];
@@ -2138,7 +2166,7 @@ const NewIOUSettlement = () => {
             for (let i = 0; i < detailsData.length; i++) {
 
                 const arr = {
-                    "IOUTypeNo": SelecteJoborVehicle,
+                    "IOUTypeNo": IOUTypeID,
                     "FileName": detailsData[i].Img_url,
                     "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
                     "FileType": "image/jepg"
@@ -2183,14 +2211,27 @@ const NewIOUSettlement = () => {
                 // console.log("[s][t][a][t][u][s][] IOU SET reponse METHOD   ........  ", response)
                 if (response.status == 200) {
 
-                    updateIOUSETSyncStatus(IOUSettlementNo, (result: any) => {
+                    if (response.data.ErrorId == 0) {
 
-                    });
+                        console.log("success ===222==== ", response.data);
+
+                        updateIDwithStatusSET(IOUSettlementNo, response.data.ID, (resp: any) => {
+
+                        });
+
+
+                    }
+
+                    // updateIOUSETSyncStatus(IOUSettlementNo, (result: any) => {
+
+
+
+                    // });
 
                     // console.log("success ======= ", response.statusText);
 
 
-                    console.log("success ===222==== ", response.data);
+
 
 
                 } else {
@@ -2262,7 +2303,7 @@ const NewIOUSettlement = () => {
 
         // });
 
-
+        ClearData();
 
     }
 
@@ -2304,6 +2345,31 @@ const NewIOUSettlement = () => {
             setSelectEmployee(res[0].EmpName);
             setEmpID(res[0].Emp_ID);
         });
+    }
+
+    const ClearData = () => {
+
+
+        setJobOwner('');
+        setJobOwnerlist([]);
+        setIOUTypeID('');
+        setEmpID('');
+        setEmployeeList([]);
+        setIOULimit(0.0);
+        setCameraPhoto('');
+        setjobNo('');
+        setSelecteJoborVehicle('');
+        setSelectExpenseType('');
+        setJobList([]);
+        setResource('');
+        setCostCenter('');
+        setAccountNo('');
+        setrequestAmount('');
+        setExpenseTypeID('');
+        setSelectEmployee('');
+        setSelectIOUType('');
+        setSelectJobOwner('');
+        setiouJobList([]);
     }
 
     return (
@@ -2369,7 +2435,7 @@ const NewIOUSettlement = () => {
 
                                                 <View style={{ justifyContent: 'center', alignItems: 'center', alignContent: 'center', flexDirection: 'row' }}>
 
-                                                    <TouchableOpacity style={styles.dashStyle} onPress={slideOutModal} />
+                                                    <TouchableOpacity style={styles.dashStyle} onPress={() => cancelJob()} />
 
                                                 </View>
 
@@ -2748,9 +2814,16 @@ const NewIOUSettlement = () => {
 
                             getEmpDetails(item.EmpId);
 
-                            setIOUID(item.IOU_ID);
+                            const iouID = item.IOU_ID + "";
 
-                            getIOUJobList(item.IOU_ID);
+                            const code = iouID.split(" - ");
+
+                            console.log(" IOU ID === ", code[0].trim());
+                            setSelectIOU(item.IOU_ID);
+
+                            setIOUID(code[0].trim());
+
+                            getIOUJobList(code[0].trim());
 
                             if (item.IOU_Type == 1) {
 
@@ -3006,7 +3079,7 @@ const NewIOUSettlement = () => {
                                                 IOU_Type={IOUTypeID}
                                                 amount={item.Requested_Amount}
                                                 IOUTypeNo={item.IOUTypeNo}
-                                                ExpenseType={item.ExpenseType == 1 ? "Meals" : (item.ExpenseType == 2 ? "Batta" : (item.ExpenseType == 3 ? "Labour" : (item.ExpenseType == 4 ? "Project Materials" : (item.ExpenseType == 5 ? "Travelling" : (item.ExpenseType == 6 ? "Other" : "")))))}
+                                                ExpenseType={item.ExpenseType}
                                                 jobremarks={item.Remark}
                                                 accNo={item.AccNo}
                                                 costCenter={item.CostCenter}

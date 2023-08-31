@@ -345,6 +345,58 @@ export const CreateTableIndexKey = () => {
         // console.log('table create query transaction:', 'success');
       },
     );
+
+
+    // ...................................... IOU SETTLEMENT Jobs IDX ................................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_IOU_JOB = `CREATE UNIQUE INDEX IF NOT EXISTS idx_IOUSETJobs ON  IOU_SETTLEMENT_JOBS(Job_ID) `;
+
+        tx.executeSql(
+          query_idx_IOU_JOB,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success EXPENSE_TYPE: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error EXPENSE_TYPE: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+    // ...................................... One-Off SETTLEMENT Jobs IDX ................................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_IOU_JOB = `CREATE UNIQUE INDEX IF NOT EXISTS idx_oneOffJobs ON  ONE_OFF_SETTLEMENT_JOBS(Job_ID) `;
+
+        tx.executeSql(
+          query_idx_IOU_JOB,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success EXPENSE_TYPE: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error EXPENSE_TYPE: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+
+
     // ...................................... Departments IDX ................................
 
     db.transaction(
@@ -374,6 +426,30 @@ export const CreateTableIndexKey = () => {
     db.transaction(
       (tx: any) => {
         const query_idx_GL_ACC = `CREATE UNIQUE INDEX IF NOT EXISTS idx_GL ON  GL_ACCOUNT(ID) `;
+
+        tx.executeSql(
+          query_idx_GL_ACC,
+          [],
+          (tx: any, response: any) => {
+            // console.log(`create table index success EXPENSE_TYPE: `, response);
+          },
+          (tx: any, error: any) => {
+            // console.log(`create table index key error EXPENSE_TYPE: `, error);
+          },
+        );
+      },
+      (error: any) => {
+        // console.log('table create query transaction failed: ', error);
+      },
+      (success: any) => {
+        // console.log('table create query transaction:', 'success');
+      },
+    );
+    // ...................................... JOB_OWNERS IDX ................................
+
+    db.transaction(
+      (tx: any) => {
+        const query_idx_GL_ACC = `CREATE UNIQUE INDEX IF NOT EXISTS idx_JobOwners ON  JOB_OWNERS(JobOwner_ID) `;
 
         tx.executeSql(
           query_idx_GL_ACC,

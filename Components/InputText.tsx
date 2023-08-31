@@ -45,7 +45,7 @@ type CustomPropTypes = {
 const InputText = ({ borderStyle,bdrStyle, imgStyle, is_back_icon, back_icon_name, backiconClr, placeholder, is_clr_icon, editable, style, secureTextEntry, placeholderColor, setState, stateValue, keyType, multiline, numberOfLines, max, onBlur, onFocus, is_icon, icon_name, onpress, icon_name1, iconClr, backicononpress }: CustomPropTypes) => {
     var customBackground = { backgroundColor: 'transparent' };
     if (editable != undefined && editable == false)
-        customBackground = { backgroundColor: 'red' };
+        customBackground = { backgroundColor: 'gray' };
     else {
         customBackground = { backgroundColor: 'transparent' }
     }

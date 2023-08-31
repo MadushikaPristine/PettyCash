@@ -14,7 +14,7 @@ export const saveOneOffJOB = (data: any, callBack: any) => {
                     values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].Job_ID,
+                        data[i].PCRID,
                         data[i].IOUTypeNo,
                         data[i].JobOwner_ID,
                         data[i].PCRCode,

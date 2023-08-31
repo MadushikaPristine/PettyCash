@@ -18,6 +18,7 @@ export default class AsyncStorageConstants {
     static ASYNC_IS_Auth_Requester = 'isAuthRequester';
     static ASYNC_STORAGE_LOGIN_COSTCENTER = 'costCenter';
     static ASYNC_STORAGE_LOGIN_EPFNO = 'EpfNo';
+    static ASYNC_STORAGE_LOGIN_PASSWORD = 'Password';
 
     //maximum Amount
     static ASYNC_STORAGE_MAXIMUM_REQUEST_AMOUNT = 'as.max.request.amount';

@@ -31,6 +31,25 @@ export const getLoginUserName = async () => {
     // console.log('Failed to fetch the data from storage')
   }
 }
+export const getLoginUName = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_USER_NAME)
+    return value
+
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
+
+export const getLoginPassword = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_PASSWORD)
+    return value
+
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
 
 export const getLoginUserID = async () => {
   try {
