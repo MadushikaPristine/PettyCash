@@ -7,7 +7,7 @@ import { Double } from "react-native/Libraries/Types/CodegenTypes";
 import ComponentsStyles from "../Constant/Components.styles";
 import { pendingRequestList } from "../Constant/DummyData";
 import { BottomPopup } from "../Screens/PendingRequest/BottomPopup";
-import { getIOUJobsListByID } from "../SQLiteDBAction/Controllers/IOUController";
+import { getIOUJobsListByID, getIOUJobsListDetailsByID } from "../SQLiteDBAction/Controllers/IOUController";
 import { getIOUSETJobsListByID } from "../SQLiteDBAction/Controllers/IouSettlementController";
 import { getOneOffJobsListByID } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
 import ButtonSheetComponent from "./ButtonSheetComponent";
@@ -148,7 +148,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
 
     if (request_type == "IOU Request") {
-      getIOUJobsListByID(Request_ID, (response: any) => {
+      getIOUJobsListDetailsByID(Request_ID, (response: any) => {
 
         setDetailList(response);
         //console.log(response);

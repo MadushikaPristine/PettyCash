@@ -10,8 +10,8 @@ export const saveGLAccount = (data: any, callBack: any) => {
             [
                 {
                     table: 'GL_ACCOUNT',
-                    columns: `ID,ANALYSIS_CODE,GL_ACCOUNT,TYPE,JOB_RELATED,Code`,
-                    values: '?,?,?,?,?,?',
+                    columns: `ID,ANALYSIS_CODE,GL_ACCOUNT,TYPE,JOB_RELATED,Code,TYPEID`,
+                    values: '?,?,?,?,?,?,?',
                     params: [
 
                         data[i].ID,
@@ -20,6 +20,7 @@ export const saveGLAccount = (data: any, callBack: any) => {
                         data[i].TYPE,
                         data[i].JOB_RELATED,
                         data[i].Code,
+                        data[i].TYPEID,
 
                         // data[i].Status,
 
@@ -66,7 +67,7 @@ export const saveGLAccount = (data: any, callBack: any) => {
 export const getAccNoForJobNo = (callBack: any) => {
 
     DB.searchData(
-        'SELECT * FROM GL_ACCOUNT WHERE JOB_RELATED=? AND Code=?',
+        'SELECT * FROM GL_ACCOUNT WHERE TYPEID=? AND Code=?',
         [1,"ALL"],
         (resp: any, err: any) => {
             //console.log("************** all IOU Types ************  " + resp.length);
@@ -74,6 +75,18 @@ export const getAccNoForJobNo = (callBack: any) => {
         },
     );
 };
+export const getGLAccNo = (type:any , code :any, callBack: any) => {
+
+    DB.searchData(
+        'SELECT * FROM GL_ACCOUNT WHERE TYPEID=? AND ANALYSIS_CODE=?',
+        [type,code],
+        (resp: any, err: any) => {
+            //console.log("************** all IOU Types ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};
+
 export const getAccNoByExpenseType = (type:any,callBack: any) => {
 
     DB.searchData(

@@ -38,7 +38,7 @@ import { getExpenseTypeAll } from "../../SQLiteDBAction/Controllers/ExpenseTypeC
 import InputText from "../../Components/InputText";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
-import { getLastOneOffJobID, getOneOffJOBDataBYRequestID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
+import { DeleteOneOffJobByID, getLastOneOffJobID, getOneOFFJobTotAmount, getOneOffJOBDataBYRequestID, getOneOffJobsByID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
 import { getAllLoginUserDetails, getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
 import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
@@ -49,7 +49,7 @@ import { updateSyncStatus } from "../../SQLiteDBAction/Controllers/IOUController
 import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
 import { getDepartments, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
+import { getAccNoByExpenseType, getAccNoForJobNo, getGLAccNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -150,6 +150,7 @@ const NewOneOffSettlement = () => {
     const [IOULimit, setIOULimit] = useState(0.0);
     const [HODId, setHODID] = useState('');
     const [RequesterLimit, setRequesterLimit] = useState(0.0);
+    const [CreateReqLimit, setCreateReqLimit] = useState(0.0);
 
 
     var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
@@ -359,31 +360,28 @@ const NewOneOffSettlement = () => {
             Alert.alert("Please Add Attachments");
         }
         else {
-            if (amount == 0.0) {
+
+            getOneOFFJobTotAmount(OneOffSettlementNo, (resp: any) => {
+
+                amount = parseFloat(resp[0].totAmount);
+
+                if (parseFloat(resp[0].totAmount) == 0.0) {
 
 
-                Alert.alert("Please Add Job");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Please Add Job',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
+                    Alert.alert("Please Add Job Details");
+                  
 
-            } else {
+                } else {
 
-                setError({ field: '', message: '' });
-                setIsSubmit(true);
-                slideInModal();
+                    setError({ field: '', message: '' });
+                    setIsSubmit(true);
+                    slideInModal();
 
 
-            }
+                }
+
+            });
+
         }
 
     }
@@ -474,7 +472,7 @@ const NewOneOffSettlement = () => {
             console.log("iou type ==== ", IOUTypeID);
 
 
-            if (userRole == "1" && amount > RequesterLimit) {
+            if (amount > CreateReqLimit) {
 
                 //Requester limit exceed
 
@@ -1116,7 +1114,7 @@ const NewOneOffSettlement = () => {
         } else {
             // addbtn 
 
-            console.log("Expense Type --- ", expenseTypeID, " - ", selectExpenseType, "  Job No ---- ", selectJOBVehicleNo, "Resource ----- ", resource);
+            // console.log("Expense Type --- ", expenseTypeID, " - ", selectExpenseType, "  Job No ---- ", selectJOBVehicleNo, "Resource ----- ", resource);
             saveJob();
         }
 
@@ -1287,6 +1285,20 @@ const NewOneOffSettlement = () => {
 
         // console.log("save job ............>>>>>>>>>>> ");
 
+        let isDecimal = requestAmount.indexOf(".");
+        let decimalAmount = 0.0;
+
+        if (isDecimal != -1) {
+
+            const splitAmount = requestAmount.split(".");
+            decimalAmount = parseFloat(splitAmount[0].replaceAll(',', '') + "." + splitAmount[1]);
+
+        } else {
+
+            decimalAmount = parseFloat(requestAmount.replaceAll(',', ''));
+
+        }
+
         const saveObject =
         {
             Job_ID: jobNo,
@@ -1297,7 +1309,7 @@ const NewOneOffSettlement = () => {
             CostCenter: costCeneter,
             Resource: resource,
             ExpenseType: parseInt(expenseTypeID),
-            Amount: requestAmount,
+            Amount: decimalAmount,
             Remark: remarks,
             CreateAt: currentDate,
             RequestedBy: userID,
@@ -1315,12 +1327,18 @@ const NewOneOffSettlement = () => {
 
             // console.log(" save job .. ", response);
 
-            amount += parseFloat(requestAmount);
+            amount += decimalAmount;
 
             if (response == 3) {
 
                 jobArray.push(saveObject);
-                setJobList(jobArray);
+                // setJobList(jobArray);
+
+
+                getOneOffJobsByID(OneOffSettlementNo, (res: any) => {
+                    setJobList(res);
+                });
+
 
                 // console.log(" JOB List [][][][ ", joblist);
 
@@ -1338,7 +1356,7 @@ const NewOneOffSettlement = () => {
                 setselectJOBVehicleNo('');
 
 
-                slideOutModal();
+                cancelJob();
 
             } else {
 
@@ -1353,7 +1371,7 @@ const NewOneOffSettlement = () => {
                 setResource('');
                 setSelectExpenseType('');
 
-                slideOutModal();
+                cancelJob();
             }
 
         });
@@ -1370,6 +1388,7 @@ const NewOneOffSettlement = () => {
         setAccountNo('');
         setCostCenter('');
         setResource('');
+        setCostCenterID('');
         setSelectExpenseType('');
         setselectJOBVehicleNo('');
 
@@ -1411,23 +1430,23 @@ const NewOneOffSettlement = () => {
 
 
             getLoginUserName().then(res => {
-                setUname(res);
+                setUname(res + "");
                 // console.log(" user name ....... ", res);
 
             });
 
             getLoginUserID().then(result => {
-                setUserID(result);
+                setUserID(result + "");
 
                 getLoginUserRoll().then(res => {
                     userRole = res;
 
-                    if (res == '1') {
 
-                        getAllLoginUserDetails(result, (resp: any) => {
-                            setRequesterLimit(parseFloat(resp[0].IOULimit));
-                        });
-                    }
+                    getAllLoginUserDetails(result, (resp: any) => {
+                        setRequesterLimit(parseFloat(resp[0].IOULimit));
+                        setCreateReqLimit(parseFloat(resp[0].ReqLimit));
+                    });
+
                 });
             })
 
@@ -1479,8 +1498,18 @@ const NewOneOffSettlement = () => {
 
                 console.log(" job owners == [][][][]    ", resp1);
 
-
                 setJobOwnerlist(resp1);
+
+                if (userRole == '3' || userRole == '4') {
+
+                    const empdata = resp1?.filter((a: any) => a.ID == parseInt(userID))[0];
+                    setSelectJobOwner(empdata.Name);
+                    setJobOwner(empdata.ID);
+                    getJobNoByJobOwner(empdata.EPFNo);
+                    setIOULimit(parseFloat(empdata.IOULimit));
+
+                }
+
 
             });
 
@@ -1493,6 +1522,15 @@ const NewOneOffSettlement = () => {
                 console.log(" transport officers == [][][][]    ", resp2);
 
                 setJobOwnerlist(resp2);
+
+                if (userRole == '3' || userRole == '4') {
+
+                    const empdata = resp2?.filter((a: any) => a.ID == parseInt(userID))[0];
+                    setSelectJobOwner(empdata.Name);
+                    setJobOwner(empdata.ID);
+                    setIOULimit(parseFloat(empdata.IOULimit));
+
+                }
             });
 
 
@@ -1694,13 +1732,14 @@ const NewOneOffSettlement = () => {
         slideInModal();
     }
 
-    const getGL_AccForJobNo = () => {
-        getAccNoForJobNo((res: any) => {
+    const getGL_AccNo = (typeID: any, code: any) => {
+
+        getGLAccNo(typeID, code, (res: any) => {
             // setAccountList(res);
             setAccountNo(res[0].GL_ACCOUNT);
         });
-    }
 
+    }
     const getGL_AccByExpenseType = (type: any) => {
         getAccNoByExpenseType(type, (res: any) => {
 
@@ -1708,6 +1747,59 @@ const NewOneOffSettlement = () => {
         });
     }
 
+    const setFormatAmount = (amount: any) => {
+
+
+        let isDecimal = amount.indexOf(".");
+
+        if (isDecimal != -1) {
+
+            // console.log(" decimal number =====    ");
+
+            const split = amount.split(".");
+
+            setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replaceAll(',', '')) + "." + split[1]);
+
+
+        } else {
+
+            setrequestAmount(Intl.NumberFormat('en-US').format(amount.replaceAll(',', '')));
+        }
+
+        // console.log(amount ,  " =======================" ,amount.indexOf(".") );
+
+
+
+
+    }
+
+    const deleteNewJob = (ID: any) => {
+
+        Alert.alert('Delete details !', 'Are you sure you want to delete detail?', [
+            {
+                text: 'No',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+            },
+            { text: 'Yes', onPress: (() => deteleJob(ID)) },
+        ]);
+
+
+
+    }
+
+    const deteleJob = (ID: any) => {
+
+        DeleteOneOffJobByID(ID, (resp: any) => {
+
+
+            getOneOffJobsByID(OneOffSettlementNo, (res: any) => {
+                setJobList(res);
+            });
+
+        })
+
+    }
 
     return (
 
@@ -1817,7 +1909,7 @@ const NewOneOffSettlement = () => {
                                                                     setSelecteJoborVehicle(no[0].trim());
 
                                                                     setselectJOBVehicleNo(item.Job_No);
-                                                                    getGL_AccForJobNo();
+                                                                    getGL_AccNo(1, 0);
                                                                     setIsDisableAcc(true);
                                                                     getCostCenter(item.DocEntry);
 
@@ -1880,8 +1972,11 @@ const NewOneOffSettlement = () => {
                                                         setSelectExpenseType(item.Description);
                                                         setExpenseTypeID(item.ExpType_ID);
 
-                                                        if (IOUTypeID != "1") {
-                                                            getGL_AccByExpenseType(item.Description);
+                                                        if (IOUTypeID == "2") {
+                                                            getGL_AccNo(2, item.ExpType_ID);
+                                                            // getGL_AccByExpenseType(item.Description);
+                                                        } else if (IOUTypeID == "3") {
+                                                            getGL_AccNo(3, item.ExpType_ID);
                                                         }
 
                                                         setIsFocus(false);
@@ -1902,10 +1997,10 @@ const NewOneOffSettlement = () => {
                                                 <InputText
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Requested amount(LKR)*"
-                                                    keyType='numeric'
+                                                    keyType='decimal-pad'
                                                     stateValue={requestAmount}
                                                     editable={true}
-                                                    setState={(val: any) => setrequestAmount(val)}
+                                                    setState={(val: any) => setFormatAmount(val)}
                                                     style={ComStyles.IOUInput}
                                                 />
                                                 {error.field === 'requestAmount' && (
@@ -2203,6 +2298,8 @@ const NewOneOffSettlement = () => {
                                                 accNo={item.AccNo}
                                                 costCenter={item.CostCenter}
                                                 resource={item.Resource}
+                                                isDelete={true}
+                                                onPressDeleteIcon={() => deleteNewJob(item._Id)}
                                             />
 
 

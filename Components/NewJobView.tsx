@@ -30,6 +30,7 @@ type ParamTypes = {
     ap_status?: any;
     jobremarks?: any;
     isEdit?: boolean;
+    isDelete?: boolean;
     isSettlementAmount?: boolean;
     onPressIcon?: Function;
     IOU_Type?: any;
@@ -37,10 +38,11 @@ type ParamTypes = {
     costCenter?: any;
     resource?: any;
     settlementAmount?: any;
+    onPressDeleteIcon?: any;
 
 }
 
-const NewJobsView = ({ settlementAmount, isSettlementAmount, accNo, costCenter, resource, onPressIcon, isEdit, IOU_Type, jobremarks, first_name, last_name, user_id, status, date, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, IOUTypeNo, ExpenseType, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
+const NewJobsView = ({ isDelete,onPressDeleteIcon, settlementAmount, isSettlementAmount, accNo, costCenter, resource, onPressIcon, isEdit, IOU_Type, jobremarks, first_name, last_name, user_id, status, date, approved_status, amount, user_avatar, request_type, currency_type, request_channel, employee_no, IOUTypeNo, ExpenseType, remarks, employee_name, right, selectedItems, requestDate }: ParamTypes) => {
     return (
         <View style={styles.maincontainer}>
 
@@ -114,9 +116,9 @@ const NewJobsView = ({ settlementAmount, isSettlementAmount, accNo, costCenter, 
 
                         <View style={{ flexDirection: 'row' }}>
 
-                            <Text style={[styles.textHeader,{color:ComponentsStyles.COLORS.RED_COLOR}]}>Settlement Amount</Text>
+                            <Text style={[styles.textHeader, { color: ComponentsStyles.COLORS.RED_COLOR }]}>Settlement Amount</Text>
                             <View style={{ flex: 1 }} />
-                            <Text style={[styles.text,{color:ComponentsStyles.COLORS.RED_COLOR}]}>{settlementAmount = null || '' ? "0.00 LKR" : settlementAmount.toLocaleString("en-LK", {
+                            <Text style={[styles.text, { color: ComponentsStyles.COLORS.RED_COLOR }]}>{settlementAmount = null || '' ? "0.00 LKR" : settlementAmount.toLocaleString("en-LK", {
                                 style: "currency",
                                 currency: "LKR",
                                 minimumFractionDigits: 2,
@@ -134,23 +136,53 @@ const NewJobsView = ({ settlementAmount, isSettlementAmount, accNo, costCenter, 
 
                 {/* <View style={{ flex: 1, marginLeft: 100, marginBottom: 10 }}> */}
 
-                <View style={{ flexDirection: 'row', justifyContent: "flex-end" }}>
+                <View style={{ flexDirection: 'row'}}>
 
-                    {
-                        isEdit ?
+                    <View style={{ justifyContent: "flex-start" , flex:1 , alignItems:"flex-start" }}>
 
-                            <TouchableOpacity style={styles.iconView} onPress={onPressIcon}>
-                                <IconMC name='playlist-edit' size={35} color={ComponentsStyles.COLORS.ICON_BLUE} iconStyle={styles.iconStyle} />
-                            </TouchableOpacity>
 
-                            :
 
-                            <></>
-                    }
+                        {
+                            isEdit ?
+
+                                <TouchableOpacity style={styles.iconView} onPress={onPressIcon}>
+                                    <IconMC name='playlist-edit' size={35} color={ComponentsStyles.COLORS.ICON_BLUE} iconStyle={styles.iconStyle} />
+                                </TouchableOpacity>
+
+                                :
+
+                                <></>
+                        }
+
+
+
+                    </View>
+
+                    <View style={{ justifyContent: "flex-end" ,flex:1 , alignItems:"flex-end"  }}>
+
+
+
+                        {
+                            isDelete ?
+
+                                <TouchableOpacity style={styles.iconView} onPress={onPressDeleteIcon}>
+                                    <IconMC name='delete-forever' size={25} color={ComponentsStyles.COLORS.RED_COLOR} iconStyle={styles.iconStyle} />
+                                </TouchableOpacity>
+
+                                :
+
+                                <></>
+                        }
+
+
+
+                    </View>
 
 
 
                 </View>
+
+
 
             </View>
 

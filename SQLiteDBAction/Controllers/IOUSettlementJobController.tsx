@@ -4,6 +4,9 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
 
     var response: any;
 
+    console.log(" job details array [[[[[   " , data);
+    
+
     for (let i = 0; i < data.length; ++i) {
 
         DB.insertOrReplace(
@@ -154,3 +157,31 @@ export const getSettlementJobAmount = (ID:any,callBack:any) => {
     )
 
 }
+export const DeleteAllDetailsIOUJobs = (ID:any,callBack:any) => {
+
+    DB.searchData(
+        ' DELETE FROM IOU_SETTLEMENT_JOBS WHERE Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+
+}
+export const DeleteJobByID = (ID:any,callBack:any) => {
+
+    DB.searchData(
+        ' DELETE FROM IOU_SETTLEMENT_JOBS WHERE _Id=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+
+}
+
+
+
+

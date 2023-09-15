@@ -41,7 +41,7 @@ import JobsView from "../../Components/JobsView";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getIOUJOBDataBYRequestID, getIOUJobDetailsByID } from "../../SQLiteDBAction/Controllers/IOUJobController";
-import { UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, getSettlementJobAmount, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
+import { DeleteAllDetailsIOUJobs, DeleteJobByID, UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, getSettlementJobAmount, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
 import { getAllTransportOfficers, getAllUsers, getJobOwners, getTransportOfficerDetails } from "../../SQLiteDBAction/Controllers/UserController";
 import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
@@ -53,7 +53,7 @@ import { getDepartments, getHODDetails, getLoggedUserHOD } from "../../SQLiteDBA
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
 import ComponentsStyles from "../../Constant/Components.styles";
-import { getAccNoByExpenseType, getAccNoForJobNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
+import { getAccNoByExpenseType, getAccNoForJobNo, getGLAccNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 
 let width = Dimensions.get("screen").width;
@@ -78,6 +78,8 @@ let IOUJobData: any[] = [];
 let ReOpenData: any[] = [];
 let IOUSETNo = "";
 let loggedUserID: any;
+
+// IstoEdit status =========  1 - only edit / 0 - edit and delete
 
 const NewIOUSettlement = () => {
 
@@ -500,9 +502,12 @@ const NewIOUSettlement = () => {
         setIsSubmit(false);
         setIsOpen(false);
 
-        // console.log(" selected job  ", jobNo);
+        console.log(" selected job  ", jobNo);
 
         getJobDetailsById(jobNo, (res: any) => {
+
+            console.log(" job details ----- [][][][]   ", res[0]);
+
 
             IOUJobData.push(res[0]);
 
@@ -629,7 +634,8 @@ const NewIOUSettlement = () => {
             // console.log(selectExpenseType);
             // console.log(exdata.Description);
         });
-        setrequestAmount(String(IOUJOBData[0].Amount));
+        setFormatAmount(String(IOUJOBData[0].Amount));
+        // setrequestAmount(String(IOUJOBData[0].Amount));
         // console.log(editAmount);
         setRemarks(IOUJOBData[0].Remark);
         setAccountNo(IOUJOBData[0].AccNo);
@@ -1399,13 +1405,29 @@ const NewIOUSettlement = () => {
 
     const saveJob = () => {
 
-        // console.log("save job ............>>>>>>>>>>> ");
+        console.log("save job ............>>>>>>>>>>> ");
+
+        let job_no = Date.now();
+
+        let isDecimal = requestAmount.indexOf(".");
+        let decimalAmount = 0.0;
+
+        if (isDecimal != -1) {
+
+            const splitAmount = requestAmount.split(".");
+            decimalAmount = parseFloat(splitAmount[0].replaceAll(',', '') + "." + splitAmount[1]);
+
+        } else {
+
+            decimalAmount = parseFloat(requestAmount.replaceAll(',', ''));
+
+        }
 
         if (saveTitle == "Add") {
 
             // new job details
 
-            let job_no = Date.now();
+
 
             const saveObject =
             {
@@ -1417,13 +1439,14 @@ const NewIOUSettlement = () => {
                 CostCenter: costCeneter,
                 Resource: resource,
                 ExpenseType: parseInt(expenseTypeID),
-                Amount: requestAmount,
+                Amount: decimalAmount,
                 Remark: remarks,
                 CreateAt: currentDate,
                 RequestedBy: loggedUserID,
                 IsSync: 0,
-                RequestedAmount: requestAmount,
-                IOU_TYPEID: parseInt(IOUTypeID)
+                RequestedAmount: decimalAmount,
+                IOU_TYPEID: parseInt(IOUTypeID),
+                IstoEdit: 0,
 
             }
 
@@ -1438,68 +1461,29 @@ const NewIOUSettlement = () => {
 
                 // console.log(" save job .. ", response);
 
-                amount += parseFloat(requestAmount);
+                amount += decimalAmount;
 
                 if (response == 3) {
 
                     jobArray.push(saveObject);
+
+                    // JOBData = [];
                     // setJobList(jobArray);
 
                     // console.log(" JOB List [][][][ ", joblist);
 
                     Alert.alert("Successfully Added!");
-                    // SweetAlert.showAlertWithOptions({
-                    //     title: 'Successfully Added!',
-                    //     subTitle: '',
-                    //     confirmButtonTitle: 'OK',
-                    //     confirmButtonColor: '#000',
-                    //     otherButtonTitle: 'Cancel',
-                    //     otherButtonColor: '#dedede',
-                    //     style: 'success',
-                    //     cancellable: true
-                    // },
-                    //     //callback => console.log('callback')
-                    // );
 
-                    setSelecteJoborVehicle('');
-                    setExpenseTypeID('');
-                    setrequestAmount('');
-                    setRemarks('');
-                    setAccountNo('');
-                    setCostCenter('');
-                    setResource('');
-                    setSelectExpenseType('');
-
-
-                    slideOutModal();
+                    cancelJob();
                     getAllJobs(IOUSettlementNo);
 
 
                 } else {
 
                     Alert.alert("Failed!");
-                    // SweetAlert.showAlertWithOptions({
-                    //     title: 'Failed!',
-                    //     subTitle: '',
-                    //     confirmButtonTitle: 'OK',
-                    //     confirmButtonColor: '#000',
-                    //     otherButtonTitle: 'Cancel',
-                    //     otherButtonColor: '#dedede',
-                    //     style: 'success',
-                    //     cancellable: true
-                    // },
-                    //     //callback => console.log('callback')
-                    // );
-                    setSelecteJoborVehicle('');
-                    setExpenseTypeID('');
-                    setrequestAmount('');
-                    setRemarks('');
-                    setAccountNo('');
-                    setCostCenter('');
-                    setResource('');
-                    setSelectExpenseType('');
 
-                    slideOutModal();
+
+                    // cancelJob();
                 }
 
             });
@@ -1519,7 +1503,7 @@ const NewIOUSettlement = () => {
             console.log(" suto id ===== ", Id);
 
 
-            UpdateSettJobbyId(accountNo, costCeneter, resource, requestAmount, remarks, Id, (result: any) => {
+            UpdateSettJobbyId(accountNo, costCeneter, resource, decimalAmount, remarks, Id, (result: any) => {
 
                 console.log("result update =======  ", result);
 
@@ -1527,7 +1511,7 @@ const NewIOUSettlement = () => {
                 if (result == "success") {
 
                     Alert.alert("Successfully Updated!");
-                    slideOutModal();
+                    cancelJob();
                     getAllJobs(IOUSettlementNo);
 
 
@@ -1575,9 +1559,34 @@ const NewIOUSettlement = () => {
 
     // }
 
+
+    const DeleteIOuJobs = () => {
+
+        try {
+
+            DeleteAllDetailsIOUJobs(IOUSettlementNo,(result:any) => {
+
+            });
+            
+        } catch (error) {
+
+            console.log(" error -     " , error);
+            
+            
+        }
+
+      
+
+    }
+  
+
     const getIOUJobList = (IOUID: any) => {
 
+
+
         console.log(IOUID);
+
+         setiouJobList([]);
 
         getIOUJobsListByID(IOUID, (response: any) => {
 
@@ -1620,6 +1629,9 @@ const NewIOUSettlement = () => {
                 const JOBData: any = [];
                 JOBData.push(saveObject);
 
+                console.log("selected iou details list ---------    " , JOBData);
+                
+
                 saveIOUSETJOB(JOBData, (response: any) => {
 
                     console.log(" save job .. ", response);
@@ -1628,7 +1640,7 @@ const NewIOUSettlement = () => {
 
                     if (response == 3) {
 
-                        jobArray.push(saveObject);
+                        // jobArray.push(saveObject);
                         // setJobList(jobArray);
 
                         getAllJobs(IOUSettlementNo);
@@ -2317,12 +2329,20 @@ const NewIOUSettlement = () => {
 
     }
 
-    const getGL_AccForJobNo = () => {
-        getAccNoForJobNo((res: any) => {
+
+    const getGL_AccNo = (typeID: any, code: any) => {
+        // getAccNoForJobNo((res: any) => {
+        //     setAccountList(res);
+        //     setAccountNo(res[0].GL_ACCOUNT);
+        // });
+
+        getGLAccNo(typeID, code, (res: any) => {
             setAccountList(res);
             setAccountNo(res[0].GL_ACCOUNT);
         });
+
     }
+
 
     const getGL_AccByExpenseType = (type: any) => {
         getAccNoByExpenseType(type, (res: any) => {
@@ -2371,6 +2391,50 @@ const NewIOUSettlement = () => {
         setSelectJobOwner('');
         setiouJobList([]);
     }
+
+    const setFormatAmount = (amount: any) => {
+
+        let isDecimal = amount.indexOf(".");
+
+        if (isDecimal != -1) {
+
+            // console.log(" decimal number =====    ");
+
+            const split = amount.split(".");
+
+            setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replaceAll(',', '')) + "." + split[1]);
+
+
+        } else {
+
+            setrequestAmount(Intl.NumberFormat('en-US').format(amount.replaceAll(',', '')));
+        }
+
+    }
+    const deleteNewJob = (ID: any) => {
+
+        Alert.alert('Delete details !', 'Are you sure you want to delete detail?', [
+            {
+                text: 'No',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+            },
+            { text: 'Yes', onPress: (() => deteleJob(ID)) },
+        ]);
+
+       
+
+    }
+
+    const deteleJob = (ID:any) =>  {
+
+        DeleteJobByID(ID,(resp:any) => {
+            getAllJobs(IOUSettlementNo)
+        })
+
+    }
+
+
 
     return (
 
@@ -2488,7 +2552,7 @@ const NewIOUSettlement = () => {
                                                                         setSelecteJoborVehicle(no[0].trim());
 
                                                                         setselectJOBVehicleNo(item.Job_No);
-                                                                        getGL_AccForJobNo();
+                                                                        getGL_AccNo(1, 0);
                                                                         setIsDisableAcc(true);
                                                                         getCostCenter(item.DocEntry);
 
@@ -2561,8 +2625,11 @@ const NewIOUSettlement = () => {
                                                         setSelectExpenseType(item.Description);
                                                         setExpenseTypeID(item.ExpType_ID);
 
-                                                        if (IOUTypeID != "1") {
-                                                            getGL_AccByExpenseType(item.Description);
+                                                        if (IOUTypeID == "2") {
+                                                            getGL_AccNo(2, item.ExpType_ID);
+                                                            // getGL_AccByExpenseType(item.Description);
+                                                        } else if (IOUTypeID == "3") {
+                                                            getGL_AccNo(3, item.ExpType_ID);
                                                         }
 
 
@@ -2592,7 +2659,7 @@ const NewIOUSettlement = () => {
                                                     keyType='numeric'
                                                     stateValue={requestAmount}
                                                     editable={true}
-                                                    setState={(val: any) => setrequestAmount(val)}
+                                                    setState={(val: any) => setFormatAmount(val)}
                                                     style={ComStyles.IOUInput}
                                                 />
                                                 {error.field === 'requestAmount' && (
@@ -2810,6 +2877,8 @@ const NewIOUSettlement = () => {
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
 
+                            DeleteIOuJobs();
+
                             setIOUTypeID(item.IOU_Type);
 
                             getEmpDetails(item.EmpId);
@@ -2822,6 +2891,9 @@ const NewIOUSettlement = () => {
                             setSelectIOU(item.IOU_ID);
 
                             setIOUID(code[0].trim());
+
+                            setiouJobList([]);
+
 
                             getIOUJobList(code[0].trim());
 
@@ -3088,6 +3160,8 @@ const NewIOUSettlement = () => {
                                                 onPressIcon={() => editJobs(item._Id)}
                                                 settlementAmount={item.Amount}
                                                 isSettlementAmount={true}
+                                                isDelete={item.IstoEdit == "0" ? true : false}
+                                                onPressDeleteIcon={() => deleteNewJob(item._Id)}
                                             />
 
 

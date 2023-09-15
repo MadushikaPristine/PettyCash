@@ -88,3 +88,42 @@ export const getOneOffJOBDataBYRequestID = (ID: any, callBack:any) => {
         },
     )
 }
+
+export const getOneOffJobsByID = (ID:any ,callBack: any) => {
+
+    DB.searchData(
+        'SELECT io._Id,io.Job_NO as IOUTypeNo,io.AccNo,io.CostCenter,io.Resource,e.Description,io.Amount,io.Remark,e.Description as ExpenseType FROM ONE_OFF_SETTLEMENT_JOBS io LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = io.Expences_Type WHERE io.Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+
+
+}
+
+export const DeleteOneOffJobByID = (ID:any,callBack:any) => {
+
+    DB.searchData(
+        ' DELETE FROM ONE_OFF_SETTLEMENT_JOBS WHERE _Id=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+
+}
+
+export const getOneOFFJobTotAmount = (ID:any , callBack: any) => {
+
+    DB.searchData(
+        'SELECT IFNULL(SUM(Amount),0) as totAmount FROM ONE_OFF_SETTLEMENT_JOBS WHERE Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp, err);
+        },
+    );
+};

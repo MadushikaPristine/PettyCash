@@ -30,45 +30,43 @@ const ButtonSheetComponent = () => {
     const newIOU = () => {
 
 
-        getLoginUserRoll().then(res => {
-            if (res == '1') {
 
-                getLoginUserID().then(result => {
+        // ====================================================
 
-                    checkOpenRequests(parseInt(result + ""), (resp: any) => {
+        getLoginUserID().then(result => {
 
-                        if (resp.length > 0) {
+            checkOpenRequests(parseInt(result + ""), (resp: any) => {
 
-                            Alert.alert('Can not create a new Request', 'You already have an open status request', [
-                                {
-                                    text: 'Ok',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                    style: 'cancel',
-                                },
-                                // { text: 'Yes', onPress: (back) },
-                            ]);
+                if (resp.length > 0) {
 
-                            setModalVisible(false);
+                    Alert.alert('Can not create a new Request', 'You already have an open status request', [
+                        {
+                            text: 'Ok',
+                            onPress: () => console.log('Cancel Pressed'),
+                            style: 'cancel',
+                        },
+                        // { text: 'Yes', onPress: (back) },
+                    ]);
 
-                        } else {
+                    setModalVisible(false);
 
-                            setModalVisible(false);
-                            navigation.navigate('NewIOU');
+                } else {
 
-                        }
+                    setModalVisible(false);
+                    navigation.navigate('NewIOU');
 
-                    });
+                }
 
-                })
+            });
 
-            } else {
+        })
 
-                setModalVisible(false);
-                navigation.navigate('NewIOU');
+        // ================================================
 
-            }
-        });
 
+
+        // setModalVisible(false);
+        // navigation.navigate('NewIOU');
 
 
     }
@@ -81,49 +79,42 @@ const ButtonSheetComponent = () => {
 
     const NewOneOffSettlement = () => {
 
-        getLoginUserRoll().then(res => {
-            if (res == '1') {
 
-                getLoginUserID().then(result => {
 
-                    checkOpenRequestsOneOff(parseInt(result + ""), (resp: any) => {
+        getLoginUserID().then(result => {
 
-                        if (resp.length > 0) {
+            checkOpenRequestsOneOff(parseInt(result + ""), (resp: any) => {
 
-                            Alert.alert('Can not create a new Request', 'You already have an open status request', [
-                                {
-                                    text: 'Ok',
-                                    onPress: () => console.log('Cancel Pressed'),
-                                    style: 'cancel',
-                                },
-                                // { text: 'Yes', onPress: (back) },
-                            ]);
+                if (resp.length > 0) {
 
-                            setModalVisible(false);
+                    Alert.alert('Can not create a new Request', 'You already have an open status request', [
+                        {
+                            text: 'Ok',
+                            onPress: () => console.log('Cancel Pressed'),
+                            style: 'cancel',
+                        },
+                        // { text: 'Yes', onPress: (back) },
+                    ]);
 
-                        } else {
+                    setModalVisible(false);
 
-                            setModalVisible(false);
-                            navigation.navigate('NewOneOffSettlement');
+                } else {
 
-                        }
+                    setModalVisible(false);
+                    navigation.navigate('NewOneOffSettlement');
 
-                    });
+                }
 
-                })
+            });
 
-            } else {
+        })
 
-                setModalVisible(false);
-                navigation.navigate('NewOneOffSettlement');
 
-            }
-        });
 
         // setModalVisible(false);
         // navigation.navigate('NewOneOffSettlement');
 
-       
+
 
     }
 

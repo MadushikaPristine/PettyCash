@@ -417,7 +417,8 @@ const LoginScreen = () => {
 
             {/* <View style={{ backgroundColor: comStyles.COLORS.WHITE, paddingTop: getStatusBarHeight(true), flex: 1 }}> */}
 
-            <ImageBackground source={require('../../assets/images/Login.png')} style={comStyles.CONTAINER}>
+            {/* <ImageBackground source={require('../../assets/images/background.png')} style={comStyles.CONTAINER}> */}
+            <Image source={require('../../assets/images/background.png')} style={{ position: 'absolute', width: '100%', height: '100%', }} resizeMode='stretch' />
 
                 <Spinner
                     visible={loandingspinner}
@@ -490,12 +491,14 @@ const LoginScreen = () => {
                                 onPress={() => login()}
                                 style={style.ActionButton} />
 
+                                <View style={{padding:10}}/>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 0  }}>
 
 
                                 <Text style={style.footer}>Powered by</Text>
-                                <Image source={require('../../assets/images/logo.png')} style={style.logo} />
+                                <Image source={require('../../assets/images/newlogo.png')} style={style.logo} />
 
 
                             </View>
@@ -512,7 +515,8 @@ const LoginScreen = () => {
 
                 {/* </View> */}
 
-            </ImageBackground>
+            {/* </ImageBackground> */}
+            
 
         </SafeAreaView>
     );

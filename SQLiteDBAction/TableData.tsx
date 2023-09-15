@@ -204,6 +204,13 @@ export const TableData = [
                 shouldNotAllowNull: false,
             },
             {
+                name: 'RequestIOULimit',
+                dataType: 'DOUBLE',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
                 name: 'IOULimit',
                 dataType: 'DOUBLE',
                 isPrimaryKey: false,
@@ -971,7 +978,7 @@ export const TableData = [
                 dataType: 'TEXT',
                 isPrimaryKey: false,
                 autoIncrement: false,
-                shouldNotAllowNull: true,
+                shouldNotAllowNull: false,
             },
             {
                 name: 'Request_ID',
@@ -1044,6 +1051,13 @@ export const TableData = [
                 shouldNotAllowNull: false,
             },
             {
+                name: 'IsToEdit',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
                 name: 'IsSync',
                 dataType: 'INTEGER',
                 isPrimaryKey: false,
@@ -1075,7 +1089,7 @@ export const TableData = [
                 dataType: 'TEXT',
                 isPrimaryKey: false,
                 autoIncrement: false,
-                shouldNotAllowNull: true,
+                shouldNotAllowNull: false,
             },
             {
                 name: 'Request_ID',
@@ -1201,7 +1215,7 @@ export const TableData = [
                 dataType: 'TEXT',
                 isPrimaryKey: false,
                 autoIncrement: false,
-                shouldNotAllowNull: true,
+                shouldNotAllowNull: false,
             },
             {
                 name: 'Request_ID',
@@ -1268,6 +1282,13 @@ export const TableData = [
             },
             {
                 name: 'CreatedBy',
+                dataType: 'INTEGER',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
+                name: 'IsToEdit',
                 dataType: 'INTEGER',
                 isPrimaryKey: false,
                 autoIncrement: false,
@@ -1607,6 +1628,13 @@ export const TableData = [
             {
                 name: 'TYPE',
                 dataType: 'TEXT',
+                isPrimaryKey: false,
+                autoIncrement: false,
+                shouldNotAllowNull: false,
+            },
+            {
+                name: 'TYPEID',
+                dataType: 'INTEGER',
                 isPrimaryKey: false,
                 autoIncrement: false,
                 shouldNotAllowNull: false,

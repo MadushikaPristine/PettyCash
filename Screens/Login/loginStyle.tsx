@@ -57,7 +57,7 @@ export default StyleSheet.create({
 
     logo: {
         width: 60,
-        height: 15,
+        height: 28,
     },
     name: {
         width: 352,
@@ -69,7 +69,7 @@ export default StyleSheet.create({
     footer: {
         fontSize: 10,
         fontFamily: comStyles.FONT_FAMILY.SEMI_BOLD,
-        color: comStyles.COLORS.WHITE,
+        color: comStyles.COLORS.BLACK,
         marginRight: 5
     },
 

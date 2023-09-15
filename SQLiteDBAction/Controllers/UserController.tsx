@@ -10,8 +10,8 @@ export const saveUser = (data: any, callBack: any) => {
             [
                 {
                     table: 'USER',
-                    columns: `USER_ID,UserName,DisplayName,ExternalName,Email,RoleID,Status,UserRole,DepartmentId,DepartmentName,IOULimit,SapEmpId,EPFNo`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
+                    columns: `USER_ID,UserName,DisplayName,ExternalName,Email,RoleID,Status,UserRole,DepartmentId,DepartmentName,RequestIOULimit,IOULimit,SapEmpId,EPFNo`,
+                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
                         data[i].UserId,
@@ -24,7 +24,8 @@ export const saveUser = (data: any, callBack: any) => {
                         data[i].UserRole,
                         data[i].DepartmentId,
                         data[i].DepartmentName,
-                        data[i].IOULimit,
+                        data[i].RequestIOULimit,
+                        data[i].ApproveIOULimit,
                         data[i].SapEmpId,
                         data[i].EPFNo,
 
@@ -143,7 +144,7 @@ export const getAllJobOwners = (callBack: any) => {
 export const getAllLoginUserDetails = (uID:any,callBack: any) => {
 
     DB.searchData(
-        'SELECT IFNULL(IOULimit , 0) as IOULimit FROM USER WHERE USER_ID=?',
+        'SELECT IFNULL(IOULimit , 0) as IOULimit , IFNULL(RequestIOULimit,0) as ReqLimit FROM USER WHERE USER_ID=?',
         [uID],
         (resp: any, err: any) => {
             // console.log("************** All employee ************  " + resp.length);

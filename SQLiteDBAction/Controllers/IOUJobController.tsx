@@ -5,7 +5,7 @@ export const saveIOUJOB = (data: any, callBack: any) => {
     var response: any;
 
 
-    console.log(" save object IOU ===============    "  , data);
+    // console.log(" save object IOU ===============    "  , data);
     
 
     for (let i = 0; i < data.length; ++i) {
@@ -42,14 +42,14 @@ export const saveIOUJOB = (data: any, callBack: any) => {
                         response = 3;
 
                         callBack(response);
-                        console.log(" end");
+                        // console.log(" end");
 
 
                     } else if (i == 0) {
 
                         response = 1;
                         callBack(response);
-                        console.log(" first  .....");
+                        // console.log(" first  .....");
                     }
 
 
@@ -132,6 +132,44 @@ export const getIOUJobsList = (RequestID: any, callBack: any) => {
         'SELECT * FROM IOU_JOBS.Request_ID WHERE IOU_JOBS.Request_ID=?',
         [RequestID],
         (resp: any, err: any) => {
+            callBack(resp, err);
+        },
+    );
+};
+
+export const getIOUJobDetailsById = (ID:any,callBack:any) => {
+
+    DB.searchData(
+        'SELECT IOU.IOU_Type as IOUTypeID , IOU_JOBS._Id,IOU_JOBS.Job_NO as IOUTypeNo,IOU_JOBS.AccNo,IOU_JOBS.CostCenter,IOU_JOBS.Resource, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount,IOU_JOBS.Remark as Remark ,IOU_JOBS.IstoEdit FROM IOU_JOBS WHERE IOU_JOBS._Id=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+
+}
+
+export const DeleteIOUJobByID = (ID:any,callBack:any) => {
+
+    DB.searchData(
+        ' DELETE FROM IOU_JOBS WHERE _Id=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
+            callBack(resp);
+        },
+    )
+
+}
+
+export const getIOUJobTotAmount = (ID:any , callBack: any) => {
+
+    DB.searchData(
+        'SELECT IFNULL(SUM(Amount),0) as totAmount FROM IOU_JOBS WHERE Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            // console.log("************** Last iou ************  " + resp.length);
             callBack(resp, err);
         },
     );

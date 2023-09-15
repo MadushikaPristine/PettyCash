@@ -75,7 +75,7 @@ const JobsView = ({job_no ,settlementAmount, isSettlementAmount, accNo, costCent
 
                     <Text style={styles.textHeader}>{IOU_Type == 1 ? "Job no" : (IOU_Type == 2 ? "Vehicle no" : "")}</Text>
                     <View style={{ flex: 1 }} />
-                    <Text style={styles.text}>{job_no}</Text>
+                    <Text style={styles.text}>{IOU_Type == 2 ? resource :job_no}</Text>
 
                 </View>
                 {/* <View style={{ flex: 1, marginLeft: 10, marginBottom: 10 }}> */}

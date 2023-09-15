@@ -45,7 +45,7 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
             ],
             (res: any, err: any) => {
 
-                console.log(" save response ===  " , res);
+                // console.log(" save response ===  " , res);
                 
                 if (res === 'success') {
 
