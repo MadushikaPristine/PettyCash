@@ -18,6 +18,8 @@ import { getLoginUserID, getLoginUserName } from "../../../Constant/AsynStorageF
 import { getLoginUserDetails } from "../../../SQLiteDBAction/Controllers/UserController";
 import ViewField from "../../../Components/ViewField";
 import Header from "../../../Components/Header";
+import { version } from "./../../../package.json";
+import ComponentsStyles from "../../../Constant/Components.styles";
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -25,11 +27,13 @@ const ProfileScreen = () => {
   const [username, setusername] = useState('');
   const [name, setname] = useState('');
   const [email, setemail] = useState('');
+  const [AppVersion, setAppVersion] = useState('');
 
 
   useFocusEffect(
     React.useCallback(() => {
 
+      getAppVesion();
       getLoginUserID().then(resid => {
         // console.log(resid, " user name ....... ", resid);
         getLoginUserDetails(resid, (result: any) => {
@@ -115,23 +119,38 @@ const ProfileScreen = () => {
 
   // }
 
+  const getAppVesion = () => {
+
+    console.log("-----  version -----   ", version);
+
+    setAppVersion("LIVE " + version + "V");
+
+  }
+
 
   return (
     <SafeAreaView>
-       <Header title="Profile" isBtn={true} btnOnPress={() => navigation.goBack()} />
-      <ScrollView style={{ height: '80%', marginBottom: 0, marginLeft: 13, marginRight: 13 }} showsVerticalScrollIndicator={false}>
+      <Header title="Profile" isBtn={true} btnOnPress={() => navigation.goBack()} />
+
+    
+        {/* <ScrollView style={{ height: '80%', marginBottom: 0, marginLeft: 13, marginRight: 13 }} showsVerticalScrollIndicator={false}> */}
+
+
+        <View style={{ alignContent: "flex-end", alignItems: "flex-end", marginRight: 10 }} >
+          <Text style={{ color: ComponentsStyles.COLORS.DASH_COLOR, fontSize: 15, }}>{AppVersion}</Text>
+        </View>
 
         <ViewField
           title="UserName :"
-          Value={username} titleStyle={undefined} valustyle={undefined}        />
+          Value={username} titleStyle={undefined} valustyle={undefined} />
         <ViewField
           title="Name :"
-          Value={name} titleStyle={undefined} valustyle={undefined}        />
+          Value={name} titleStyle={undefined} valustyle={undefined} />
         <ViewField
           title="Email : "
-          Value={email} titleStyle={undefined} valustyle={undefined}        />
-      </ScrollView>
-      {/* <View style={{ marginBottom: 0, marginLeft: 20, alignItems: 'flex-start', justifyContent: 'space-evenly' }} >
+          Value={email} titleStyle={undefined} valustyle={undefined} />
+        {/* </ScrollView> */}
+        {/* <View style={{ marginBottom: 0, marginLeft: 20, alignItems: 'flex-start', justifyContent: 'space-evenly' }} >
         <View style={{ flex: 2, borderBottomRightRadius: 20, borderBottomLeftRadius: 20 }}>
           <Text style={{ fontSize: 20, marginTop: 10, color: '#ffffff', fontFamily: 'Montserrat-Bold' }}>{ }</Text>
           <View style={{ flexDirection: 'row', marginBottom: 10 }}>
@@ -149,11 +168,19 @@ const ProfileScreen = () => {
         </View>
 
       </View> */}
+    
 
-      <View style={{ marginTop: 20, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}>
+
+
+
+
+      {/* <View style={{ marginTop: 20, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontFamily: 'Montserrat-SemiBold' }}>Developed By Pristine</Text>
-        <Text style={{ fontFamily: 'Montserrat-SemiBold' }}>Version </Text>
-      </View>
+        <Text style={{ fontFamily: 'Montserrat-SemiBold' }}>Version </Text> */}
+      {/* </View> */}
+
+
+
     </SafeAreaView>
 
 

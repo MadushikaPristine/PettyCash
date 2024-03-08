@@ -709,6 +709,9 @@ export const CleanDatabase = async () => {
       tx.executeSql('DELETE FROM VEHICLE_NO');
       tx.executeSql('DELETE FROM JOB_NO');
       tx.executeSql('DELETE FROM JOB_OWNERS');
+      tx.executeSql('DELETE FROM DEPARTMENTS');
+      tx.executeSql('DELETE FROM GL_ACCOUNT');
+      tx.executeSql('DELETE FROM USER_ROLLS');
       // ... and so on for all tables in the database
     },
       (error: any) => {

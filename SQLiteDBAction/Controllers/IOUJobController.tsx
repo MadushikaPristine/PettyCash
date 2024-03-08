@@ -1,6 +1,6 @@
 import * as DB from '../DBService';
 
-export const saveIOUJOB = (data: any, callBack: any) => {
+export const saveIOUJOB = (data: any, type:any,callBack: any) => {
 
     var response: any;
 
@@ -18,7 +18,7 @@ export const saveIOUJOB = (data: any, callBack: any) => {
                     values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].PCRID,
+                        data[i].ID,
                         data[i].IOUTypeNo,
                         data[i].JobOwner,
                         data[i].PCRCode,
@@ -30,7 +30,7 @@ export const saveIOUJOB = (data: any, callBack: any) => {
                         data[i].Remark,
                         data[i].CreateAt,
                         data[i].RequestedBy,
-                        1,
+                        parseInt(type),
 
                     ],
                 },
@@ -85,6 +85,26 @@ export const getLastIOUJobID = (callBack: any) => {
 
 }
 
+export const DeleteIOUSyncedDetailLine = (callBack: any) => {
+
+    DB.deleteData(
+        [
+          {
+            table: 'IOU_JOBS',
+            query: "WHERE IsSync=? ",
+            params: [1],
+          },
+        ],
+        (resp: any, err: any) => {
+          console.log(resp, ">>>>>>", err);
+    
+          callBack(resp, err);
+        },
+      );
+
+
+}
+
 export const getIOUJobsByID = (ID:any ,callBack: any) => {
 
     DB.searchData(
@@ -116,7 +136,7 @@ export const getIOUJobDetailsByID = (jobID: any, callBack: any) => {
 export const getIOUJOBDataBYRequestID = (ID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT IOU.IOU_Type as IOUTypeID, IOU_JOBS.Job_No as IOUTypeNo,IOU_JOBS.AccNo,IOU_JOBS.CostCenter,IOU_JOBS.Resource, IOU_JOBS.Expences_Type as ExpenseType, IOU_JOBS.Amount as Amount, IOU_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM IOU_JOBS INNER JOIN IOU ON IOU.IOU_ID = IOU_JOBS.Request_ID LEFT OUTER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = IOU_JOBS.Request_ID WHERE IOU_JOBS.Request_ID=?',
+        'SELECT IOU.IOU_Type as IOUTypeID, IOU_JOBS.Job_No as IOUTypeNo,IOU_JOBS.AccNo,IOU_JOBS.CostCenter,IOU_JOBS.Resource, IOU_JOBS.Expences_Type as ExpenseType, IOU_JOBS.Amount as Amount, IOU_JOBS.Remark as Remark FROM IOU_JOBS INNER JOIN IOU ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU_JOBS.Request_ID=?',
         [ID],
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
@@ -171,6 +191,18 @@ export const getIOUJobTotAmount = (ID:any , callBack: any) => {
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
             callBack(resp, err);
+        },
+    );
+};
+
+export const updateIOUDetailLineSyncStatus = (ID: any, callBack: any) => {
+
+    DB.updateData(
+        'UPDATE IOU_JOBS SET IsSync=1 WHERE Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
         },
     );
 };

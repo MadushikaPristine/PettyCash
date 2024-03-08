@@ -24,9 +24,9 @@ import { getIOUSETToatalAmount, getPendingIOUSettlement, getPendingIOUSettlement
 import { getONEOFFToatalAmount, getPendingOneOffSettlement, getPendingOneOffSettlementHome, saveOneOffSettlement } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
 import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
 import * as DB from '../SQLiteDBAction/DBService';
-import { getLoginUserID, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_LOGIN_ROUND } from "../Constant/AsynStorageFuntion";
+import { getIsLogFileView, getLoginUserID, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_LOGIN_ROUND } from "../Constant/AsynStorageFuntion";
 import Modal from "react-native-modal";
-import { BASE_URL, BASE_URL_LOOKUPS, COMMON_BASE_URL, headers } from "../Constant/ApiConstants";
+import { BASE_URL, BASE_URL_LOOKUPS, COMMON_BASE_URL, DB_LIVE, SAP_LIVE_DB, headers } from "../Constant/ApiConstants";
 import axios from "axios";
 import { saveIOUType } from "../SQLiteDBAction/Controllers/IOUTypeController";
 import { saveExpenseType } from "../SQLiteDBAction/Controllers/ExpenseTypeController";
@@ -34,9 +34,9 @@ import { getAllJobOwners, saveUser } from "../SQLiteDBAction/Controllers/UserCon
 import { saveVehicleNo } from "../SQLiteDBAction/Controllers/VehicleNoController";
 import { saveJobOwners } from "../SQLiteDBAction/Controllers/JobOwnerController";
 import { saveJobNo } from "../SQLiteDBAction/Controllers/JobNoController";
-import { saveIOUJOB } from "../SQLiteDBAction/Controllers/IOUJobController";
-import { saveIOUSETJOB } from "../SQLiteDBAction/Controllers/IOUSettlementJobController";
-import { saveOneOffJOB } from "../SQLiteDBAction/Controllers/OneOffJobController";
+import { DeleteIOUSyncedDetailLine, saveIOUJOB } from "../SQLiteDBAction/Controllers/IOUJobController";
+import { DeleteSETSyncedDetailLine, saveIOUSETJOB } from "../SQLiteDBAction/Controllers/IOUSettlementJobController";
+import { DeleteOneOffSyncedDetailLine, saveOneOffJOB } from "../SQLiteDBAction/Controllers/OneOffJobController";
 import { saveUserRolls } from "../SQLiteDBAction/Controllers/UserRollController";
 import { saveDepartment } from "../SQLiteDBAction/Controllers/DepartmentController";
 import { Conection_Checking } from "../Constant/InternetConection_Checking";
@@ -44,6 +44,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 import { saveEmployee } from "../SQLiteDBAction/Controllers/EmployeeController";
 import { saveGLAccount } from "../SQLiteDBAction/Controllers/GLAccountController";
+import logFileDialogBox from "../Components/LogFileDialogBox";
+import LogFileDialogBox from "../Components/LogFileDialogBox";
 
 let SyncArray1: any[] = [];
 let arrayindex = 0;
@@ -63,6 +65,7 @@ const HomeScreen = () => {
     const [ONEOFFTotalAmount, setONEOFFTotalAmount] = useState(0);
     const [roll, setRoll] = useState('');
     const [uName, setUname] = useState('');
+    const [viewLogFileList, setviewLogFileList] = useState(false);
 
     //Sync Modal
     const [isModalVisible, setModalVisible] = useState(false);
@@ -258,9 +261,12 @@ const HomeScreen = () => {
 
     useEffect(() => {
 
+        setviewLogFileList(false);
         checkCurrentTime();
 
     }, [HeaderText]);
+
+
 
     useFocusEffect(
         React.useCallback(() => {
@@ -285,7 +291,7 @@ const HomeScreen = () => {
 
 
             //createChannels();
-
+            setviewLogFileList(false);
         }, [navigation])
     );
 
@@ -382,7 +388,7 @@ const HomeScreen = () => {
 
     const Download_IOU_Types = async () => {
 
-        const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=PC_UAT_WM'
+        const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=' + DB_LIVE;
 
         console.log(" iou types ===  ", URL);
 
@@ -501,7 +507,7 @@ const HomeScreen = () => {
 
     const Download_Expense_Types = async () => {
 
-        const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=PC_UAT_WM&sapDbName=PC_UAT_SAP'
+        const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=' + DB_LIVE + '&sapDbName=' + SAP_LIVE_DB;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -537,7 +543,7 @@ const HomeScreen = () => {
 
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-                                Download_MaximumAmount();
+                                Download_User_Rolls();
 
 
                             } else if (resp == 3) {
@@ -552,7 +558,7 @@ const HomeScreen = () => {
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
 
-                                Download_MaximumAmount();
+                                Download_User_Rolls();
                             }
 
 
@@ -572,7 +578,7 @@ const HomeScreen = () => {
 
                         setSyncArray(SyncArray1);
                         setOnRefresh(true);
-                        Download_MaximumAmount();
+                        Download_User_Rolls();
 
                     }
 
@@ -591,7 +597,7 @@ const HomeScreen = () => {
                     setSyncArray(SyncArray1);
                     setOnRefresh(true);
 
-                    Download_MaximumAmount();
+                    Download_User_Rolls();
 
                 }
 
@@ -611,7 +617,7 @@ const HomeScreen = () => {
                 setSyncArray(SyncArray1);
                 setOnRefresh(true);
 
-                Download_MaximumAmount();
+                Download_User_Rolls();
 
             });
 
@@ -619,7 +625,7 @@ const HomeScreen = () => {
     // //----------------------Download Max Amount -------------------------------------
 
     const Download_MaximumAmount = async () => {
-        const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=PC_UAT_WM";
+        const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=" + DB_LIVE;
 
         await axios.get(URL2, { headers }
         ).then(async response => {
@@ -668,7 +674,7 @@ const HomeScreen = () => {
 
     const Download_User_Rolls = async () => {
 
-        const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=PC_UAT_WM'
+        const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=' + DB_LIVE;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -788,7 +794,7 @@ const HomeScreen = () => {
 
     const Download_Users = async () => {
 
-        const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=PC_UAT_WM'
+        const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=' + DB_LIVE;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -905,7 +911,7 @@ const HomeScreen = () => {
 
     const Download_VehicleNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=PC_UAT_WM&sapDbName=PC_UAT_SAP&ResType=VEHICLE'
+        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=' + DB_LIVE + '&sapDbName=' +  SAP_LIVE_DB + '&ResType=VEHICLE';
 
 
         await axios.get(URL, { headers })
@@ -1024,7 +1030,7 @@ const HomeScreen = () => {
 
     const Download_Departments = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllDepartment.xsjs?dbName=PC_UAT_WM'
+        const URL = BASE_URL + '/Mob_GetAllDepartment.xsjs?dbName=' + DB_LIVE;
 
         console.log("DOWNLOAD DEPARTMENTS ==============  ", URL);
 
@@ -1167,7 +1173,7 @@ const HomeScreen = () => {
 
     const Download_Employee = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllEmployee.xsjs?dbName=PC_UAT_WM';
+        const URL = BASE_URL + '/Mob_GetAllEmployee.xsjs?dbName=' + DB_LIVE;
 
 
         await axios.get(URL, { headers })
@@ -1286,7 +1292,7 @@ const HomeScreen = () => {
 
     const Download_JobOwners = async () => {
 
-        const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=PC_UAT_WM&sapDbName=PC_UAT_SAP'
+        const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=' + DB_LIVE + '&sapDbName=' + SAP_LIVE_DB;
 
         try {
 
@@ -1480,7 +1486,10 @@ const HomeScreen = () => {
 
     const Download_JobNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=PC_UAT_WM'
+        const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=' + DB_LIVE;
+
+        console.log(" DOWNLOAD JOB NO ======  " , URL);
+        
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1602,7 +1611,7 @@ const HomeScreen = () => {
 
     const Download_GL_ACCOUNT = async () => {
 
-        const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=PC_UAT_WM'
+        const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=' + DB_LIVE;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1729,7 +1738,7 @@ const HomeScreen = () => {
         console.log(" user ID ==== ", userID);
 
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=PC_UAT_WM&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1740,7 +1749,7 @@ const HomeScreen = () => {
 
                     if (response.data.header.length > 0) {
 
-                        saveIOU(response.data.header, (resp: any) => {
+                        saveIOU(response.data.header, 1, (resp: any) => {
 
                             // console.log("save IOU ------------>>>>>  ", resp);
 
@@ -1858,7 +1867,7 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement Request --------------------------------------
     const Download_IOUSETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1867,7 +1876,7 @@ const HomeScreen = () => {
 
                     if (response.data.header.length > 0) {
 
-                        saveIOUSettlement(response.data.header, (resp: any) => {
+                        saveIOUSettlement(response.data.header, 1, (resp: any) => {
 
                             // console.log("save IOU SET ------------>>>>>  ", resp);
 
@@ -1985,7 +1994,7 @@ const HomeScreen = () => {
     // -------------------- Download One-Off Settlement Request --------------------------------------
     const Download_ONE_OFF_SETRequest = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
+        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1994,7 +2003,7 @@ const HomeScreen = () => {
 
                     if (response.data.header.length > 0) {
 
-                        saveOneOffSettlement(response.data.header, (resp: any) => {
+                        saveOneOffSettlement(response.data.header, 1, (resp: any) => {
 
                             // console.log("save ONE OFF ------------>>>>>  ", resp);
 
@@ -2111,54 +2120,80 @@ const HomeScreen = () => {
     // -------------------- Download IOU Settlement JOBS Request --------------------------------------
     const Download_IOUSETJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
+        DeleteSETSyncedDetailLine(async (resp: any) => {
+            console.log("delete set jobs =============   ", resp);
 
-        await axios.get(URL, { headers })
-            .then(response => {
+            if (resp === 'success') {
 
-                if (response.status === 200) {
+                const URL = BASE_URL + '/Mob_GetAllIOUSettlements.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
 
-                    if (response.data.detail.length > 0) {
+                await axios.get(URL, { headers })
+                    .then(response => {
 
-                        saveIOUSETJOB(response.data.detail, (resp: any) => {
+                        if (response.status === 200) {
 
-                            // console.log("save IOUSET JOBS ------------>>>>>  ", resp);
+                            if (response.data.detail.length > 0) {
+
+                                saveIOUSETJOB(response.data.detail, 1, (resp: any) => {
+
+                                    // console.log("save IOUSET JOBS ------------>>>>>  ", resp);
 
 
-                            setOnRefresh(false);
+                                    setOnRefresh(false);
 
-                            if (resp == 1) {
+                                    if (resp == 1) {
 
-                                arrayindex++;
+                                        arrayindex++;
 
-                                SyncArray1.push({
-                                    name: 'IOUSET JOBS Downloading...',
-                                    id: arrayindex,
+                                        SyncArray1.push({
+                                            name: 'IOUSET JOBS Downloading...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+
+                                    } else if (resp == 2) {
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'IOUSET JOBS Download Failed...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+                                        Download_ONEOFFJOBS();
+
+
+                                    } else if (resp == 3) {
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'IOUSET JOBS Download Successfully...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+                                        Download_ONEOFFJOBS();
+
+                                    }
+
+
+
                                 });
 
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
+                            } else {
 
-                            } else if (resp == 2) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'IOUSET JOBS Download Failed...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-                                Download_ONEOFFJOBS();
-
-
-                            } else if (resp == 3) {
+                                setOnRefresh(false);
 
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'IOUSET JOBS Download Successfully...',
+                                    name: 'No available IOUSET JOBS for Download...',
                                     id: arrayindex,
                                 });
 
@@ -2170,16 +2205,38 @@ const HomeScreen = () => {
 
 
 
-                        });
+                        } else {
 
-                    } else {
+                            // console.log(" response code ======= ", response.status);
+
+                            setOnRefresh(false);
+
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'IOUSET JOBS Download Failed...',
+                                id: arrayindex,
+                            });
+
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+
+                            Download_ONEOFFJOBS();
+
+                        }
+
+
+                    })
+                    .catch((error) => {
+
+                        // console.log(" IOUSET JOBS download  error .....   ", error);
 
                         setOnRefresh(false);
 
                         arrayindex++;
 
                         SyncArray1.push({
-                            name: 'No available IOUSET JOBS for Download...',
+                            name: 'IOUSET JOBS Download Failed...',
                             id: arrayindex,
                         });
 
@@ -2187,104 +2244,92 @@ const HomeScreen = () => {
                         setOnRefresh(true);
                         Download_ONEOFFJOBS();
 
-                    }
-
-
-
-                } else {
-
-                    // console.log(" response code ======= ", response.status);
-
-                    setOnRefresh(false);
-
-                    arrayindex++;
-
-                    SyncArray1.push({
-                        name: 'IOUSET JOBS Download Failed...',
-                        id: arrayindex,
                     });
 
-                    setSyncArray(SyncArray1);
-                    setOnRefresh(true);
 
-                    Download_ONEOFFJOBS();
+            }
 
-                }
+        });
 
-
-            })
-            .catch((error) => {
-
-                // console.log(" IOUSET JOBS download  error .....   ", error);
-
-                setOnRefresh(false);
-
-                arrayindex++;
-
-                SyncArray1.push({
-                    name: 'IOUSET JOBS Download Failed...',
-                    id: arrayindex,
-                });
-
-                setSyncArray(SyncArray1);
-                setOnRefresh(true);
-                Download_ONEOFFJOBS();
-
-            });
 
     }
 
     // -------------------- Download OneOff JOBS Request --------------------------------------
     const Download_ONEOFFJOBS = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=PC_UAT_WM&emp=' + userID;
+        DeleteOneOffSyncedDetailLine(async (resp: any) => {
+            console.log("delete one-off jobs =============   ", resp);
+            if (resp === 'success') {
 
-        await axios.get(URL, { headers })
-            .then(response => {
+                const URL = BASE_URL + '/Mob_GetAllOneOffSettlements.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
 
-                if (response.status === 200) {
+                await axios.get(URL, { headers })
+                    .then(response => {
 
-                    if (response.data.detail.length > 0) {
+                        if (response.status === 200) {
 
-                        saveOneOffJOB(response.data.detail, (resp: any) => {
+                            if (response.data.detail.length > 0) {
 
-                            // console.log("save ONEOFF JOBS ------------>>>>>  ", resp);
+                                saveOneOffJOB(response.data.detail, 1, (resp: any) => {
+
+                                    // console.log("save ONEOFF JOBS ------------>>>>>  ", resp);
 
 
-                            setOnRefresh(false);
+                                    setOnRefresh(false);
 
-                            if (resp == 1) {
+                                    if (resp == 1) {
 
-                                arrayindex++;
+                                        arrayindex++;
 
-                                SyncArray1.push({
-                                    name: 'ONEOFF JOBS Downloading...',
-                                    id: arrayindex,
+                                        SyncArray1.push({
+                                            name: 'ONEOFF JOBS Downloading...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+
+                                    } else if (resp == 2) {
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'ONEOFF JOBS Download Failed...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+                                        Download_IOUJobs();
+
+
+                                    } else if (resp == 3) {
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'ONEOFF JOBS Download Successfully...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+                                        Download_IOUJobs();
+
+                                    }
+
+
+
                                 });
 
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
+                            } else {
 
-                            } else if (resp == 2) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'ONEOFF JOBS Download Failed...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-                                Download_IOUJobs();
-
-
-                            } else if (resp == 3) {
+                                setOnRefresh(false);
 
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'ONEOFF JOBS Download Successfully...',
+                                    name: 'No available ONEOFF JOBS for Download...',
                                     id: arrayindex,
                                 });
 
@@ -2296,16 +2341,38 @@ const HomeScreen = () => {
 
 
 
-                        });
+                        } else {
 
-                    } else {
+                            // console.log(" response code ======= ", response.status);
+
+                            setOnRefresh(false);
+
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'ONEOFF JOBS Download Failed...',
+                                id: arrayindex,
+                            });
+
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+
+                            Download_IOUJobs();
+
+                        }
+
+
+                    })
+                    .catch((error) => {
+
+                        // console.log(" ONEOFF JOBS download  error .....   ", error);
 
                         setOnRefresh(false);
 
                         arrayindex++;
 
                         SyncArray1.push({
-                            name: 'No available ONEOFF JOBS for Download...',
+                            name: 'ONEOFF JOBS Download Failed...',
                             id: arrayindex,
                         });
 
@@ -2313,50 +2380,12 @@ const HomeScreen = () => {
                         setOnRefresh(true);
                         Download_IOUJobs();
 
-                    }
-
-
-
-                } else {
-
-                    // console.log(" response code ======= ", response.status);
-
-                    setOnRefresh(false);
-
-                    arrayindex++;
-
-                    SyncArray1.push({
-                        name: 'ONEOFF JOBS Download Failed...',
-                        id: arrayindex,
                     });
 
-                    setSyncArray(SyncArray1);
-                    setOnRefresh(true);
-
-                    Download_IOUJobs();
-
-                }
+            }
+        });
 
 
-            })
-            .catch((error) => {
-
-                // console.log(" ONEOFF JOBS download  error .....   ", error);
-
-                setOnRefresh(false);
-
-                arrayindex++;
-
-                SyncArray1.push({
-                    name: 'ONEOFF JOBS Download Failed...',
-                    id: arrayindex,
-                });
-
-                setSyncArray(SyncArray1);
-                setOnRefresh(true);
-                Download_IOUJobs();
-
-            });
 
     }
 
@@ -2364,51 +2393,118 @@ const HomeScreen = () => {
     // -------------------- Download IOU Job Data --------------------------------------
     const Download_IOUJobs = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=PC_UAT_WM&emp=' + userID;
+        DeleteIOUSyncedDetailLine(async (resp: any) => {
+            console.log("delete iou jobs =============   ", resp);
+            if (resp === 'success') {
 
-        console.log(" IOU JOBS URL ==== ", URL);
+                const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
+
+                console.log(" IOU JOBS URL ==== ", URL);
 
 
-        await axios.get(URL, { headers })
-            .then(response => {
+                await axios.get(URL, { headers })
+                    .then(response => {
 
-                // console.log(response.status);
-                if (response.status === 200) {
+                        // console.log(response.status);
+                        if (response.status === 200) {
 
-                    //console.log(response.data.details, '=====================');
-                    // console.log(response.status);
+                            //console.log(response.data.details, '=====================');
+                            // console.log(response.status);
 
-                    if (response.data.detail.length > 0) {
+                            if (response.data.detail.length > 0) {
 
-                        saveIOUJOB(response.data.detail, (resp: any) => {
+                                saveIOUJOB(response.data.detail, 1, (resp: any) => {
 
-                            setOnRefresh(false);
+                                    setOnRefresh(false);
 
-                            if (resp == 1) {
+                                    if (resp == 1) {
 
-                                arrayindex++;
+                                        arrayindex++;
 
-                                SyncArray1.push({
-                                    name: 'Jobs Downloading...',
-                                    id: arrayindex,
+                                        SyncArray1.push({
+                                            name: 'Jobs Downloading...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+
+                                    } else if (resp == 2) {
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'Jobs Download Failed...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+
+                                        setOnRefresh(false);
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'Finished...',
+                                            id: arrayindex,
+                                        });
+                                        setSyncArray(SyncArray1);
+
+                                        setOnRefresh(true);
+                                        setOnRefresh(false);
+                                        SetCloseBtnSync(true)
+                                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
+                                        OnLoadData();
+
+
+                                    } else if (resp == 3) {
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'Jobs Download Successfully...',
+                                            id: arrayindex,
+                                        });
+
+                                        setSyncArray(SyncArray1);
+                                        setOnRefresh(true);
+
+                                        arrayindex++;
+
+                                        SyncArray1.push({
+                                            name: 'Finished...',
+                                            id: arrayindex,
+                                        });
+                                        setSyncArray(SyncArray1);
+
+                                        setOnRefresh(true);
+                                        setOnRefresh(false);
+                                        SetCloseBtnSync(true)
+                                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
+                                        OnLoadData();
+
+
+                                    }
+
+
+
+
                                 });
 
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-
-                            } else if (resp == 2) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'Jobs Download Failed...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
+                            } else {
 
                                 setOnRefresh(false);
+
+                                arrayindex++;
+
+                                SyncArray1.push({
+                                    name: 'No available Jobs for Download...',
+                                    id: arrayindex,
+                                });
+
+                                setSyncArray(SyncArray1);
+                                setOnRefresh(true);
 
                                 arrayindex++;
 
@@ -2423,50 +2519,55 @@ const HomeScreen = () => {
                                 SetCloseBtnSync(true)
                                 AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
                                 OnLoadData();
-
-
-                            } else if (resp == 3) {
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'Jobs Download Successfully...',
-                                    id: arrayindex,
-                                });
-
-                                setSyncArray(SyncArray1);
-                                setOnRefresh(true);
-
-                                arrayindex++;
-
-                                SyncArray1.push({
-                                    name: 'Finished...',
-                                    id: arrayindex,
-                                });
-                                setSyncArray(SyncArray1);
-
-                                setOnRefresh(true);
-                                setOnRefresh(false);
-                                SetCloseBtnSync(true)
-                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
-                                OnLoadData();
-
 
                             }
 
 
 
+                        } else {
 
-                        });
+                            // console.log(" response code ======= ", response.status);
 
-                    } else {
+                            setOnRefresh(false);
+
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'Jobs Download Failed...',
+                                id: arrayindex,
+                            });
+
+                            setSyncArray(SyncArray1);
+                            setOnRefresh(true);
+
+                            arrayindex++;
+
+                            SyncArray1.push({
+                                name: 'Finished...',
+                                id: arrayindex,
+                            });
+                            setSyncArray(SyncArray1);
+
+                            setOnRefresh(true);
+                            setOnRefresh(false);
+                            SetCloseBtnSync(true)
+                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
+                            OnLoadData();
+
+                        }
+
+
+                    })
+                    .catch((error) => {
+
+                        // console.log(" IOUTypes error .....   ", error);
 
                         setOnRefresh(false);
 
                         arrayindex++;
 
                         SyncArray1.push({
-                            name: 'No available Jobs for Download...',
+                            name: 'Jobs Download Failed...',
                             id: arrayindex,
                         });
 
@@ -2487,87 +2588,64 @@ const HomeScreen = () => {
                         AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
                         OnLoadData();
 
-                    }
 
-
-
-                } else {
-
-                    // console.log(" response code ======= ", response.status);
-
-                    setOnRefresh(false);
-
-                    arrayindex++;
-
-                    SyncArray1.push({
-                        name: 'Jobs Download Failed...',
-                        id: arrayindex,
                     });
 
-                    setSyncArray(SyncArray1);
-                    setOnRefresh(true);
-
-                    arrayindex++;
-
-                    SyncArray1.push({
-                        name: 'Finished...',
-                        id: arrayindex,
-                    });
-                    setSyncArray(SyncArray1);
-
-                    setOnRefresh(true);
-                    setOnRefresh(false);
-                    SetCloseBtnSync(true)
-                    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
-                    OnLoadData();
-
-                }
+            }
+        });
 
 
-            })
-            .catch((error) => {
-
-                // console.log(" IOUTypes error .....   ", error);
-
-                setOnRefresh(false);
-
-                arrayindex++;
-
-                SyncArray1.push({
-                    name: 'Jobs Download Failed...',
-                    id: arrayindex,
-                });
-
-                setSyncArray(SyncArray1);
-                setOnRefresh(true);
-
-                arrayindex++;
-
-                SyncArray1.push({
-                    name: 'Finished...',
-                    id: arrayindex,
-                });
-                setSyncArray(SyncArray1);
-
-                setOnRefresh(true);
-                setOnRefresh(false);
-                SetCloseBtnSync(true)
-                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2")
-                OnLoadData();
-
-
-            });
 
     }
 
     const sync = () => {
 
-        SyncArray1 = [];
-        setSyncArray([]);
-        SetCloseBtnSync(false)
-        toggleModal();
+        Conection_Checking((resp: any) => {
+            if (resp != false) {
 
-        Download_IOU_Types();
+                SyncArray1 = [];
+                setSyncArray([]);
+                SetCloseBtnSync(false)
+                toggleModal();
+
+                Download_IOU_Types();
+
+
+            } else {
+
+                Alert.alert('No Internet Connection', 'Please check your internet connection! ', [
+                    
+                    { text: 'Ok', onPress: () => console.log('ok pressed') },
+                ]);
+
+            }
+        });
+
+
+    }
+
+    const shareLogFiles = () => {
+
+        console.log(" pressed log file btn");
+        setviewLogFileList(false);
+
+        getIsLogFileView().then(async res => {
+
+            console.log(" sync result ===   ", res);
+
+            setviewLogFileList(true);
+            if (res === "false") {
+
+                await AsyncStorage.setItem(AsyncStorageConstants.VIEW_LOG_FILE_BOX, "true");
+
+            }
+
+
+
+        });
+
+
+
     }
 
     //Sync Functions end --------------------------------------------------------------------------------------
@@ -2575,7 +2653,7 @@ const HomeScreen = () => {
     return (
 
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
-            <Header title={`${HeaderText}\n${uName}`} image={true} isIcon={true} iconOnPress={() => sync()} />
+            <Header title={`${HeaderText}\n${uName}`} image={true} isIcon={true} iconOnPress={() => sync()} ShareLog={() => shareLogFiles()} />
 
             {/* // --------------- Sync Modal ---------------------------------- */}
 
@@ -2953,6 +3031,16 @@ const HomeScreen = () => {
                 <View style={{ marginBottom: 70 }}></View>
 
             </ScrollView>
+
+            {
+                viewLogFileList ?
+
+                    <LogFileDialogBox />
+
+                    :
+
+                    <></>
+            }
 
 
         </SafeAreaView>

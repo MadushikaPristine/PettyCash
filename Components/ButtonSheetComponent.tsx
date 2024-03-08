@@ -81,38 +81,38 @@ const ButtonSheetComponent = () => {
 
 
 
-        getLoginUserID().then(result => {
+        // getLoginUserID().then(result => {
 
-            checkOpenRequestsOneOff(parseInt(result + ""), (resp: any) => {
+        //     checkOpenRequestsOneOff(parseInt(result + ""), (resp: any) => {
 
-                if (resp.length > 0) {
+        //         if (resp.length > 0) {
 
-                    Alert.alert('Can not create a new Request', 'You already have an open status request', [
-                        {
-                            text: 'Ok',
-                            onPress: () => console.log('Cancel Pressed'),
-                            style: 'cancel',
-                        },
-                        // { text: 'Yes', onPress: (back) },
-                    ]);
+        //             Alert.alert('Can not create a new Request', 'You already have an open status request', [
+        //                 {
+        //                     text: 'Ok',
+        //                     onPress: () => console.log('Cancel Pressed'),
+        //                     style: 'cancel',
+        //                 },
+        //                 // { text: 'Yes', onPress: (back) },
+        //             ]);
 
-                    setModalVisible(false);
+        //             setModalVisible(false);
 
-                } else {
+        //         } else {
 
-                    setModalVisible(false);
-                    navigation.navigate('NewOneOffSettlement');
+        //             setModalVisible(false);
+        //             navigation.navigate('NewOneOffSettlement');
 
-                }
+        //         }
 
-            });
+        //     });
 
-        })
+        // })
 
 
 
-        // setModalVisible(false);
-        // navigation.navigate('NewOneOffSettlement');
+        setModalVisible(false);
+        navigation.navigate('NewOneOffSettlement');
 
 
 

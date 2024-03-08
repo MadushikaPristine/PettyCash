@@ -80,7 +80,7 @@ export const getAllJobOwnersBYDep = (callBack: any) => {
 
     get_ASYNC_COST_CENTER().then(async res => {
 
-        // console.log(" dep ===   " , res);
+        console.log(" dep ===   " , res);
         
 
         DB.searchData(

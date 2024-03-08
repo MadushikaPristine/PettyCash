@@ -50,7 +50,7 @@ const NewJobsView = ({ isDelete,onPressDeleteIcon, settlementAmount, isSettlemen
 
                 <View style={{ flexDirection: 'row', flex: 4 }}>
 
-                    <Text style={styles.textHeader}>{IOU_Type == 1 ? "Job no" : (IOU_Type == 2 ? "Vehicle no" : "")}</Text>
+                    <Text style={styles.textHeader}>{IOU_Type == 1 ? "Job No" : (IOU_Type == 2 ? "Vehicle No" : "")}</Text>
                     <View style={{ flex: 1 }} />
                     <Text style={styles.text}>{IOUTypeNo}</Text>
 
@@ -59,7 +59,7 @@ const NewJobsView = ({ isDelete,onPressDeleteIcon, settlementAmount, isSettlemen
 
                 <View style={{ flexDirection: 'row' }}>
 
-                    <Text style={styles.textHeader}>Expense type</Text>
+                    <Text style={styles.textHeader}>Expense Type</Text>
                     <View style={{ flex: 1 }} />
                     <Text style={styles.text}>{ExpenseType}</Text>
 

@@ -28,7 +28,7 @@ import * as  DB_Emp from "../../SQLiteDBAction/Controllers/EmployeeController"
 import { Employee, EmpType, ExpenseType, IOUType } from "../../Constant/DummyData";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import { getLoginPassword, getLoginRound, getLoginUName, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_LOGIN_ROUND } from "../../Constant/AsynStorageFuntion";
-import { BASE_URL, LOGIN_BASE_URL, headers } from "../../Constant/ApiConstants";
+import { BASE_URL, DB_LIVE, LOGIN_BASE_URL, SAP_LIVE_DB, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import * as CryptoJS from 'crypto-js';
 import Spinner from "react-native-loading-spinner-overlay";
@@ -36,6 +36,8 @@ import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import RNVPNDetect from "react-native-vpn-detect";
 import { getStatusBarHeight } from "react-native-status-bar-height";
+import moment from "moment";
+import { CreateLogFile, logger, readLogs, saveJsonObject_To_Loog } from "../../Constant/Logger";
 
 
 const LoginScreen = () => {
@@ -122,21 +124,27 @@ const LoginScreen = () => {
             var u_name = "dinushkam";
             var p_word = "GdBzSuV6mAdEyA6/H4plMQ==";
 
-            const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=PC_UAT_WM&username=" + uName + "&password=" + encryptedPassword + "&sap=PSLTEST_LIVE_SL";
+            const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=" + DB_LIVE + "&username=" + uName + "&password=" + encryptedPassword + "&sap=" + SAP_LIVE_DB;
 
             console.log("Login URL === ", URL);
 
+            var loggerDate = "Date - "+moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss')+"+++++++++++++LOGIN ++++++++++++++++";
+
+            logger(loggerDate,"Login URL " + "   *******   " +URL );
+           
+
             Conection_Checking(async (res: any) => {
                 if (res != false) {
-
-                    //check vpn connected
-
-                    // console.log("vpn connection check ... ",RNVPNDetect.checkIsVpnConnected());
 
                     try {
 
                         await axios.get(URL, { headers }
                         ).then(async response => {
+
+
+                            logger(response.status+"" , "Login Response Status " );
+                            saveJsonObject_To_Loog(response.data);
+                            
 
                             console.log(" login response ==== ", response.data);
 
@@ -264,6 +272,8 @@ const LoginScreen = () => {
 
                             console.log(" response error =====  ", err);
 
+                            logger("Login ERROR ====  " ,  err+"" );
+
 
                             setloandingspinner(false);
                             Alert.alert(
@@ -277,6 +287,11 @@ const LoginScreen = () => {
                         });
 
                     } catch (error) {
+
+                        logger("Login ERROR ====  " ,  error+"" );
+
+                        readLogs();
+
                         Alert.alert(
                             "Bad Request!",
                             "Login Failed...",
@@ -353,6 +368,8 @@ const LoginScreen = () => {
 
             setuName('');
             setPword('');
+
+            CreateLogFile();
 
 
             getLoginUName().then(res => {

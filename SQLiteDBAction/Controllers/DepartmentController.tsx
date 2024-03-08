@@ -82,9 +82,9 @@ export const getHODDetails = (ID:any,callBack: any) => {
 
     DB.searchData(
         'SELECT HODName as Name , HODNo as ID FROM DEPARTMENTS WHERE HODNo=? ',
-        [],
+        [ID],
         (resp: any, err: any) => {
-            //console.log("************** all IOU Types ************  " + resp.length);
+            console.log("************** all IOU Types ************  " + resp.length);
             callBack(resp, err);
         },
     );

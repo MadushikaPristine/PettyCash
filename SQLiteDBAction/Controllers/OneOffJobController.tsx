@@ -1,6 +1,6 @@
 import * as DB from '../DBService';
 
-export const saveOneOffJOB = (data: any, callBack: any) => {
+export const saveOneOffJOB = (data: any, type: any, callBack: any) => {
 
     var response: any;
 
@@ -14,7 +14,7 @@ export const saveOneOffJOB = (data: any, callBack: any) => {
                     values: '?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].PCRID,
+                        data[i].ID,
                         data[i].IOUTypeNo,
                         data[i].JobOwner_ID,
                         data[i].PCRCode,
@@ -26,7 +26,7 @@ export const saveOneOffJOB = (data: any, callBack: any) => {
                         data[i].Remark,
                         data[i].CreateAt,
                         data[i].RequestedBy,
-                        0,
+                        parseInt(type),
 
                     ],
                 },
@@ -63,7 +63,7 @@ export const saveOneOffJOB = (data: any, callBack: any) => {
 
 };
 
-export const getLastOneOffJobID = (callBack:any) => {
+export const getLastOneOffJobID = (callBack: any) => {
 
     DB.searchData(
         'SELECT _Id FROM ONE_OFF_SETTLEMENT_JOBS ORDER BY _Id DESC LIMIT 1',
@@ -77,10 +77,30 @@ export const getLastOneOffJobID = (callBack:any) => {
 
 }
 
-export const getOneOffJOBDataBYRequestID = (ID: any, callBack:any) => {
+export const DeleteOneOffSyncedDetailLine = (callBack: any) => {
+
+    DB.deleteData(
+        [
+          {
+            table: 'ONE_OFF_SETTLEMENT_JOBS',
+            query: "WHERE IsSync=? ",
+            params: [1],
+          },
+        ],
+        (resp: any, err: any) => {
+          console.log(resp, ">>>>>>", err);
+    
+          callBack(resp, err);
+        },
+      );
+
+
+}
+
+export const getOneOffJOBDataBYRequestID = (ID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT.IOU_Type as IOUTypeID, ONE_OFF_SETTLEMENT_JOBS.Job_No as IOUTypeNo,ONE_OFF_SETTLEMENT_JOBS.AccNo,ONE_OFF_SETTLEMENT_JOBS.CostCenter,ONE_OFF_SETTLEMENT_JOBS.Resource, ONE_OFF_SETTLEMENT_JOBS.Expences_Type as ExpenseType, ONE_OFF_SETTLEMENT_JOBS.Amount as Amount, ONE_OFF_SETTLEMENT_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM ONE_OFF_SETTLEMENT_JOBS INNER JOIN ONE_OFF_SETTLEMENT ON ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID INNER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID WHERE ONE_OFF_SETTLEMENT_JOBS.Request_ID=?',
+        'SELECT ONE_OFF_SETTLEMENT.IOU_Type as IOUTypeID, ONE_OFF_SETTLEMENT_JOBS.Job_No as IOUTypeNo,ONE_OFF_SETTLEMENT_JOBS.AccNo,ONE_OFF_SETTLEMENT_JOBS.CostCenter,ONE_OFF_SETTLEMENT_JOBS.Resource, ONE_OFF_SETTLEMENT_JOBS.Expences_Type as ExpenseType, ONE_OFF_SETTLEMENT_JOBS.Amount as Amount, ONE_OFF_SETTLEMENT_JOBS.Remark as Remark FROM ONE_OFF_SETTLEMENT_JOBS INNER JOIN ONE_OFF_SETTLEMENT ON ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID WHERE ONE_OFF_SETTLEMENT_JOBS.Request_ID=?',
         [ID],
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
@@ -89,7 +109,7 @@ export const getOneOffJOBDataBYRequestID = (ID: any, callBack:any) => {
     )
 }
 
-export const getOneOffJobsByID = (ID:any ,callBack: any) => {
+export const getOneOffJobsByID = (ID: any, callBack: any) => {
 
     DB.searchData(
         'SELECT io._Id,io.Job_NO as IOUTypeNo,io.AccNo,io.CostCenter,io.Resource,e.Description,io.Amount,io.Remark,e.Description as ExpenseType FROM ONE_OFF_SETTLEMENT_JOBS io LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = io.Expences_Type WHERE io.Request_ID=?',
@@ -103,7 +123,7 @@ export const getOneOffJobsByID = (ID:any ,callBack: any) => {
 
 }
 
-export const DeleteOneOffJobByID = (ID:any,callBack:any) => {
+export const DeleteOneOffJobByID = (ID: any, callBack: any) => {
 
     DB.searchData(
         ' DELETE FROM ONE_OFF_SETTLEMENT_JOBS WHERE _Id=?',
@@ -116,7 +136,7 @@ export const DeleteOneOffJobByID = (ID:any,callBack:any) => {
 
 }
 
-export const getOneOFFJobTotAmount = (ID:any , callBack: any) => {
+export const getOneOFFJobTotAmount = (ID: any, callBack: any) => {
 
     DB.searchData(
         'SELECT IFNULL(SUM(Amount),0) as totAmount FROM ONE_OFF_SETTLEMENT_JOBS WHERE Request_ID=?',
@@ -124,6 +144,18 @@ export const getOneOFFJobTotAmount = (ID:any , callBack: any) => {
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
             callBack(resp, err);
+        },
+    );
+};
+
+export const updateDetailLineSyncStatus = (ID: any, callBack: any) => {
+
+    DB.updateData(
+        'UPDATE ONE_OFF_SETTLEMENT_JOBS SET IsSync=1 WHERE Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
         },
     );
 };

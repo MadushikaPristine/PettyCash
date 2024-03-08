@@ -1,6 +1,6 @@
 import * as DB from '../DBService';
 
-export const saveOneOffSettlement = (data: any, callBack: any) => {
+export const saveOneOffSettlement = (data: any, type: any, callBack: any) => {
 
     var response: any;
 
@@ -22,7 +22,7 @@ export const saveOneOffSettlement = (data: any, callBack: any) => {
                         data[i].Amount,
                         data[i].StatusID,
                         data[i].RequestedBy,
-                        0,
+                        parseInt(type),
                         data[i].Remark,
                         "",
                         "0",
@@ -209,16 +209,34 @@ export const getPendingOneOffSettlementHome = (callBack: any) => {
 };
 
 
-export const getPendingOneOffSetList = (callBack: any) => {
+export const getPendingOneOffSetList = (roleID:any ,callBack: any) => {
 
-    DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID,IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=1 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
-        [],
-        (resp: any, err: any) => {
+    if (roleID == '3') {
+        //Job owner  
 
-            callBack(resp, err);
-        },
-    );
+        DB.searchData(
+            'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID,IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=1 AND ONE_OFF_SETTLEMENT.IOU_Type=1 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+            [],
+            (resp: any, err: any) => {
+    
+                callBack(resp, err);
+            },
+        );
+
+    } else {
+        //transport officer
+
+        DB.searchData(
+            'SELECT ONE_OFF_SETTLEMENT._Id as Id ,ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID as ID ,USER.DisplayName as employee ,USER.USER_ID,IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT.Approve_Status,ONE_OFF_SETTLEMENT.Approve_Remark, RequestDate  FROM ONE_OFF_SETTLEMENT INNER JOIN USER ON ONE_OFF_SETTLEMENT.CreatedBy = USER.USER_ID  WHERE ONE_OFF_SETTLEMENT.Approve_Status=1 AND ONE_OFF_SETTLEMENT.IOU_Type=2 ORDER BY ONE_OFF_SETTLEMENT._Id DESC',
+            [],
+            (resp: any, err: any) => {
+    
+                callBack(resp, err);
+            },
+        );
+    }
+
+   
 
 };
 
@@ -324,7 +342,7 @@ export const getDateFilterONEOFFCancelList = (firstDate: any, secondDate: any, c
 export const getOneOffJobsListByID = (RequestID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT ONE_OFF_SETTLEMENT_JOBS._Id,ONE_OFF_SETTLEMENT_JOBS.Job_ID, ONE_OFF_SETTLEMENT.JobOwner_ID,ONE_OFF_SETTLEMENT.IOU_Type, ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID, ONE_OFF_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,  e.Description as ExpenseType, IFNULL(ONE_OFF_SETTLEMENT.Amount ,0) as Amount, ONE_OFF_SETTLEMENT_JOBS.Remark, ONE_OFF_SETTLEMENT_JOBS.AccNo, ONE_OFF_SETTLEMENT_JOBS.CostCenter, ONE_OFF_SETTLEMENT_JOBS.Resource FROM ONE_OFF_SETTLEMENT INNER JOIN ONE_OFF_SETTLEMENT_JOBS ON ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = ONE_OFF_SETTLEMENT_JOBS.Expences_Type WHERE ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID=?',
+        'SELECT ONE_OFF_SETTLEMENT_JOBS._Id,ONE_OFF_SETTLEMENT_JOBS.Job_ID, ONE_OFF_SETTLEMENT.JobOwner_ID,ONE_OFF_SETTLEMENT.IOU_Type, ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID, ONE_OFF_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,  e.Description as ExpenseType, IFNULL(ONE_OFF_SETTLEMENT_JOBS.Amount ,0) as Amount, ONE_OFF_SETTLEMENT_JOBS.Remark, ONE_OFF_SETTLEMENT_JOBS.AccNo, ONE_OFF_SETTLEMENT_JOBS.CostCenter, ONE_OFF_SETTLEMENT_JOBS.Resource FROM ONE_OFF_SETTLEMENT INNER JOIN ONE_OFF_SETTLEMENT_JOBS ON ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID = ONE_OFF_SETTLEMENT_JOBS.Request_ID  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = ONE_OFF_SETTLEMENT_JOBS.Expences_Type WHERE ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID=?',
         [RequestID],
         (resp: any, err: any) => {
             callBack(resp, err);
@@ -377,7 +395,7 @@ export const updateIDwithStatusOneOff = (ID: any, refID: any, callBack: any) => 
 
     DB.updateData(
         'UPDATE ONE_OFF_SETTLEMENT SET IsSync=1 , WebRefID=? WHERE ONEOFFSettlement_ID=?',
-        [refID,ID],
+        [refID, ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -400,8 +418,8 @@ export const Update_ONE_OF_FirstApprovel = (data: any, callBack: any) => {
 
 
     DB.updateData(
-        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE ONEOFFSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
+        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -410,14 +428,14 @@ export const Update_ONE_OF_FirstApprovel = (data: any, callBack: any) => {
 };
 export const Update_ONE_OF_ValidateAmount = (data: any, callBack: any) => {
 
-    console.log(data,">>>>>>>>>>>>>>>>>>>>>>");
-    console.log(data[0].FirstActionBy,">>>>>>>>>>>>>>>>>>>>>>");
-    console.log(data[0].IOU_ID,">>>>>>>>>>>>>>>>>>>>>>");
-    
+    // console.log(data,">>>>>>>>>>>>>>>>>>>>>>");
+    // console.log(data[0].FirstActionBy,">>>>>>>>>>>>>>>>>>>>>>");
+    // console.log(data[0].IOU_ID,">>>>>>>>>>>>>>>>>>>>>>");
+
 
     DB.updateData(
-        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE ONEOFFSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
+        'UPDATE ONE_OFF_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].AIsLimit, data[0].AIOULimit, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -428,8 +446,8 @@ export const Update_ONE_OF_SecondApprovel = (data: any, callBack: any) => {
 
 
     DB.updateData(
-        'UPDATE ONE_OFF_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE ONEOFFSettlement_ID=?',
-        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
+        'UPDATE ONE_OFF_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE ONEOFFSettlement_ID=?',
+        [data[0].SecondActionBy, data[0].SecondActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 

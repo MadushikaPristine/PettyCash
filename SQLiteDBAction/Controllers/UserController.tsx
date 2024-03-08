@@ -144,7 +144,7 @@ export const getAllJobOwners = (callBack: any) => {
 export const getAllLoginUserDetails = (uID:any,callBack: any) => {
 
     DB.searchData(
-        'SELECT IFNULL(IOULimit , 0) as IOULimit , IFNULL(RequestIOULimit,0) as ReqLimit FROM USER WHERE USER_ID=?',
+        'SELECT IFNULL(IOULimit , 0) as IOULimit , IFNULL(RequestIOULimit,0) as ReqLimit, EPFNo FROM USER WHERE USER_ID=?',
         [uID],
         (resp: any, err: any) => {
             // console.log("************** All employee ************  " + resp.length);

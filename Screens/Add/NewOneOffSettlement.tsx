@@ -38,19 +38,20 @@ import { getExpenseTypeAll } from "../../SQLiteDBAction/Controllers/ExpenseTypeC
 import InputText from "../../Components/InputText";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
-import { DeleteOneOffJobByID, getLastOneOffJobID, getOneOFFJobTotAmount, getOneOffJOBDataBYRequestID, getOneOffJobsByID, saveOneOffJOB } from "../../SQLiteDBAction/Controllers/OneOffJobController";
+import { DeleteOneOffJobByID, getLastOneOffJobID, getOneOFFJobTotAmount, getOneOffJOBDataBYRequestID, getOneOffJobsByID, saveOneOffJOB, updateDetailLineSyncStatus } from "../../SQLiteDBAction/Controllers/OneOffJobController";
 import { getAllLoginUserDetails, getAllTransportOfficers, getAllUsers, getJobOwners } from "../../SQLiteDBAction/Controllers/UserController";
 import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
 import { getAllJobOwners, getAllJobOwnersBYDep } from "../../SQLiteDBAction/Controllers/JobOwnerController";
-import { BASE_URL, headers } from "../../Constant/ApiConstants";
+import { BASE_URL, DB_LIVE, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import { updateSyncStatus } from "../../SQLiteDBAction/Controllers/IOUController";
-import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
+import { getIOUAttachmentListByID, getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
 import { getDepartments, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAccNoByExpenseType, getAccNoForJobNo, getGLAccNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
+import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
 
@@ -70,6 +71,7 @@ var jobArray: any = [];
 let JobDetails: any[] = [];
 let ReOpenData: any[] = [];
 let ONEOFFID = "";
+let epfNo: any;
 
 let userRole: any;
 
@@ -369,7 +371,7 @@ const NewOneOffSettlement = () => {
 
 
                     Alert.alert("Please Add Job Details");
-                  
+
 
                 } else {
 
@@ -525,7 +527,7 @@ const NewOneOffSettlement = () => {
                         }
                     ]
 
-                    saveOneOffSettlement(OneOffData, async (Response: any) => {
+                    saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                         // console.log("Save One-Off Settlement...",Response);
                         // slideOutModal();
                         // Alert.alert("Successfully Submitted!")
@@ -603,7 +605,7 @@ const NewOneOffSettlement = () => {
                     console.log(" json [][][]  ", OneOffData);
 
 
-                    saveOneOffSettlement(OneOffData, async (Response: any) => {
+                    saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                         console.log("Save One-Off Settlement...", Response);
                         // slideOutModal();
                         // Alert.alert("Successfully Submitted!")
@@ -681,7 +683,7 @@ const NewOneOffSettlement = () => {
                             }
                         ]
 
-                        saveOneOffSettlement(OneOffData, async (Response: any) => {
+                        saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                             // console.log("Save One-Off Settlement...",Response);
                             // slideOutModal();
                             // Alert.alert("Successfully Submitted!")
@@ -758,7 +760,7 @@ const NewOneOffSettlement = () => {
                             }
                         ]
 
-                        saveOneOffSettlement(OneOffData, async (Response: any) => {
+                        saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                             // console.log("Save One-Off Settlement...",Response);
                             // slideOutModal();
                             // Alert.alert("Successfully Submitted!")
@@ -1111,11 +1113,24 @@ const NewOneOffSettlement = () => {
             jobError.message = 'Amount  is required'
             setError(jobError);
 
-        } else {
+        } else if (requestAmount === 'NaN') {
             // addbtn 
 
-            // console.log("Expense Type --- ", expenseTypeID, " - ", selectExpenseType, "  Job No ---- ", selectJOBVehicleNo, "Resource ----- ", resource);
+            jobError.field = 'requestAmount'
+            jobError.message = 'Invalid Amount'
+            setError(jobError);
+
+        } else if (accountNo === '') {
+
+            jobError.field = 'accNo'
+            jobError.message = 'Account No is required '
+            setError(jobError);
+
+
+        } else {
+
             saveJob();
+
         }
 
     }
@@ -1153,7 +1168,7 @@ const NewOneOffSettlement = () => {
                     Remark: response[i].Remark,
                     CreateAt: currentDate,
                     RequestedBy: userID,
-                    IsSync: 1
+                    IsSync: 0
 
 
                 }
@@ -1161,7 +1176,7 @@ const NewOneOffSettlement = () => {
                 const JOBData: any = [];
                 JOBData.push(saveObject);
 
-                saveOneOffJOB(JOBData, (response: any) => {
+                saveOneOffJOB(JOBData, 0, (response: any) => {
 
                     // console.log(" save job .. ", response);
 
@@ -1323,7 +1338,7 @@ const NewOneOffSettlement = () => {
         console.log("save one-off job ====  ", JOBData);
 
 
-        saveOneOffJOB(JOBData, (response: any) => {
+        saveOneOffJOB(JOBData, 0, (response: any) => {
 
             // console.log(" save job .. ", response);
 
@@ -1443,6 +1458,7 @@ const NewOneOffSettlement = () => {
 
 
                     getAllLoginUserDetails(result, (resp: any) => {
+                        epfNo = resp[0].EPFNo;
                         setRequesterLimit(parseFloat(resp[0].IOULimit));
                         setCreateReqLimit(parseFloat(resp[0].ReqLimit));
                     });
@@ -1563,6 +1579,8 @@ const NewOneOffSettlement = () => {
         getOneOffJOBDataBYRequestID(OneOffSettlementNo, (result: any) => {
 
             // console.log(result, '+++++++++++++++++++++++++++');
+            JobDetails = [];
+            var Fileobj: any = [];
 
 
             for (let i = 0; i < result.length; i++) {
@@ -1572,11 +1590,60 @@ const NewOneOffSettlement = () => {
                 JobDetails.push(result[i]);
             }
 
-            Conection_Checking(async (res: any) => {
-                if (res != false) {
-                    UploadOneOff(JobDetails, HOD, IsLimit);
+            getIOUAttachmentListByID(OneOffSettlementNo, async (rest: any) => {
+
+
+
+                console.log(" one off att  ===  ", rest, " ====  ", OneOffSettlementNo);
+
+                if (rest.length > 0) {
+
+                    for (let i = 0; i < rest.length; i++) {
+
+                        const arr = {
+                            "IOUTypeNo": IOUTypeID,
+                            "FileName": rest[i].Img_url,
+                            "File": await RNFS.readFile(rest[i].Img_url, 'base64'),
+                            "FileType": "image/jpeg"
+                        }
+
+
+                        Fileobj.push(arr);
+
+
+                        // console.log(" file array ==== " , Fileobj);
+
+                        if (i + 1 == rest.length) {
+
+                           
+
+                            Conection_Checking(async (res: any) => {
+                                if (res != false) {
+                                    UploadOneOff(JobDetails, HOD, IsLimit, Fileobj);
+                                }
+                            })
+
+                        }
+
+                    }
+
+                } else {
+
+
+                    Conection_Checking(async (res: any) => {
+                        if (res != false) {
+                            UploadOneOff(JobDetails, HOD, IsLimit, Fileobj);
+                        }
+                    })
+
                 }
+
+
+
             })
+
+
+
 
 
         })
@@ -1584,13 +1651,24 @@ const NewOneOffSettlement = () => {
 
     //-----------Upload IOU Request------------------
 
-    const UploadOneOff = async (detailsData: any, HOD: any, IsLimit: any) => {
+    const UploadOneOff = async (detailsData: any, HOD: any, IsLimit: any, Fileobj: any) => {
 
-        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=PC_UAT_WM';
+        // console.log(" attachments ===   ", Fileobj);
+
+
+        const URL = BASE_URL + '/Mob_PostOneOffSettlements.xsjs?dbName=' + DB_LIVE;
+
+        var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload One-Off Settlement  ++++++++++++++++";
+
+        logger(loggerDate, " UPLOAD IOne-Off Settlement URL " + "   *******   " + URL);
 
         var obj = [];
-        var Fileobj = [];
+
         try {
+
+            console.log(" detail line ====== " ,detailsData );
+            
+
 
             if (parseInt(IOUTypeID) == 1) {
 
@@ -1631,17 +1709,18 @@ const NewOneOffSettlement = () => {
 
             }
 
-            for (let i = 0; i < detailsData.length; i++) {
+            // for (let i = 0; i < detailsData.length; i++) {
 
-                const arr = {
-                    "IOUTypeNo": IOUTypeID,
-                    "FileName": detailsData[i].Img_url,
-                    "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
-                    "FileType": "image/jepg"
-                }
+            //     const arr = {
+            //         "IOUTypeNo": IOUTypeID,
+            //         "FileName": detailsData[i].Img_url,
+            //         "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
+            //         "FileType": "image/jepg"
+            //     }
 
-                Fileobj.push(arr);
-            }
+            //     Fileobj.push(arr);
+            // }
+
 
 
             const prams = {
@@ -1664,6 +1743,7 @@ const NewOneOffSettlement = () => {
             }
 
 
+            saveJsonObject_To_Loog(prams);
             console.log("ONE OFF UPLOAD JSON ====   ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
             // await axios.get(URL, { headers })
@@ -1672,6 +1752,11 @@ const NewOneOffSettlement = () => {
             }).then((response) => {
                 // console.log("[s][t][a][t][u][s][]", response.status);
                 // console.log("[s][t][a][t][u][s][] one off reponse METHOD   ........  ", response);
+
+                logger(" One-Off Upload Response Status ", response.status + "");
+
+                saveJsonObject_To_Loog(response.data);
+
                 if (response.status == 200) {
 
                     // console.log("success ======= ", response.statusText);
@@ -1681,7 +1766,15 @@ const NewOneOffSettlement = () => {
                         console.log("success ===222==== ", response.data);
 
                         updateIDwithStatusOneOff(OneOffSettlementNo, response.data.ID, (resp: any) => {
+                            console.log(" update id after sync ====  ", resp);
 
+                            if (resp === 'success') {
+
+                                updateDetailLineSyncStatus(OneOffSettlementNo, (resp1: any) => {
+
+                                });
+
+                            }
                         });
 
 
@@ -1700,6 +1793,10 @@ const NewOneOffSettlement = () => {
             }).catch((error) => {
 
                 // console.log("error .....   ", error);
+                logger(" One-Off Upload ERROR ", "");
+
+                saveJsonObject_To_Loog(error);
+
                 clearData();
 
             });
@@ -1707,6 +1804,7 @@ const NewOneOffSettlement = () => {
 
         } catch (error) {
             // console.log(error);
+            logger(" One-Off Upload ERROR ", error + "");
             clearData();
         }
 
@@ -1734,6 +1832,9 @@ const NewOneOffSettlement = () => {
 
     const getGL_AccNo = (typeID: any, code: any) => {
 
+        // setAccountList([]);
+        setAccountNo('');
+
         getGLAccNo(typeID, code, (res: any) => {
             // setAccountList(res);
             setAccountNo(res[0].GL_ACCOUNT);
@@ -1758,12 +1859,13 @@ const NewOneOffSettlement = () => {
 
             const split = amount.split(".");
 
-            setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replaceAll(',', '')) + "." + split[1]);
+            setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''));
+
 
 
         } else {
 
-            setrequestAmount(Intl.NumberFormat('en-US').format(amount.replaceAll(',', '')));
+            setrequestAmount(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')));
         }
 
         // console.log(amount ,  " =======================" ,amount.indexOf(".") );
@@ -2018,12 +2120,16 @@ const NewOneOffSettlement = () => {
 
                                                 <InputText
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
-                                                    placeholder="Account No"
+                                                    placeholder="Account No*"
                                                     stateValue={accountNo}
                                                     editable={false}
                                                     setState={(val: any) => setAccountNo(val)}
                                                     style={ComStyles.IOUInput}
                                                 />
+
+                                                {error.field === 'accNo' && (
+                                                    <Text style={styles.error}>{error.message}</Text>
+                                                )}
 
 
                                                 <InputText
@@ -2121,7 +2227,7 @@ const NewOneOffSettlement = () => {
 
                 <ViewField
                     title="Employee No"
-                    Value={userID}
+                    Value={epfNo}
                 />
 
                 <ViewField
@@ -2197,6 +2303,9 @@ const NewOneOffSettlement = () => {
                                 setIsEditable(true);
                                 setIsDisableRes(false);
                                 getJJobOwnerTransportHOD(3);
+                                get_ASYNC_COST_CENTER().then(async res => {
+                                    setCostCenter(res);
+                                });
 
                             }
                             setIsFocus(false);

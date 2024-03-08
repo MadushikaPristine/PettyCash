@@ -12,7 +12,7 @@ import { ApprovedONEOFF, CancelledONEOFF, getAllPendingOneOffSetList, getDateFil
 import DateRangePopup from "../../Components/DateRangePopup";
 //import Notifications from 'react-native-notifications';
 import { getCurrentPendingListType, getLoginUserID, getLoginUserRoll, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_MAX_AMOUNT } from "../../Constant/AsynStorageFuntion";
-import { BASE_URL, headers } from "../../Constant/ApiConstants";
+import { BASE_URL, DB_LIVE, headers } from "../../Constant/ApiConstants";
 import axios from "axios";
 import Spinner from "react-native-loading-spinner-overlay";
 import { Dialog } from "react-native-paper";
@@ -22,6 +22,8 @@ import IconA from 'react-native-vector-icons/FontAwesome';
 import { getAllLoginUserDetails } from "../../SQLiteDBAction/Controllers/UserController";
 import { getHODDetailsID } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import moment from "moment";
+import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
+import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 
 
 let width = Dimensions.get("screen").width;
@@ -64,6 +66,7 @@ const PendingList = () => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [loandingspinner, setloandingspinner] = useState(false);
   const [isDialog, setisDialog] = useState(false);
+  const [isInternetAvailable, setIsInternetAvailable] = useState(false);
 
   const [selectedRange, setRange] = useState({});
 
@@ -428,8 +431,24 @@ const PendingList = () => {
                     "AIsLimit": "",
                     "AIouLimit": "",
                   }
-                  UpdateNew_API(prams);
-                  navigation.navigate('IOU', { status: 'Approved', })
+
+                  Conection_Checking((internetresp: any) => {
+
+                    if (internetresp) {
+
+                      UpdateNew_API(prams);
+
+                    } else {
+
+                      navigation.navigate('IOU', { status: 'Approved', })
+
+                    }
+
+
+
+                  });
+
+
 
                 } else {
 
@@ -1372,10 +1391,6 @@ const PendingList = () => {
 
           }
 
-
-
-
-
         });
 
 
@@ -2216,7 +2231,7 @@ const PendingList = () => {
           console.log(" Job owner or transport officer ");
 
 
-          getPendingIOUList((result: any) => {
+          getPendingIOUList(UserRoleID, (result: any) => {
             setPendingList(result);
 
             setloandingspinner(false);
@@ -2262,7 +2277,7 @@ const PendingList = () => {
         if (UserRoleID == '3' || UserRoleID == '4') {
           //Job owner or transport officer
 
-          getPendingIOUSetList((resp: any) => {
+          getPendingIOUSetList(UserRoleID, (resp: any) => {
 
             setPendingList(resp);
             setloandingspinner(false);
@@ -2299,7 +2314,7 @@ const PendingList = () => {
         if (UserRoleID == '3' || UserRoleID == '4') {
           //Job owner or transport officer
 
-          getPendingOneOffSetList((res: any) => {
+          getPendingOneOffSetList(UserRoleID, (res: any) => {
             setPendingList(res);
             setloandingspinner(false);
           });
@@ -2423,6 +2438,14 @@ const PendingList = () => {
         loggedUserID = result;
         // console.log("User ID: ", result);
 
+        Conection_Checking(async (res: any) => {
+          if (res != false) {
+            getIOURequests();
+          }
+        })
+
+
+
       })
 
       getCurrentPendingListType().then(res => {
@@ -2468,18 +2491,74 @@ const PendingList = () => {
       setSelectedItems([]);
       // approveRemark(remarks);
 
+      Conection_Checking((resp: any) => {
+        setIsInternetAvailable(resp);
+      });
+
     }, [navigation])
 
 
   );
 
+
+  const getIOURequests = async () => {
+
+    const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=' + DB_LIVE + '&emp=' + loggedUserID;
+
+    console.log(" url ----  ", URL);
+
+
+    await axios.get(URL, { headers })
+      .then(response => {
+
+        if (response.status === 200) {
+
+          //console.log(response.data.header,'=====================');
+
+          if (response.data.header.length > 0) {
+
+            saveIOU(response.data.header, 1, (resp: any) => {
+
+              // console.log("save IOU ------------>>>>>  ", resp);
+              if (resp == 1) {
+              } else if (resp == 2) {
+              } else if (resp == 3) {
+              }
+
+            });
+
+
+          } else {
+
+          }
+
+        } else {
+
+        }
+
+
+      })
+      .catch((error) => {
+
+      });
+
+  }
+
+
   const UpdateNew_API = async (prams: any) => {
 
-    const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=PC_UAT_WM';
+    const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=' + DB_LIVE;
+
+    var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  UPDATE STATUS  ++++++++++++++++";
+
+    logger(loggerDate, " UPDATE STATUS REQUEST URL " + "   *******   " + URL);
 
 
 
     try {
+
+      saveJsonObject_To_Loog(prams);
+
 
       console.log("APPROVE JSON UPLOAD [][][][][]    ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
@@ -2488,6 +2567,12 @@ const PendingList = () => {
         headers: headers
       }).then((response) => {
         // console.log("[s][t][a][t][u][s][]", response);
+
+        logger(" UPDATE STATUS Response Status ", response.status + "");
+
+        saveJsonObject_To_Loog(response.data);
+
+
         if (response.status == 200) {
 
           // updateSyncStatus(IOUNo, (result: any) => {
@@ -2496,8 +2581,17 @@ const PendingList = () => {
 
           // console.log("success ======= ", response.status);
 
+          if(response.data.ErrorId == 0){
+            console.log("success ===222==== ", response.data);
+            //update sync status 
 
-          console.log("success ===222==== ", response.data);
+
+            
+
+          }
+
+
+          
 
 
         } else {
@@ -2507,12 +2601,20 @@ const PendingList = () => {
         }
       }).catch((error) => {
 
+        logger(" UPDATE ERROR ", "");
+
+        saveJsonObject_To_Loog(error);
+
+
         console.log("error .....   ", error);
 
       });
 
 
     } catch (error) {
+
+      logger(" UPDATE ERROR ", error + "");
+
       console.log(error);
 
     }
@@ -2523,7 +2625,7 @@ const PendingList = () => {
     // console.log(" status ====  " , status);
 
 
-    const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=PC_UAT_WM';
+    const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=' + DB_LIVE;
 
     const prams =
     {
@@ -2999,12 +3101,12 @@ export default PendingList;
 
 
 // const onShowPopup = () => {
-  //   popupRef.show()
-  // }
+//   popupRef.show()
+// }
 
-  // const onClosePopup = () => {
-  //   popupRef.close()
-  // }
+// const onClosePopup = () => {
+//   popupRef.close()
+// }
 
 /*const [restaurantInfo, setRestaurantInfo] = useState([]);
 

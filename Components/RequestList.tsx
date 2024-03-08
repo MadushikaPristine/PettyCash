@@ -592,7 +592,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
           }
 
 
-          {
+          {/* {
             approved_status == "3" ?
               <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10, marginBottom: 20 }}>
                 <ActionButton
@@ -606,7 +606,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
               :
               <></>
-          }
+          } */}
 
 
 

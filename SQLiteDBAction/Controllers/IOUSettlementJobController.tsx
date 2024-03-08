@@ -1,11 +1,11 @@
 import * as DB from '../DBService';
 
-export const saveIOUSETJOB = (data: any, callBack: any) => {
+export const saveIOUSETJOB = (data: any, type: any, callBack: any) => {
 
     var response: any;
 
-    console.log(" job details array [[[[[   " , data);
-    
+    console.log(" job details array [[[[[   ", data);
+
 
     for (let i = 0; i < data.length; ++i) {
 
@@ -17,7 +17,7 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
                     values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                     params: [
 
-                        data[i].PCRID,
+                        data[i].ID,
                         data[i].IOUTypeNo,
                         data[i].JobOwner_ID,
                         data[i].PCRCode,
@@ -29,7 +29,7 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
                         data[i].Remark,
                         data[i].CreateAt,
                         data[i].RequestedBy,
-                        0,
+                        parseInt(type),
                         data[i].RequestedAmount,
                         data[i].IstoEdit,
                         data[i].IOU_TYPEID
@@ -70,7 +70,7 @@ export const saveIOUSETJOB = (data: any, callBack: any) => {
 
 };
 
-export const getLastIOUSETJobID = (callBack:any) => {
+export const getLastIOUSETJobID = (callBack: any) => {
 
     DB.searchData(
         'SELECT _Id FROM IOU_SETTLEMENT_JOBS ORDER BY _Id DESC LIMIT 1',
@@ -80,6 +80,25 @@ export const getLastIOUSETJobID = (callBack:any) => {
             callBack(resp, err);
         },
     );
+
+
+}
+export const DeleteSETSyncedDetailLine = (callBack: any) => {
+
+    DB.deleteData(
+        [
+          {
+            table: 'IOU_SETTLEMENT_JOBS',
+            query: "WHERE IsSync=? ",
+            params: [1],
+          },
+        ],
+        (resp: any, err: any) => {
+          console.log(resp, ">>>>>>", err);
+    
+          callBack(resp, err);
+        },
+      );
 
 
 }
@@ -98,10 +117,10 @@ export const getLastIOUSETJobID = (callBack:any) => {
 // }
 
 
-export const getIOUSETJOBDataBYRequestID = (ID: any, callBack:any) => {
+export const getIOUSETJOBDataBYRequestID = (ID: any, callBack: any) => {
 
     DB.searchData(
-        'SELECT IOU_SETTLEMENT.IOU_Type as IOUTypeID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark as Remark, ATTACHMENTS.Img_url FROM IOU_SETTLEMENT_JOBS INNER JOIN IOU_SETTLEMENT ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID INNER JOIN ATTACHMENTS ON ATTACHMENTS.Request_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
+        'SELECT IOU_SETTLEMENT.IOU_Type as IOUTypeID, IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IOU_SETTLEMENT_JOBS.Remark as Remark FROM IOU_SETTLEMENT_JOBS INNER JOIN IOU_SETTLEMENT ON IOU_SETTLEMENT.IOUSettlement_ID = IOU_SETTLEMENT_JOBS.Request_ID WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
         [ID],
         (resp: any, err: any) => {
             // console.log("************** Last iou ************  " + resp.length);
@@ -109,7 +128,7 @@ export const getIOUSETJOBDataBYRequestID = (ID: any, callBack:any) => {
         },
     )
 }
-export const getIOUSETJOBsBYSettlementID = (ID: any, callBack:any) => {
+export const getIOUSETJOBsBYSettlementID = (ID: any, callBack: any) => {
 
     DB.searchData(
         'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, e.Description as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IFNULL(IOU_SETTLEMENT_JOBS.Requested_Amount,0) as Requested_Amount,IOU_SETTLEMENT_JOBS.Remark as Remark ,IOU_SETTLEMENT_JOBS.IstoEdit FROM IOU_SETTLEMENT_JOBS  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = IOU_SETTLEMENT_JOBS.Expences_Type WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
@@ -121,11 +140,11 @@ export const getIOUSETJOBsBYSettlementID = (ID: any, callBack:any) => {
     )
 }
 
-export const UpdateSettJobbyId = (AccNo:any,Costcenter:any,Resource:any,Amount:any,Remark:any,ID:any, callBack: any) => {
+export const UpdateSettJobbyId = (AccNo: any, Costcenter: any, Resource: any, Amount: any, Remark: any, ExpID:any, ID: any, callBack: any) => {
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT_JOBS SET AccNo=? , CostCenter=? , Resource=? , Amount=? , Remark=? WHERE _Id=?',
-        [AccNo,Costcenter,Resource,Amount,Remark,ID],
+        'UPDATE IOU_SETTLEMENT_JOBS SET AccNo=? , CostCenter=? , Resource=? , Amount=? , Remark=? , Expences_Type=?  WHERE _Id=?',
+        [AccNo, Costcenter, Resource, Amount, Remark, ExpID, ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -133,7 +152,7 @@ export const UpdateSettJobbyId = (AccNo:any,Costcenter:any,Resource:any,Amount:a
     );
 };
 
-export const getJobDetailsById = (ID:any,callBack:any) => {
+export const getJobDetailsById = (ID: any, callBack: any) => {
 
     DB.searchData(
         'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, IOU_SETTLEMENT_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IFNULL(IOU_SETTLEMENT_JOBS.Requested_Amount,0) as Requested_Amount,IOU_SETTLEMENT_JOBS.Remark as Remark ,IOU_SETTLEMENT_JOBS.IstoEdit FROM IOU_SETTLEMENT_JOBS WHERE IOU_SETTLEMENT_JOBS._Id=?',
@@ -145,7 +164,7 @@ export const getJobDetailsById = (ID:any,callBack:any) => {
     )
 
 }
-export const getSettlementJobAmount = (ID:any,callBack:any) => {
+export const getSettlementJobAmount = (ID: any, callBack: any) => {
 
     DB.searchData(
         ' SELECT IFNULL(SUM(Amount),0) as totAmount FROM IOU_SETTLEMENT_JOBS WHERE Request_ID=?',
@@ -157,7 +176,7 @@ export const getSettlementJobAmount = (ID:any,callBack:any) => {
     )
 
 }
-export const DeleteAllDetailsIOUJobs = (ID:any,callBack:any) => {
+export const DeleteAllDetailsIOUJobs = (ID: any, callBack: any) => {
 
     DB.searchData(
         ' DELETE FROM IOU_SETTLEMENT_JOBS WHERE Request_ID=?',
@@ -169,7 +188,7 @@ export const DeleteAllDetailsIOUJobs = (ID:any,callBack:any) => {
     )
 
 }
-export const DeleteJobByID = (ID:any,callBack:any) => {
+export const DeleteJobByID = (ID: any, callBack: any) => {
 
     DB.searchData(
         ' DELETE FROM IOU_SETTLEMENT_JOBS WHERE _Id=?',
@@ -181,6 +200,18 @@ export const DeleteJobByID = (ID:any,callBack:any) => {
     )
 
 }
+
+export const updateSettlementDetailLineSyncStatus = (ID: any, callBack: any) => {
+
+    DB.updateData(
+        'UPDATE IOU_SETTLEMENT_JOBS SET IsSync=1 WHERE Request_ID=?',
+        [ID],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};
 
 
 

@@ -257,6 +257,7 @@ const IOUScreen = () => {
                                     isCheckBoxVisible={false}
                                     approved_status={item.Approve_Status}
                                     RequestID={item.ID}
+                                    iou_type={item.IOUType}
                                 />
                             </View>
                         )

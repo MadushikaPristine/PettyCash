@@ -1,6 +1,6 @@
 import * as DB from '../DBService';
 
-export const saveIOUSettlement = (data: any, callBack: any) => {
+export const saveIOUSettlement = (data: any, type: any, callBack: any) => {
 
     var response: any;
 
@@ -23,7 +23,7 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
                         data[i].Amount,
                         data[i].StatusID,
                         data[i].RequestedBy,
-                        1,
+                        parseInt(type),
                         data[i].Remark,
                         "",
                         "0",
@@ -46,7 +46,7 @@ export const saveIOUSettlement = (data: any, callBack: any) => {
             (res: any, err: any) => {
 
                 // console.log(" save response ===  " , res);
-                
+
                 if (res === 'success') {
 
                     if (i + 1 == data.length) {
@@ -213,16 +213,34 @@ export const getCancelledIOUSET = (callBack: any) => {
 };
 
 
-export const getPendingIOUSetList = (callBack: any) => {
+export const getPendingIOUSetList = (roleID: any, callBack: any) => {
 
-    DB.searchData(
-        'SELECT IOU_SETTLEMENT._Id as Id ,IOU_SETTLEMENT.IOUSettlement_ID as ID ,USER.DisplayName as employee, USER.USER_ID,  IFNULL(IOU_SETTLEMENT.Amount,0) as Amount,IOU_SETTLEMENT.Approve_Status,IOU_SETTLEMENT.Approve_Remark, RequestDate FROM IOU_SETTLEMENT INNER JOIN USER ON IOU_SETTLEMENT.CreatedBy = USER.USER_ID WHERE IOU_SETTLEMENT.Approve_Status=1 ORDER BY IOU_SETTLEMENT._Id DESC',
-        [],
-        (resp: any, err: any) => {
+    if (roleID == '3') {
+        //Job owner  
 
-            callBack(resp, err);
-        },
-    );
+        DB.searchData(
+            'SELECT IOU_SETTLEMENT._Id as Id ,IOU_SETTLEMENT.IOUSettlement_ID as ID ,USER.DisplayName as employee, USER.USER_ID,  IFNULL(IOU_SETTLEMENT.Amount,0) as Amount,IOU_SETTLEMENT.Approve_Status,IOU_SETTLEMENT.Approve_Remark, RequestDate FROM IOU_SETTLEMENT INNER JOIN USER ON IOU_SETTLEMENT.CreatedBy = USER.USER_ID WHERE IOU_SETTLEMENT.Approve_Status=1 AND IOU_SETTLEMENT.IOU_Type=1 ORDER BY IOU_SETTLEMENT._Id DESC',
+            [],
+            (resp: any, err: any) => {
+    
+                callBack(resp, err);
+            },
+        );
+
+    } else {
+        //transport officer
+
+        DB.searchData(
+            'SELECT IOU_SETTLEMENT._Id as Id ,IOU_SETTLEMENT.IOUSettlement_ID as ID ,USER.DisplayName as employee, USER.USER_ID,  IFNULL(IOU_SETTLEMENT.Amount,0) as Amount,IOU_SETTLEMENT.Approve_Status,IOU_SETTLEMENT.Approve_Remark, RequestDate FROM IOU_SETTLEMENT INNER JOIN USER ON IOU_SETTLEMENT.CreatedBy = USER.USER_ID WHERE IOU_SETTLEMENT.Approve_Status=1 AND IOU_SETTLEMENT.IOU_Type=2 ORDER BY IOU_SETTLEMENT._Id DESC',
+            [],
+            (resp: any, err: any) => {
+    
+                callBack(resp, err);
+            },
+        );
+    }
+
+   
 
 };
 export const getAllPendingIOUSetList = (callBack: any) => {
@@ -403,8 +421,8 @@ export const Update_IOUSettlement_FirstApprovel = (data: any, callBack: any) => 
 
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE IOUSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
+        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE IOUSettlement_ID=?',
+        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -414,14 +432,14 @@ export const Update_IOUSettlement_FirstApprovel = (data: any, callBack: any) => 
 
 export const Update_IOUSettelment_ValidateAmount = (data: any, callBack: any) => {
 
-    console.log(data,">>>>>>>>>>>>>>>>>>>>>>");
-    console.log(data[0].FirstActionBy,">>>>>>>>>>>>>>>>>>>>>>");
-    console.log(data[0].IOU_ID,">>>>>>>>>>>>>>>>>>>>>>");
-    
+    console.log(data, ">>>>>>>>>>>>>>>>>>>>>>");
+    console.log(data[0].FirstActionBy, ">>>>>>>>>>>>>>>>>>>>>>");
+    console.log(data[0].IOU_ID, ">>>>>>>>>>>>>>>>>>>>>>");
+
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE IOUSettlement_ID=?',
-        [data[0].FirstActionBy,data[0].FirstActionAt,data[0].AIsLimit,data[0].AIOULimit,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
+        'UPDATE IOU_SETTLEMENT SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE IOUSettlement_ID=?',
+        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].AIsLimit, data[0].AIOULimit, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -433,8 +451,8 @@ export const Update_IOUSettlement_SecondApprovel = (data: any, callBack: any) =>
 
 
     DB.updateData(
-        'UPDATE IOU_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=? WHERE IOUSettlement_ID=?',
-        [data[0].SecondActionBy,data[0].SecondActionAt,data[0].Approve_Remark,data[0].Approve_Status,data[0].ActionStep,data[0].IOU_ID],
+        'UPDATE IOU_SETTLEMENT SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE IOUSettlement_ID=?',
+        [data[0].SecondActionBy, data[0].SecondActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -446,7 +464,7 @@ export const updateIDwithStatusSET = (IOUSETID: any, refID: any, callBack: any) 
 
     DB.updateData(
         'UPDATE IOU_SETTLEMENT SET IsSync=1 , WebRefID=? WHERE IOUSettlement_ID=?',
-        [refID,IOUSETID],
+        [refID, IOUSETID],
         (resp: any, err: any) => {
             callBack(resp, err)
 

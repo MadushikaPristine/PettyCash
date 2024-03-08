@@ -37,6 +37,7 @@ export default class AsyncStorageConstants {
     // Pending List Type
 
     static ASYNC_CURRENT_PENDING_LIST_TYPE = 'LIST_TYPE';
+    static VIEW_LOG_FILE_BOX = 'LOG_FILE_VIEW';
 }
 
     

@@ -15,10 +15,13 @@ export const COMMON_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/
 
 
 // ----------  Database -----------------------
-export const DB_UAT = "PC_UAT_WM";
+// export const DB_LIVE = "PC_UAT_WM";
 export const DB_Dev = "TPL_JOBA8_170723";
+export const DB_LIVE = "TPL_JOBA8_170723";
 export const SAP_DEV_DB = "PSLTEST_LIVE_SL";
-export const SAP_UAT_DB = "PC_UAT_SAP";
+// export const SAP_LIVE_DB = "PC_UAT_SAP";
+export const SAP_LIVE_DB = "PSLTEST_LIVE_SL";
+
 
 export const USERNAME = "SYSTEM";
 export const PASSWORD = "Root@123";

@@ -61,6 +61,16 @@ export const getLoginUserID = async () => {
   }
 }
 
+export const getIsLogFileView = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.VIEW_LOG_FILE_BOX)
+    return value
+
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
+
 export const ClearAsyncStorage = async () => {
  
     try {

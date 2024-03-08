@@ -41,20 +41,21 @@ import JobsView from "../../Components/JobsView";
 import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import NewJobsView from "../../Components/NewJobView";
 import { getIOUJOBDataBYRequestID, getIOUJobDetailsByID } from "../../SQLiteDBAction/Controllers/IOUJobController";
-import { DeleteAllDetailsIOUJobs, DeleteJobByID, UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, getSettlementJobAmount, saveIOUSETJOB } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
-import { getAllTransportOfficers, getAllUsers, getJobOwners, getTransportOfficerDetails } from "../../SQLiteDBAction/Controllers/UserController";
+import { DeleteAllDetailsIOUJobs, DeleteJobByID, UpdateSettJobbyId, getIOUSETJOBDataBYRequestID, getIOUSETJOBsBYSettlementID, getJobDetailsById, getLastIOUSETJobID, getSettlementJobAmount, saveIOUSETJOB, updateSettlementDetailLineSyncStatus } from "../../SQLiteDBAction/Controllers/IOUSettlementJobController";
+import { getAllLoginUserDetails, getAllTransportOfficers, getAllUsers, getJobOwners, getTransportOfficerDetails } from "../../SQLiteDBAction/Controllers/UserController";
 import { getCostCenterByJobNo, getJobNOByOwners, getJobNoAll } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
 import { getAllJobOwners, getAllJobOwnersBYDep, getJobOWnerDetails } from "../../SQLiteDBAction/Controllers/JobOwnerController";
 import axios from "axios";
-import { BASE_URL, headers } from "../../Constant/ApiConstants";
-import { getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
+import { BASE_URL, DB_LIVE, headers } from "../../Constant/ApiConstants";
+import { getIOUAttachmentListByID, getLastAttachment, saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentController";
 import { getDepartments, getHODDetails, getLoggedUserHOD } from "../../SQLiteDBAction/Controllers/DepartmentController";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Modal from "react-native-modal";
 import ComponentsStyles from "../../Constant/Components.styles";
 import { getAccNoByExpenseType, getAccNoForJobNo, getGLAccNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
+import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -78,6 +79,7 @@ let IOUJobData: any[] = [];
 let ReOpenData: any[] = [];
 let IOUSETNo = "";
 let loggedUserID: any;
+let epfNo: any;
 
 // IstoEdit status =========  1 - only edit / 0 - edit and delete
 
@@ -379,8 +381,25 @@ const NewIOUSettlement = () => {
 
 
         if (JobOwner === '') {
-            loginError.field = 'JobOwner';
-            loginError.message = 'Please select Job Owner to procced'
+
+            if (IOUTypeID === '1') {
+
+                loginError.field = 'JobOwner';
+                loginError.message = 'Please select Job Owner to procced'
+
+            } else if (IOUTypeID === '2') {
+
+                loginError.field = 'JobOwner';
+                loginError.message = 'Please select Transport Officer to procced'
+
+            } else {
+
+                loginError.field = 'JobOwner';
+                loginError.message = 'Please select HOD to procced'
+
+
+            }
+
             setError(loginError);
             // } else if (IOUTypeID === '') {
             //     loginError.field = 'IOUTypeID';
@@ -444,7 +463,7 @@ const NewIOUSettlement = () => {
         if (type == 1) {
             //get job owners
 
-            console.log(" Owner ID ==  ", ID);
+            // console.log(" Owner ID ==  ", ID);
 
 
             getJobOWnerDetails(ID, (res: any) => {
@@ -477,6 +496,9 @@ const NewIOUSettlement = () => {
 
             //get hod
 
+            // console.log(" HOD ID ===  " ,  ID);
+            
+
             getHODDetails(ID, (rest: any) => {
 
                 setSelectJobOwner(rest[0].Name);
@@ -493,6 +515,11 @@ const NewIOUSettlement = () => {
 
 
     const editJobs = (jobNo: any) => {
+
+        clearJobDetails();
+
+        // console.log(" expense ty[e ============  ", expenseTypeID);
+
 
         setIsEdit(true);
         setIsAmount(true);
@@ -513,10 +540,9 @@ const NewIOUSettlement = () => {
 
             typeID = res[0].IOU_TYPEID;
 
-            setEditJobNo(res[0].IOUTypeNo)
-            setEditExpense(res[0].ExpenseType);
             setId(res[0]._Id);
-            checkIOUJobData(typeID, IOUJobData);
+            checkIOUJobData(typeID, res);
+
 
             if (typeID == 1) {
 
@@ -532,11 +558,15 @@ const NewIOUSettlement = () => {
 
                 // const joblistarray = data?.filter((a: any) => a.value == resp[0].AssisstanceID)[0];
 
+
             } else if (typeID == 2) {
 
                 setIsJobOrVehicle(true);
                 setIouTypeJob("Vehicle No");
                 setSearchtxt("Search Vehicle");
+
+
+
 
                 // const jobNolistarray = data?.filter((a: any) => a.value == resp[0].AssisstanceID)[0];
 
@@ -544,9 +574,11 @@ const NewIOUSettlement = () => {
 
                 setIsJobOrVehicle(false);
 
+
+
             }
 
-            slideInModal();
+
 
         });
 
@@ -606,6 +638,8 @@ const NewIOUSettlement = () => {
     }
 
     const checkIOUJobData = async (type: any, IOUJOBData: any) => {
+
+
         if (type == 1) {
             getJobNoAll(selectJobOwner, (res: any) => {
                 //console.log("Job No............", res);
@@ -634,6 +668,11 @@ const NewIOUSettlement = () => {
             // console.log(selectExpenseType);
             // console.log(exdata.Description);
         });
+        // console.log("");
+
+
+        console.log(IOUJOBData[0].Remark, "^^^^^^^^^^^^^^^^");
+
         setFormatAmount(String(IOUJOBData[0].Amount));
         // setrequestAmount(String(IOUJOBData[0].Amount));
         // console.log(editAmount);
@@ -641,6 +680,8 @@ const NewIOUSettlement = () => {
         setAccountNo(IOUJOBData[0].AccNo);
         setCostCenter(IOUJOBData[0].CostCenter);
         setResource(IOUJOBData[0].Resource);
+
+        slideInModal();
 
     }
 
@@ -743,6 +784,8 @@ const NewIOUSettlement = () => {
 
     const generateIOUNo = (ID: any) => {
 
+        ClearData();
+
         let newID = parseInt(ID) + 1;
         let randomNum = Math.floor(Math.random() * 1000) + 1;
 
@@ -823,7 +866,7 @@ const NewIOUSettlement = () => {
                     ]
 
 
-                    saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                    saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
                         // console.log(" save iou .................... ", response);
 
                         if (response == 3) {
@@ -910,7 +953,7 @@ const NewIOUSettlement = () => {
                         }
                     ]
 
-                    saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                    saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
                         // console.log(" save iou .................... ", response);
 
                         if (response == 3) {
@@ -1000,7 +1043,7 @@ const NewIOUSettlement = () => {
                             }
                         ]
 
-                        saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                        saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
                             // console.log(" save iou .................... ", response);
 
                             if (response == 3) {
@@ -1086,7 +1129,7 @@ const NewIOUSettlement = () => {
                             }
                         ]
 
-                        saveIOUSettlement(IOUSettlementData, async (response: any) => {
+                        saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
                             // console.log(" save iou .................... ", response);
 
                             if (response == 3) {
@@ -1393,11 +1436,26 @@ const NewIOUSettlement = () => {
             jobError.message = 'Amount  is required'
             setError(jobError);
 
-        } else {
+
+        } else if (requestAmount === 'NaN') {
             // addbtn 
 
-            // console.log("insert  /////////// ");
+            jobError.field = 'requestAmount'
+            jobError.message = 'Invalid Amount'
+            setError(jobError);
+
+        }
+        else if (accountNo === '') {
+
+            jobError.field = 'accNo'
+            jobError.message = 'Account No is required '
+            setError(jobError);
+
+
+        } else {
+
             saveJob();
+
         }
 
     }
@@ -1457,7 +1515,7 @@ const NewIOUSettlement = () => {
             console.log("job data == [][][][]  ", JOBData);
 
 
-            saveIOUSETJOB(JOBData, (response: any) => {
+            saveIOUSETJOB(JOBData, 0, (response: any) => {
 
                 // console.log(" save job .. ", response);
 
@@ -1503,7 +1561,7 @@ const NewIOUSettlement = () => {
             console.log(" suto id ===== ", Id);
 
 
-            UpdateSettJobbyId(accountNo, costCeneter, resource, decimalAmount, remarks, Id, (result: any) => {
+            UpdateSettJobbyId(accountNo, costCeneter, resource, decimalAmount, remarks, parseInt(expenseTypeID), Id, (result: any) => {
 
                 console.log("result update =======  ", result);
 
@@ -1544,6 +1602,9 @@ const NewIOUSettlement = () => {
 
         slideOutModal();
 
+        console.log(" Expence id == ", expenseTypeID);
+
+
     }
 
     // const getIOUJobList = (IOUID: any) => {
@@ -1559,26 +1620,38 @@ const NewIOUSettlement = () => {
 
     // }
 
+    const clearJobDetails = () => {
+        setSelecteJoborVehicle('');
+        setExpenseTypeID('');
+        setrequestAmount('');
+        setRemarks('');
+        setAccountNo('');
+        setCostCenter('');
+        setResource('');
+        setSelectExpenseType('');
+        setselectJOBVehicleNo('');
+    }
+
 
     const DeleteIOuJobs = () => {
 
         try {
 
-            DeleteAllDetailsIOUJobs(IOUSettlementNo,(result:any) => {
+            DeleteAllDetailsIOUJobs(IOUSettlementNo, (result: any) => {
 
             });
-            
+
         } catch (error) {
 
-            console.log(" error -     " , error);
-            
-            
+            console.log(" error -     ", error);
+
+
         }
 
-      
+
 
     }
-  
+
 
     const getIOUJobList = (IOUID: any) => {
 
@@ -1586,7 +1659,7 @@ const NewIOUSettlement = () => {
 
         console.log(IOUID);
 
-         setiouJobList([]);
+        setiouJobList([]);
 
         getIOUJobsListByID(IOUID, (response: any) => {
 
@@ -1629,10 +1702,10 @@ const NewIOUSettlement = () => {
                 const JOBData: any = [];
                 JOBData.push(saveObject);
 
-                console.log("selected iou details list ---------    " , JOBData);
-                
+                console.log("selected iou details list ---------    ", JOBData);
 
-                saveIOUSETJOB(JOBData, (response: any) => {
+
+                saveIOUSETJOB(JOBData, 0, (response: any) => {
 
                     console.log(" save job .. ", response);
 
@@ -1672,59 +1745,6 @@ const NewIOUSettlement = () => {
             console.log(IOUID, "============== ", response);
 
             setiouJobList(response);
-
-            //console.log(ioujoblist.Amount);
-            // for (let i = 0; i < response.length; i++) {
-
-            //     // console.log(response[i].Amount);
-            //     let newamount = response[i].Amount;
-            //     let randomNum = Math.floor(Math.random() * 1000) + 1;
-            //     let ID = parseInt(response[0]._Id) + 1;
-
-            //     const saveObject =
-            //     {
-            //         Job_ID: 0,
-            //         IOUTypeNo: response[i].IOUTypeNo,
-            //         JobOwner_ID: response[i].JobOwner_ID,
-            //         PCRCode: IOUSettlementNo,
-            //         AccNo: response[i].AccNo,
-            //         CostCenter: response[i].CostCenter,
-            //         Resource: response[i].Resource,
-            //         ExpenseType: response[i].ExpenseType,
-            //         Amount: response[i].Amount,
-            //         Remark: response[i].Remark,
-            //         CreateAt: currentDate,
-            //         RequestedBy: 2,
-            //         IsSync: 1
-
-            //     }
-
-            //     const JOBData: any = [];
-            //     JOBData.push(saveObject);
-
-            //     saveIOUSETJOB(JOBData, (response: any) => {
-
-            //         // console.log(" save job .. ", response);
-
-            //         amount += parseFloat(newamount);
-
-            //         if (response == 3) {
-
-            //             jobArray.push(saveObject);
-            //             setJobList(jobArray);
-
-            //             // console.log(" JOB List [][][][ ", joblist);
-
-            //             //Alert.alert("Successfully Added!");
-
-
-            //         }
-
-
-            //     });
-
-
-            // }
 
         });
 
@@ -1807,6 +1827,8 @@ const NewIOUSettlement = () => {
 
 
     const editRequest = async (id: any) => {
+
+        clearJobDetails();
 
         try {
 
@@ -2039,6 +2061,10 @@ const NewIOUSettlement = () => {
             getLoginUserID().then(result => {
                 setUserID(result);
                 loggedUserID = result;
+
+                getAllLoginUserDetails(result, (resp: any) => {
+                    epfNo = resp[0].EPFNo;
+                });
             })
 
             CopyRequest().then(resp => {
@@ -2129,10 +2155,13 @@ const NewIOUSettlement = () => {
     //--------Get IOU Types Details Data----------------------
 
     const getDetailsData = (HOD: any, IsLimit: any) => {
+
+        var Fileobj: any = [];
+
         getIOUSETJOBDataBYRequestID(IOUSettlementNo, (result: any) => {
 
             // console.log(result, '+++++++++++++++++++++++++++');
-
+            JobDetails = [];
 
             for (let i = 0; i < result.length; i++) {
 
@@ -2141,11 +2170,48 @@ const NewIOUSettlement = () => {
                 JobDetails.push(result[i]);
             }
 
-            Conection_Checking(async (res: any) => {
-                if (res != false) {
-                    UploadIOU(JobDetails, HOD, IsLimit);
+
+            getIOUAttachmentListByID(IOUSettlementNo, async (rest: any) => {
+
+                Fileobj = [];
+
+                if (rest.length > 0) {
+
+                    for (let i = 0; i < rest.length; i++) {
+
+                        const arr = {
+                            "IOUTypeNo": IOUTypeID,
+                            "FileName": rest[i].Img_url,
+                            "File": await RNFS.readFile(rest[i].Img_url, 'base64'),
+                            "FileType": "image/jpeg"
+                        }
+
+                        Fileobj.push(arr);
+
+                        if (i + 1 == rest.length) {
+
+                            Conection_Checking(async (res: any) => {
+                                if (res != false) {
+                                    UploadIOU(JobDetails, HOD, IsLimit, Fileobj);
+                                }
+                            })
+
+                        }
+                    }
+
+                } else {
+                    Conection_Checking(async (res: any) => {
+                        if (res != false) {
+                            UploadIOU(JobDetails, HOD, IsLimit, Fileobj);
+                        }
+                    })
                 }
+
+
+
             })
+
+
 
 
         })
@@ -2153,13 +2219,20 @@ const NewIOUSettlement = () => {
 
     //-----------Upload IOU Request------------------
 
-    const UploadIOU = async (detailsData: any, HOD: any, IsLimit: any) => {
+    const UploadIOU = async (detailsData: any, HOD: any, IsLimit: any, Fileobj: any) => {
 
-        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=PC_UAT_WM'
+        const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=' + DB_LIVE;
+
+        var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload IOU SETTLEMENT  ++++++++++++++++";
+
+        logger(loggerDate, " UPLOAD IOU SETTLEMENT URL " + "   *******   " + URL);
+
 
         var obj = [];
-        var Fileobj = [];
+
         try {
+
+
             for (let i = 0; i < detailsData.length; i++) {
 
                 const arr = {
@@ -2175,17 +2248,19 @@ const NewIOUSettlement = () => {
 
                 obj.push(arr);
             }
-            for (let i = 0; i < detailsData.length; i++) {
+            // for (let i = 0; i < detailsData.length; i++) {
 
-                const arr = {
-                    "IOUTypeNo": IOUTypeID,
-                    "FileName": detailsData[i].Img_url,
-                    "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
-                    "FileType": "image/jepg"
-                }
+            //     const arr = {
+            //         "IOUTypeNo": IOUTypeID,
+            //         "FileName": detailsData[i].Img_url,
+            //         "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
+            //         "FileType": "image/jepg"
+            //     }
 
-                Fileobj.push(arr);
-            }
+            //     Fileobj.push(arr);
+            // }
+
+
 
 
             const prams = {
@@ -2213,6 +2288,8 @@ const NewIOUSettlement = () => {
             // console.log(" file object === ", Fileobj);
 
 
+            saveJsonObject_To_Loog(prams);
+
             console.log("IOU SET UPLOAD JSON ==== ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
 
             // await axios.get(URL, { headers })
@@ -2221,6 +2298,11 @@ const NewIOUSettlement = () => {
             }).then((response) => {
                 // console.log("[s][t][a][t][u][s][]", response.status);
                 // console.log("[s][t][a][t][u][s][] IOU SET reponse METHOD   ........  ", response)
+
+                logger(" IOU SETTLEMENT Upload Response Status ", response.status + "");
+
+                saveJsonObject_To_Loog(response.data);
+
                 if (response.status == 200) {
 
                     if (response.data.ErrorId == 0) {
@@ -2228,6 +2310,15 @@ const NewIOUSettlement = () => {
                         console.log("success ===222==== ", response.data);
 
                         updateIDwithStatusSET(IOUSettlementNo, response.data.ID, (resp: any) => {
+
+
+                            if (resp === 'success') {
+
+                                updateSettlementDetailLineSyncStatus(IOUSettlementNo, (resp1: any) => {
+
+                                });
+                            }
+
 
                         });
 
@@ -2254,13 +2345,19 @@ const NewIOUSettlement = () => {
             }).catch((error) => {
 
                 // console.log("error .....   ", error);
+                logger(" IOU SETTLEMENT Upload ERROR ", "");
 
+                saveJsonObject_To_Loog(error);
 
             });
 
 
         } catch (error) {
             // console.log(error);
+
+            logger(" IOU SETTLEMENT Upload ERROR ", error + "");
+
+
 
         }
         // const prams = {
@@ -2336,6 +2433,9 @@ const NewIOUSettlement = () => {
         //     setAccountNo(res[0].GL_ACCOUNT);
         // });
 
+        setAccountList([]);
+        setAccountNo('');
+
         getGLAccNo(typeID, code, (res: any) => {
             setAccountList(res);
             setAccountNo(res[0].GL_ACCOUNT);
@@ -2390,6 +2490,8 @@ const NewIOUSettlement = () => {
         setSelectIOUType('');
         setSelectJobOwner('');
         setiouJobList([]);
+        setSelectIOU('');
+        setIOUID('');
     }
 
     const setFormatAmount = (amount: any) => {
@@ -2402,12 +2504,12 @@ const NewIOUSettlement = () => {
 
             const split = amount.split(".");
 
-            setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replaceAll(',', '')) + "." + split[1]);
+            setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''));
 
 
         } else {
 
-            setrequestAmount(Intl.NumberFormat('en-US').format(amount.replaceAll(',', '')));
+            setrequestAmount(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')));
         }
 
     }
@@ -2422,13 +2524,13 @@ const NewIOUSettlement = () => {
             { text: 'Yes', onPress: (() => deteleJob(ID)) },
         ]);
 
-       
+
 
     }
 
-    const deteleJob = (ID:any) =>  {
+    const deteleJob = (ID: any) => {
 
-        DeleteJobByID(ID,(resp:any) => {
+        DeleteJobByID(ID, (resp: any) => {
             getAllJobs(IOUSettlementNo)
         })
 
@@ -2682,10 +2784,10 @@ const NewIOUSettlement = () => {
 
                                                 <View style={{ flexDirection: 'row', }}>
                                                     <Text style={styles.bodyTextLeft}>
-                                                        Account No
+                                                        Account No *
                                                     </Text>
                                                 </View>
-                                                <Dropdown
+                                                {/* <Dropdown
                                                     style={[
                                                         styles.dropdown,
                                                         isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
@@ -2721,7 +2823,21 @@ const NewIOUSettlement = () => {
                                                             size={15}
                                                         />
                                                     )}
+                                                /> */}
+
+                                                <InputText
+                                                    placeholderColor={ComStyles.COLORS.HEADER_BLACK}
+                                                    placeholder="Account No*"
+                                                    stateValue={accountNo}
+                                                    editable={false}
+                                                    setState={(val: any) => setAccountNo(val)}
+                                                    style={ComStyles.IOUInput}
                                                 />
+
+                                                {error.field === 'accNo' && (
+                                                    <Text style={styles.error}>{error.message}</Text>
+                                                )}
+
 
                                                 <View style={{ flexDirection: 'row', }}>
                                                     <Text style={styles.bodyTextLeft}>
@@ -2832,7 +2948,7 @@ const NewIOUSettlement = () => {
 
                 <ViewField
                     title="Employee No"
-                    Value={userID}
+                    Value={epfNo}
                 />
 
                 <ViewField
@@ -2876,6 +2992,9 @@ const NewIOUSettlement = () => {
                         onFocus={() => setIsFocus(true)}
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
+
+                            // console.log("IOU DATA ====  " , item);
+                            
 
                             DeleteIOuJobs();
 
@@ -2923,11 +3042,11 @@ const NewIOUSettlement = () => {
 
                             } else {
 
-                                // console.log(" other");
+                                // console.log(" other HOD ====   "  ,  item.HOD);
                                 setOwnerType("HOD");
                                 setIsEditable(true);
                                 setIsDisableRes(false);
-                                getJJobOwnerTransportHOD(item.HOD, 3);
+                                getJJobOwnerTransportHOD(item.JobOwner_ID, 3);
                                 setSelectIOUType("Other");
 
                             }
