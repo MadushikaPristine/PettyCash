@@ -731,3 +731,15 @@ export const Update_IOU_SecondApprovel = (data: any, callBack: any) => {
         },
     );
 };
+export const getIOUForUpload = (callBack: any) => {
+
+
+    DB.updateData(
+        'SELECT * FRom IOU WHERE IsSync = ? AND Approve_Status = ?',
+        [0,1],
+        (resp: any, err: any) => {
+            callBack(resp, err)
+
+        },
+    );
+};

@@ -19,7 +19,7 @@ import ListBox from "../Components/ListBox";
 import { ProgressBar } from "react-native-paper";
 import ActionButton from "../Components/ActionButton";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { getIOUToatalAmount, getPendingIOU, getPendingIOUHome, saveIOU } from "../SQLiteDBAction/Controllers/IOUController";
+import { getIOUForUpload, getIOUToatalAmount, getPendingIOU, getPendingIOUHome, saveIOU, updateIDwithStatus } from "../SQLiteDBAction/Controllers/IOUController";
 import { getIOUSETToatalAmount, getPendingIOUSettlement, getPendingIOUSettlementHome, saveIOUSettlement } from "../SQLiteDBAction/Controllers/IouSettlementController";
 import { getONEOFFToatalAmount, getPendingOneOffSettlement, getPendingOneOffSettlementHome, saveOneOffSettlement } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
 import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
@@ -34,7 +34,7 @@ import { getAllJobOwners, saveUser } from "../SQLiteDBAction/Controllers/UserCon
 import { saveVehicleNo } from "../SQLiteDBAction/Controllers/VehicleNoController";
 import { saveJobOwners } from "../SQLiteDBAction/Controllers/JobOwnerController";
 import { saveJobNo } from "../SQLiteDBAction/Controllers/JobNoController";
-import { DeleteIOUSyncedDetailLine, saveIOUJOB } from "../SQLiteDBAction/Controllers/IOUJobController";
+import { DeleteIOUSyncedDetailLine, getIOUJOBDataBYRequestID, saveIOUJOB, updateIOUDetailLineSyncStatus } from "../SQLiteDBAction/Controllers/IOUJobController";
 import { DeleteSETSyncedDetailLine, saveIOUSETJOB } from "../SQLiteDBAction/Controllers/IOUSettlementJobController";
 import { DeleteOneOffSyncedDetailLine, saveOneOffJOB } from "../SQLiteDBAction/Controllers/OneOffJobController";
 import { saveUserRolls } from "../SQLiteDBAction/Controllers/UserRollController";
@@ -46,6 +46,9 @@ import { saveEmployee } from "../SQLiteDBAction/Controllers/EmployeeController";
 import { saveGLAccount } from "../SQLiteDBAction/Controllers/GLAccountController";
 import logFileDialogBox from "../Components/LogFileDialogBox";
 import LogFileDialogBox from "../Components/LogFileDialogBox";
+import { getIOUAttachmentListByID } from "../SQLiteDBAction/Controllers/AttachmentController";
+import RNFS from 'react-native-fs';
+import { logger, saveJsonObject_To_Loog } from "../Constant/Logger";
 
 let SyncArray1: any[] = [];
 let arrayindex = 0;
@@ -336,6 +339,8 @@ const HomeScreen = () => {
                         console.log("conection is tru");
                         Download_IOU_Types();
 
+                        // UploadIOU();
+
                     } else {
                         console.log("no connection");
 
@@ -383,6 +388,300 @@ const HomeScreen = () => {
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
+
+    // -------------------- Upload IOU Requests -------------------------------------
+
+    // const UploadIOU = () => {
+
+    //     try {
+
+    //         getIOUForUpload((result: any) => {
+
+    //             if (result.length > 0) {
+
+    //                 console.log(" iou array ====    ", result);
+
+    //                 var obj = [];
+
+    //                 for (let i = 0; i < result.length; i++) {
+
+    //                     let IOUID = result[i].IOU_ID;
+    //                     let IOUTypeID = result[i].IOU_Type;
+    //                     let HOD = result[i].HOD;
+    //                     let IsLimit = result[i].RIsLimit;
+    //                     let userID = result[i].CreatedBy;
+    //                     let RequestDate = result[i].RequestDate;
+    //                     let EmpID = result[i].EmpId;
+    //                     let Job_Owner = result[i].JobOwner_ID;
+    //                     let amount = result[i].Amount;
+
+    //                     let JobDetails: any[] = [];
+    //                     var Fileobj: any[] = [];
+
+                       
+                
+    //                     getIOUJOBDataBYRequestID(IOUID, (result: any) => {
+                
+    //                         console.log(result, '+++++++++++++++++++++++++++');
+                
+                
+    //                         for (let i = 0; i < result.length; i++) {
+                
+    //                             // console.log(result[i]);
+                
+    //                             JobDetails.push(result[i]);
+    //                         }
+                
+    //                         getIOUAttachmentListByID(IOUID, async (rest: any) => {
+                
+    //                             Fileobj = [];
+                
+    //                             if (rest.length > 0) {
+                
+    //                                 for (let i = 0; i < rest.length; i++) {
+                
+    //                                     const arr = {
+    //                                         "IOUTypeNo": IOUTypeID,
+    //                                         "FileName": rest[i].Img_url,
+    //                                         "File": await RNFS.readFile(rest[i].Img_url, 'base64'),
+    //                                         "FileType": "image/jpeg"
+    //                                     }
+    //                                     Fileobj.push(arr);
+                
+    //                                     if (i + 1 == rest.length) {
+
+    //                                         const prams = {
+    //                                             "PettycashID": IOUID,
+    //                                             "RequestedBy": parseInt(userID),
+    //                                             "ReqChannel": "Mobile",
+    //                                             "Date": RequestDate,
+    //                                             "IOUtype": parseInt(IOUTypeID),
+    //                                             "EmpNo": parseInt(EmpID),
+    //                                             "JobOwner": parseInt(Job_Owner),
+    //                                             "CreateAt": RequestDate,
+    //                                             "TotalAmount": parseFloat(amount),
+    //                                             "IOUTypeDetails": obj,
+    //                                             "attachments": Fileobj,
+    //                                             "Hod": parseFloat(HOD),
+    //                                             "RIsLimit": result[i].RIsLimit,
+    //                                             "RIouLimit": result[i].RIOULimit
+    //                                         }
+                
+                
+    //                                         Conection_Checking(async (res: any) => {
+    //                                             if (res != false) {
+    //                                                 UploadIOURequest(IOUID,IOUTypeID,JobDetails, HOD, IsLimit, Fileobj,prams);
+    //                                             }
+    //                                         })
+                
+                
+    //                                     }
+    //                                 }
+                
+    //                             } else {
+    //                                 Conection_Checking(async (res: any) => {
+    //                                     if (res != false) {
+    //                                         UploadIOURequest(IOUID,IOUTypeID,JobDetails, HOD, IsLimit, Fileobj,prams);
+    //                                     }
+    //                                 })
+    //                             }
+                
+                
+                
+    //                         })
+                
+    //                     })
+
+
+    //                 }
+
+
+    //             } else {
+    //                 //No Available data for upload
+
+    //             }
+
+    //         });
+
+
+
+    //     } catch (error) {
+
+
+
+    //     }
+
+    // }
+
+    // const UploadIOURequest = async (IOUNo:any, IOUTypeID:any, detailsData: any, HOD: any, isLimit: any, Fileobj: any, prams:any) => {
+
+    //     console.log(" details data --------------   ", detailsData);
+
+
+    //     const URL = BASE_URL + '/Mob_PostIOURequests.xsjs?dbName=' + DB_LIVE;
+
+    //     var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload IOU  ++++++++++++++++";
+
+    //     logger(loggerDate, " UPLOAD IOU REQUEST URL " + "   *******   " + URL);
+
+    //     var obj = [];
+
+    //     try {
+
+    //         if (parseInt(IOUTypeID) == 1) {
+
+    //             for (let i = 0; i < detailsData.length; i++) {
+
+    //                 const arr = {
+    //                     "IOUTypeID": detailsData[i].IOUTypeID,
+    //                     "IOUTypeNo": detailsData[i].IOUTypeNo,
+    //                     "ExpenseType": detailsData[i].ExpenseType,
+    //                     "Amount": detailsData[i].Amount,
+    //                     "Remark": detailsData[i].Remark,
+    //                     "AccNo": detailsData[i].AccNo,
+    //                     "CostCenter": detailsData[i].CostCenter,
+    //                     "Resource": detailsData[i].Resource
+    //                 }
+
+    //                 obj.push(arr);
+    //             }
+
+
+    //         } else {
+
+    //             for (let i = 0; i < detailsData.length; i++) {
+
+    //                 const arr = {
+    //                     "IOUTypeID": detailsData[i].IOUTypeID,
+    //                     "IOUTypeNo": "",
+    //                     "ExpenseType": detailsData[i].ExpenseType,
+    //                     "Amount": detailsData[i].Amount,
+    //                     "Remark": detailsData[i].Remark,
+    //                     "AccNo": detailsData[i].AccNo,
+    //                     "CostCenter": detailsData[i].CostCenter,
+    //                     "Resource": detailsData[i].Resource
+    //                 }
+
+    //                 obj.push(arr);
+    //             }
+
+    //         }
+
+
+    //         saveJsonObject_To_Loog(prams);
+
+    //         console.log("[][][][][] IOU UPLOAD JSON ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+    //         console.log("[][][][][] IOU UPLOAD JSON job details ", obj, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+    //         // console.log("[][][][][] IOU UPLOAD JSON attachments ", Fileobj, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
+
+    //         await axios.get(URL, { headers })
+    //         axios.post(URL, prams, {
+    //             headers: headers
+    //         }).then((response) => {
+    //             // console.log("[s][t][a][t][u][s][]", response.status);
+
+    //             logger(" IOU Upload Response Status ", response.status + "");
+
+    //             saveJsonObject_To_Loog(response.data);
+
+    //             if (response.status == 200) {
+
+    //                 // updateSyncStatus(IOUNo, (result: any) => {
+
+    //                 // });
+
+    //                 if (response.data.ErrorId == 0) {
+
+    //                     updateIDwithStatus(IOUNo, response.data.ID, (resp: any) => {
+
+    //                         console.log(" update id after sync ====  ", resp);
+
+    //                         if (resp === 'success') {
+
+    //                             updateIOUDetailLineSyncStatus(IOUNo, (resp1: any) => {
+
+    //                             });
+    //                         }
+
+
+    //                     });
+
+    //                 }
+
+
+    //                 // console.log("success ======= ", response.statusText);
+
+    //                 console.log(" IOU UPLOAD response OBJECT  === ", response.data);
+
+
+
+
+    //             } else {
+
+    //                 console.log(" IOU UPLOAD ERROR response code ======= ", response.status);
+
+    //             }
+    //         }).catch((error) => {
+
+    //             console.log("error .....   ", error);
+
+    //             logger(" IOU Upload ERROR ", "");
+
+    //             saveJsonObject_To_Loog(error);
+
+
+    //         });
+
+
+    //     } catch (error) {
+    //         // console.log(error);
+
+    //         logger(" IOU Upload ERROR ", error + "");
+
+
+    //     }
+
+      
+
+    // }
+
+
+    // -------------------- Upload IOU Approved Requests -------------------------------------
+
+    const UploadIOUApproved = () => {
+
+        try {
+
+
+
+        } catch (error) {
+
+
+
+        }
+
+    }
+
+
+
+    // -------------------- Upload IOU-SETTLEMENTS Requests -------------------------------------
+
+    const UploadIOUSETTLEMENTS = () => {
+
+
+
+    }
+
+
+    // -------------------- Upload ONE-OFF Requests -------------------------------------
+
+    const UploadOneOff = () => {
+
+
+
+    }
+
+
 
     // -------------------- Download IOU Types --------------------------------------
 
@@ -911,7 +1210,7 @@ const HomeScreen = () => {
 
     const Download_VehicleNo = async () => {
 
-        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=' + DB_LIVE + '&sapDbName=' +  SAP_LIVE_DB + '&ResType=VEHICLE';
+        const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=' + DB_LIVE + '&sapDbName=' + SAP_LIVE_DB + '&ResType=VEHICLE';
 
 
         await axios.get(URL, { headers })
@@ -1488,8 +1787,8 @@ const HomeScreen = () => {
 
         const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=' + DB_LIVE;
 
-        console.log(" DOWNLOAD JOB NO ======  " , URL);
-        
+        console.log(" DOWNLOAD JOB NO ======  ", URL);
+
 
         await axios.get(URL, { headers })
             .then(response => {
@@ -1613,10 +1912,16 @@ const HomeScreen = () => {
 
         const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=' + DB_LIVE;
 
+        console.log("DOWNLOAD GL ACCOUNT =====  " , URL);
+        
+
         await axios.get(URL, { headers })
             .then(response => {
 
                 if (response.status === 200) {
+
+                    console.log(" GL Accounts ===    " , response.data);
+                    
 
                     if (response.data.length > 0) {
 
@@ -1710,7 +2015,7 @@ const HomeScreen = () => {
             })
             .catch((error) => {
 
-                // console.log(" JobNo error .....   ", error);
+                console.log(" GL ACCOUNT  .....   ", error);
                 setOnRefresh(false);
 
                 arrayindex++;
@@ -2614,7 +2919,7 @@ const HomeScreen = () => {
             } else {
 
                 Alert.alert('No Internet Connection', 'Please check your internet connection! ', [
-                    
+
                     { text: 'Ok', onPress: () => console.log('ok pressed') },
                 ]);
 
