@@ -2551,7 +2551,7 @@ const PendingList = () => {
 
     var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  UPDATE STATUS  ++++++++++++++++";
 
-    logger(loggerDate, " UPDATE STATUS REQUEST URL " + "   *******   " + URL);
+    logger(loggerDate, "   *******   " );
 
 
 

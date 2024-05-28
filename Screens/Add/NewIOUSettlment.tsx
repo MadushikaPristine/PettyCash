@@ -2225,7 +2225,7 @@ const NewIOUSettlement = () => {
 
         var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload IOU SETTLEMENT  ++++++++++++++++";
 
-        logger(loggerDate, " UPLOAD IOU SETTLEMENT URL " + "   *******   " + URL);
+        logger(loggerDate , "   *****************   ");
 
 
         var obj = [];

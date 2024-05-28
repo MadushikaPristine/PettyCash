@@ -11,7 +11,14 @@ import base64 from 'react-native-base64';
 // export const LOGIN_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/api/CommonLogin/";
 // export const COMMON_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_MERGE/api/PettyCash/";
 
+// ---- CUAT ---------------------------------------
+// export const BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/PettyCash_Mobile";
+// export const BASE_URL_LOOKUPS = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/lookups";
+// export const LOGIN_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/CommonLogin/";
+// export const COMMON_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/PettyCash/";
 
+
+// ---- CLIVE ---------------------------------------
 export const BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/PettyCash_Mobile";
 export const BASE_URL_LOOKUPS = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/lookups";
 export const LOGIN_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/api/CommonLogin/";
@@ -25,12 +32,18 @@ export const COMMON_BASE_URL = "http://123.231.92.201:8002/TPL_JOB_A8_SAP_TEST/a
 // export const DB_Dev = "TPL_JOBA8_170723";
 
 // ---- Client UAT ---------
-export const DB_Dev = "TPL_PEETY_A8_TEST";
-export const SAP_LIVE_DB = "TPL_PEETY_TEST_SL";
-export const DB_LIVE = "TPL_PEETY_A8_TEST";
-export const SAP_DEV_DB = "TPL_PEETY_TEST_SL";
+// export const DB_Dev = "TPL_PEETY_A8_TEST";
+// export const SAP_LIVE_DB = "TPL_PEETY_TEST_SL";
+// export const DB_LIVE = "TPL_PEETY_A8_TEST";
+// export const SAP_DEV_DB = "TPL_PEETY_TEST_SL";
 
 // ------ Client Live ------------
+export const DB_Dev = "TPL_JOB_A8_LIVE";
+export const SAP_LIVE_DB = "TPL_LIVE_SL";
+export const DB_LIVE = "TPL_JOB_A8_LIVE";
+export const SAP_DEV_DB = "TPL_LIVE_SL";
+
+
 
 // export const DB_Dev = "TPL_PEETY_A8_TEST";
 // export const SAP_LIVE_DB = "TPL_PEETY_TEST_SL";

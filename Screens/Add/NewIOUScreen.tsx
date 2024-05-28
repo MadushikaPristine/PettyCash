@@ -1975,7 +1975,7 @@ const NewIOUScreen = () => {
 
         var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload IOU  ++++++++++++++++";
 
-        logger(loggerDate, " UPLOAD IOU REQUEST URL " + "   *******   " + URL);
+        logger(loggerDate,  "   *******   " );
 
         var obj = [];
 

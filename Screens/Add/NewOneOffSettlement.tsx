@@ -1660,7 +1660,7 @@ const NewOneOffSettlement = () => {
 
         var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload One-Off Settlement  ++++++++++++++++";
 
-        logger(loggerDate, " UPLOAD IOne-Off Settlement URL " + "   *******   " + URL);
+        logger(loggerDate,  "   *******   " );
 
         var obj = [];
 

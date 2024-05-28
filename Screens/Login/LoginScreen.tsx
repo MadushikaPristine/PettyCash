@@ -38,6 +38,10 @@ import RNVPNDetect from "react-native-vpn-detect";
 import { getStatusBarHeight } from "react-native-status-bar-height";
 import moment from "moment";
 import { CreateLogFile, logger, readLogs, saveJsonObject_To_Loog } from "../../Constant/Logger";
+import { getAppstoreAppVersion } from "react-native-appstore-version-checker";
+import DeviceInfo from "react-native-device-info";
+import AppLink from 'react-native-app-link';
+import { Dialog } from "react-native-paper";
 
 
 const LoginScreen = () => {
@@ -50,6 +54,7 @@ const LoginScreen = () => {
     const [loandingspinner, setloandingspinner] = useState(false);
     const [isEditUName, setisEditUName] = useState(true);
     const [isEditPW, setisEditPW] = useState(true);
+    const [ViewDialog, setViewDialog] = useState(false);
 
 
     const saveDBData = () => {
@@ -75,6 +80,54 @@ const LoginScreen = () => {
 
     }
 
+    const checkVersionUpdate = () => {
+        if (Platform.OS == 'ios') {
+
+        } else {
+
+            // openDialog();
+
+            try {
+
+
+                getAppstoreAppVersion("com.pettycashapp")
+                    .then((appVersion: any) => {
+
+                        console.log("appVersion on Playstore==== ", appVersion);
+
+                        console.log('Build number in android', parseFloat(DeviceInfo.getBuildNumber()))
+                        if (parseFloat(DeviceInfo.getBuildNumber()) > parseFloat(appVersion) || parseFloat(DeviceInfo.getBuildNumber()) == parseFloat(appVersion)) {
+
+                        }
+                        else {
+                            // update modal open
+                            openDialog();
+                        }
+
+                    })
+                    .catch((err: any) => {
+                        console.log("error msg", err);
+                    });
+
+            } catch (error) {
+                console.log(" error ===   ", error);
+
+            }
+
+
+        }
+    }
+
+
+    const goToStore = () => {
+
+        AppLink.openInStore({ appName: 'TPL Wallet', appStoreId: '1450157260', playStoreId: 'com.pettycashapp' }).then(() => {
+        })
+            .catch((err: any) => {
+
+            });
+
+    }
 
 
     const login = async () => {
@@ -126,12 +179,13 @@ const LoginScreen = () => {
 
             const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=" + DB_LIVE + "&username=" + uName + "&password=" + encryptedPassword + "&sap=" + SAP_LIVE_DB;
 
-            console.log("Login URL === ", URL);
+            // console.log("Login URL === ", URL);
 
-            var loggerDate = "Date - "+moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss')+"+++++++++++++LOGIN ++++++++++++++++";
+            var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++LOGIN ++++++++++++++++";
 
-            logger(loggerDate,"Login URL " + "   *******   " +URL );
-           
+            // logger(loggerDate,"Login URL " + "   *******   " +URL );
+            // logger(loggerDate,"Login URL " + "   *******   " +URL );
+
 
             Conection_Checking(async (res: any) => {
                 if (res != false) {
@@ -142,9 +196,9 @@ const LoginScreen = () => {
                         ).then(async response => {
 
 
-                            logger(response.status+"" , "Login Response Status " );
+                            logger(response.status + "", "Login Response Status ");
                             saveJsonObject_To_Loog(response.data);
-                            
+
 
                             console.log(" login response ==== ", response.data);
 
@@ -160,7 +214,11 @@ const LoginScreen = () => {
 
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserID, response.data.userId);
 
-                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser);
+                                    if (response.data.isAuthUser != null) {
+
+                                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser);
+
+                                    }
 
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_COSTCENTER, response.data.costCenter);
 
@@ -272,7 +330,7 @@ const LoginScreen = () => {
 
                             console.log(" response error =====  ", err);
 
-                            logger("Login ERROR ====  " ,  err+"" );
+                            logger("Login ERROR ====  ", err + "");
 
 
                             setloandingspinner(false);
@@ -288,7 +346,7 @@ const LoginScreen = () => {
 
                     } catch (error) {
 
-                        logger("Login ERROR ====  " ,  error+"" );
+                        logger("Login ERROR ====  ", error + "");
 
                         readLogs();
 
@@ -371,6 +429,8 @@ const LoginScreen = () => {
 
             CreateLogFile();
 
+            checkVersionUpdate();
+
 
             getLoginUName().then(res => {
                 console.log(" user name >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
@@ -411,7 +471,7 @@ const LoginScreen = () => {
                 } else {
 
 
-                    
+
                     setisEditUName(true);
                     setisEditPW(true);
 
@@ -429,6 +489,15 @@ const LoginScreen = () => {
         }, [navigation])
     )
 
+    const closeDialog = () => {
+        // setViewDialog(false);
+    }
+
+    const openDialog = () => {
+        setViewDialog(true);
+    }
+
+
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
 
@@ -437,103 +506,143 @@ const LoginScreen = () => {
             {/* <ImageBackground source={require('../../assets/images/background.png')} style={comStyles.CONTAINER}> */}
             <Image source={require('../../assets/images/background.png')} style={{ position: 'absolute', width: '100%', height: '100%', }} resizeMode='stretch' />
 
-                <Spinner
-                    visible={loandingspinner}
-                    textContent={'Sending Request...'}
-                    textStyle={{
-                        color: ComponentsStyles.COLORS.DASH_COLOR,
-                        fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
-                        fontSize: 15
-                    }}
-                />
+            <Spinner
+                visible={loandingspinner}
+                textContent={'Sending Request...'}
+                textStyle={{
+                    color: ComponentsStyles.COLORS.DASH_COLOR,
+                    fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
+                    fontSize: 15
+                }}
+            />
 
-                <ScrollView
-                    style={comStyles.CONTENTLOG}
-                    showsVerticalScrollIndicator={true}
-                    keyboardShouldPersistTaps='handled'
-                    contentContainerStyle={{
-                        flexGrow: 1,
-                        justifyContent: 'space-between'
-                    }}>
+            <ScrollView
+                style={comStyles.CONTENTLOG}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps='handled'
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    justifyContent: 'space-between'
+                }}>
 
-                    <View style={comStyles.CONTENT}>
+                <View style={comStyles.CONTENT}>
 
-                        <View style={style.box1}>
-                            <Image source={require('../../assets/images/CompanyName.png')} style={style.name} />
-                        </View>
+                    <View style={style.box1}>
+                        <Image source={require('../../assets/images/CompanyName.png')} style={style.name} />
+                    </View>
 
-                        <View style={{ alignItems: "center", justifyContent: "center", flex: 0.5 }}>
-                            {/* <View style={style.box2}> */}
-                            <Text style={style.welcometxt}>Welcome Back</Text>
-                            <Text style={style.subtxt1}>Please enter user name and password
-                                to log in to the application</Text>
-
-                        </View>
-
-
-                        <View style={style.box2}>
-                            <InputText
-                                is_clr_icon={true}
-                                iconClr={comStyles.COLORS.WHITE}
-                                icon_name1="user"
-                                editable={isEditUName}
-                                placeholder="ENTER USER NAME"
-                                stateValue={uName}
-                                setState={(val: any) => setuName(val)}
-                                placeholderColor={comStyles.COLORS.WHITE}
-                                style={style.inputTextStyles}
-
-                            />
-                            {error.field === 'uName' && (
-                                <Text style={style.error}>{error.message}</Text>
-                            )}
-                            <InputText
-                                is_clr_icon={true}
-                                iconClr={comStyles.COLORS.WHITE}
-                                icon_name1="lock"
-                                editable={isEditPW}
-                                stateValue={pword}
-                                setState={(val: any) => setPword(val)}
-                                placeholder="ENTER PASSWORD"
-                                secureTextEntry={true}
-                                placeholderColor={comStyles.COLORS.WHITE}
-                                style={style.inputTextStyles}
-                            />
-                            {error.field === 'pword' && (
-                                <Text style={style.error}>{error.message}</Text>
-                            )}
-
-                            <ActionButton
-                                title="LOGIN"
-                                onPress={() => login()}
-                                style={style.ActionButton} />
-
-                                <View style={{padding:10}}/>
-
-
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 0  }}>
-
-
-                                <Text style={style.footer}>Powered by</Text>
-                                <Image source={require('../../assets/images/newlogo.png')} style={style.logo} />
-
-
-                            </View>
-                        </View>
-
-
-
+                    <View style={{ alignItems: "center", justifyContent: "center", flex: 0.5 }}>
+                        {/* <View style={style.box2}> */}
+                        <Text style={style.welcometxt}>Welcome Back</Text>
+                        <Text style={style.subtxt1}>Please enter user name and password
+                            to log in to the application</Text>
 
                     </View>
 
 
+                    <View style={style.box2}>
+                        <InputText
+                            is_clr_icon={true}
+                            iconClr={comStyles.COLORS.WHITE}
+                            icon_name1="user"
+                            editable={isEditUName}
+                            placeholder="ENTER USER NAME"
+                            stateValue={uName}
+                            setState={(val: any) => setuName(val)}
+                            placeholderColor={comStyles.COLORS.WHITE}
+                            style={style.inputTextStyles}
 
-                </ScrollView>
+                        />
+                        {error.field === 'uName' && (
+                            <Text style={style.error}>{error.message}</Text>
+                        )}
+                        <InputText
+                            is_clr_icon={true}
+                            iconClr={comStyles.COLORS.WHITE}
+                            icon_name1="lock"
+                            editable={isEditPW}
+                            stateValue={pword}
+                            setState={(val: any) => setPword(val)}
+                            placeholder="ENTER PASSWORD"
+                            secureTextEntry={true}
+                            placeholderColor={comStyles.COLORS.WHITE}
+                            style={style.inputTextStyles}
+                        />
+                        {error.field === 'pword' && (
+                            <Text style={style.error}>{error.message}</Text>
+                        )}
 
-                {/* </View> */}
+                        <ActionButton
+                            title="LOGIN"
+                            onPress={() => login()}
+                            style={style.ActionButton} />
+
+                        <View style={{ padding: 10 }} />
+
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 0 }}>
+
+
+                            <Text style={style.footer}>Powered by</Text>
+                            <Image source={require('../../assets/images/newlogo.png')} style={style.logo} />
+
+
+                        </View>
+                    </View>
+
+
+
+
+                </View>
+
+
+
+            </ScrollView>
+
+            {/* </View> */}
 
             {/* </ImageBackground> */}
-            
+
+            <Dialog
+                visible={ViewDialog}
+                style={{ marginBottom: 20 }}
+                onDismiss={() => closeDialog()}
+            >
+
+                <Dialog.Title style={{ color: comStyles.COLORS.BLACK, fontFamily: comStyles.FONT_FAMILY.SEMI_BOLD, textAlign: 'center' }}>New version available</Dialog.Title>
+
+                <Dialog.Content>
+
+                    <View style={{ alignItems: 'flex-start', width: '100%', height: '50%' }}>
+
+                        <Text style={{ color: '#6b6b6b', fontSize: 16, fontFamily: 'Roboto-Regular', alignItems: 'flex-start', marginTop: 20, marginLeft: 22, marginRight: 22 }}>Looks like you have an older version of the app. To get latest features and best experience you'll need to update now</Text>
+
+                        <TouchableOpacity onPress={() => {
+
+                            goToStore();
+
+                        }}
+                            style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginTop: Platform.OS == 'ios' ? 40 : 50,
+                                height: 40,
+                                width: '100%',
+                                backgroundColor: 'red'
+                            }}>
+                            <Text style={{
+                                fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR,
+                                fontSize: 16,
+                                color: 'white'
+                            }}>UPDATE NOW</Text>
+                        </TouchableOpacity>
+
+                    </View>
+
+                </Dialog.Content>
+
+            </Dialog>
+
 
         </SafeAreaView>
     );
