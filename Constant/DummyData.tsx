@@ -345,34 +345,34 @@ export const todayNotifications = [
 ]
 
 export const yesterdayNotifications = [
-    {
-        _id: 1,
-        title: "IOU has been approved by Finance",
-        date: 'Feb 01, 2023',
-        time: '10.25 AM',
-        description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
-    },
-    {
-        _id: 2,
-        title: "IOU has been approved by Finance",
-        date: 'Feb 01, 2023',
-        time: '10.25 AM',
-        description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
-    },
-    {
-        _id: 3,
-        title: "IOU has been approved by Finance",
-        date: 'Feb 01, 2023',
-        time: '10.25 AM',
-        description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
-    },
-    {
-        _id: 4,
-        title: "IOU has been approved by Finance",
-        date: 'Feb 01, 2023',
-        time: '10.25 AM',
-        description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
-    },
+    // {
+    //     _id: 1,
+    //     title: "IOU has been approved by Finance",
+    //     date: 'Feb 01, 2023',
+    //     time: '10.25 AM',
+    //     description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
+    // },
+    // {
+    //     _id: 2,
+    //     title: "IOU has been approved by Finance",
+    //     date: 'Feb 01, 2023',
+    //     time: '10.25 AM',
+    //     description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
+    // },
+    // {
+    //     _id: 3,
+    //     title: "IOU has been approved by Finance",
+    //     date: 'Feb 01, 2023',
+    //     time: '10.25 AM',
+    //     description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
+    // },
+    // {
+    //     _id: 4,
+    //     title: "IOU has been approved by Finance",
+    //     date: 'Feb 01, 2023',
+    //     time: '10.25 AM',
+    //     description: 'IOU Request #123456789 has been approved by the finance and total payable has been updated',
+    // },
 
 ]
 

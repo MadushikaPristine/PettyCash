@@ -23,6 +23,7 @@ import AsyncStorageConstants from "../../Constant/AsyncStorageConstants";
 import { getLoginUserRoll } from "../../Constant/AsynStorageFuntion";
 import SyncScreen from "../SyncData/SyncScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import PendingRequestList from "../PendingRequest/PendingRequestList";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -47,6 +48,7 @@ function HomeStack() {
             <Stack.Screen name="NewIOUSettlement" component={NewIOUSettlement} options={{ headerShown: false }} />
             <Stack.Screen name="NewOneOffSettlement" component={NewOneOffSettlement} options={{ headerShown: false }} />
             <Stack.Screen name="Sync" component={SyncScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="PendingRequestList" component={PendingRequestList} options={{ headerShown: false }} />
 
         </Stack.Navigator>
 

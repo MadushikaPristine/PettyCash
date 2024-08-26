@@ -5,7 +5,7 @@ import comStyles from "../../Constant/Components.styles";
 let width = Dimensions.get("screen").width;
 export default StyleSheet.create({
     ActionButton: {
-        marginTop: 15,
+        marginTop: 35,
         marginBottom: 5,
         color: comStyles.COLORS.ICON_BLUE,
         
@@ -28,6 +28,7 @@ export default StyleSheet.create({
     inputTextStyles:{
         color: comStyles.COLORS.WHITE,
         borderColor: comStyles.COLORS.WHITE,
+        // marginBottom:50
 
     },
 
@@ -101,14 +102,14 @@ export default StyleSheet.create({
         fontWeight:"500",
         color: comStyles.COLORS.WHITE,
         marginBottom: 10,
-        marginTop:60,
+        marginTop:20,
     },
 
     subtxt1: {
         color: comStyles.COLORS.WHITE,
         fontSize: 16,
         fontFamily: comStyles.FONT_FAMILY.SEMI_BOLD,
-        marginBottom: 60,
+        marginBottom: 10,
         textAlign:"center",
         
     },

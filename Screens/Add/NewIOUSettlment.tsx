@@ -193,6 +193,8 @@ const NewIOUSettlement = () => {
         mediaType: 'photo',
         quality: 0.5,
         includeBase64: true,
+        maxWidth:400,
+        maxHeight:300,
     };
 
     var typeID = 0;
@@ -212,45 +214,96 @@ const NewIOUSettlement = () => {
 
 
     const openCamera = async () => {
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+
+
+        if (Platform.OS === "ios") {
+
+            console.log(" ios camera open -----   ");
+
             const result = await launchCamera(options);
+    
+    
+                try {
+                    let atchNo = Date.now();
+                    console.log("attno", atchNo);
+    
+                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+    
+                    imageURI = Platform.OS === 'ios'
+                        ? `file://${newFilePath}`
+                        : `file:///android_asset/${newFilePath}`;
+    
+    
+                    await RNFS.mkdir(newFolderPath);
+                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                    // console.log('Picture saved successfully.');
+                    // console.log(newFilePath);
+    
+                } catch (error) {
+                    console.log(error);
+                }
+    
+    
+                const newCaptureImages = [...cameraPhoto, imageURI];
+                setCameraPhoto(newCaptureImages);
+                // console.log("Cache URI: ", result.assets[0].uri);
+    
+                // console.log("NEW Image URI: ", imageURI)
+    
+                const fileData = await RNFS.readFile(imageURI, 'base64');
+    
+                // console.log(fileData);
+    
+                attachmentSave();
+            
 
-            try {
+        }else{
 
-                let atchNo = Date.now();
-                console.log("attno", atchNo);
-
-                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
-
-                imageURI = Platform.OS === 'android'
-                    ? `file://${newFilePath}`
-                    : `file:///android_asset/${newFilePath}`;
-
-                await RNFS.mkdir(newFolderPath);
-                await RNFS.moveFile(result.assets[0].uri, newFilePath);
-                // console.log('Picture saved successfully.');
-                // console.log(newFilePath);
-
-            } catch (error) {
-                // console.log(error);
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                const result = await launchCamera(options);
+    
+                try {
+    
+                    let atchNo = Date.now();
+                    console.log("attno", atchNo);
+    
+                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+    
+                    imageURI = Platform.OS === 'android'
+                        ? `file://${newFilePath}`
+                        : `file:///android_asset/${newFilePath}`;
+    
+                    await RNFS.mkdir(newFolderPath);
+                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                    // console.log('Picture saved successfully.');
+                    // console.log(newFilePath);
+    
+                } catch (error) {
+                    // console.log(error);
+                }
+    
+    
+                const newCaptureImages = [...cameraPhoto, imageURI];
+                setCameraPhoto(newCaptureImages);
+                // console.log("Cache URI: ", result.assets[0].uri);
+    
+                // console.log("NEW Image URI: ", imageURI)
+    
+                const fileData = await RNFS.readFile(imageURI, 'base64');
+    
+                // console.log(fileData);
+    
+                attachmentSave();
             }
 
-
-            const newCaptureImages = [...cameraPhoto, imageURI];
-            setCameraPhoto(newCaptureImages);
-            // console.log("Cache URI: ", result.assets[0].uri);
-
-            // console.log("NEW Image URI: ", imageURI)
-
-            const fileData = await RNFS.readFile(imageURI, 'base64');
-
-            // console.log(fileData);
-
-            attachmentSave();
         }
+            
+
+
+        
     }
 
 
@@ -475,7 +528,7 @@ const NewIOUSettlement = () => {
 
                 setIOULimit(parseFloat(res[0].IOULimit));
 
-                getJobNoByJobOwner(res[0].EPFNo);
+                getJobNoByJobOwner(res[0].EPFNo+"");
 
             });
 
@@ -2759,6 +2812,7 @@ const NewIOUSettlement = () => {
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Requested amount(LKR)*"
                                                     keyType='numeric'
+                                                    returnKeyType='done' 
                                                     stateValue={requestAmount}
                                                     editable={true}
                                                     setState={(val: any) => setFormatAmount(val)}
@@ -2777,6 +2831,7 @@ const NewIOUSettlement = () => {
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Remarks"
                                                     stateValue={remarks}
+                                                    max={30}
                                                     setState={(val: any) => setRemarks(val)}
                                                     editable={true}
                                                     style={ComStyles.IOUInput}
@@ -3275,11 +3330,11 @@ const NewIOUSettlement = () => {
                                                 accNo={item.AccNo}
                                                 costCenter={item.CostCenter}
                                                 resource={item.Resource}
-                                                isEdit={item.IstoEdit == "1" ? true : false}
+                                                isEdit={item.IstoEdit == 1 ? true : false}
                                                 onPressIcon={() => editJobs(item._Id)}
                                                 settlementAmount={item.Amount}
                                                 isSettlementAmount={true}
-                                                isDelete={item.IstoEdit == "0" ? true : false}
+                                                isDelete={item.IstoEdit == 0 ? true : false}
                                                 onPressDeleteIcon={() => deleteNewJob(item._Id)}
                                             />
 

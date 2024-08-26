@@ -199,10 +199,11 @@ export const getPendingOneOffSettlementHome = (callBack: any) => {
 
     DB.searchData(
         // 'SELECT ONE_OFF_SETTLEMENT.ONEOFFSettlement_ID AS ID, ONE_OFF_SETTLEMENT.Amount, EMPLOYEE.EmpName FROM ONE_OFF_SETTLEMENT INNER JOIN EMPLOYEE ON ONE_OFF_SETTLEMENT.EmpId = EMPLOYEE.Emp_ID INNER JOIN WHERE Approve_Status=0 ORDER BY _Id DESC',
-        'SELECT * FROM ONE_OFF_SETTLEMENT WHERE Approve_Status=1 ORDER BY _Id DESC LIMIT 10',
-        [],
+        // 'SELECT * FROM ONE_OFF_SETTLEMENT WHERE Approve_Status=? ORDER BY _Id DESC LIMIT 10',
+        'SELECT * FROM ONE_OFF_SETTLEMENT WHERE Approve_Status=?  ',
+        [1],
         (resp: any, err: any) => {
-            // console.log("************** Last iou settlement ************  " + resp.length);
+            console.log("************** Last iou settlement ************  " + resp);
             callBack(resp, err);
         },
     );

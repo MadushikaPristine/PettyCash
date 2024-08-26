@@ -41,7 +41,7 @@ const NotificationScreen = () => {
         //getNotificationByStatus();
         filterRequestsByStatus(currentDate, (result: any) => {
           // console.log("Today Notifications ", result);
-          setTodayNotificationList(result);
+          // setTodayNotificationList(result);
           
       })
           

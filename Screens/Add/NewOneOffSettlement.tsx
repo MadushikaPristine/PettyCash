@@ -165,6 +165,8 @@ const NewOneOffSettlement = () => {
         mediaType: 'photo',
         quality: 0.5,
         includeBase64: true,
+        maxWidth:400,
+        maxHeight:300,
     };
 
     const newFolderPath = `${RNFS.DocumentDirectoryPath}/ImageFolder`;
@@ -183,46 +185,95 @@ const NewOneOffSettlement = () => {
 
 
     const openCamera = async () => {
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+
+        if (Platform.OS === "ios") {
+
+            console.log(" ios camera open -----   ");
+
             const result = await launchCamera(options);
+    
+    
+                try {
+                    let atchNo = Date.now();
+                    console.log("attno", atchNo);
+    
+                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+    
+                    imageURI = Platform.OS === 'ios'
+                        ? `file://${newFilePath}`
+                        : `file:///android_asset/${newFilePath}`;
+    
+    
+                    await RNFS.mkdir(newFolderPath);
+                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                    // console.log('Picture saved successfully.');
+                    // console.log(newFilePath);
+    
+                } catch (error) {
+                    console.log(error);
+                }
+    
+    
+                const newCaptureImages = [...cameraPhoto, imageURI];
+                setCameraPhoto(newCaptureImages);
+                // console.log("Cache URI: ", result.assets[0].uri);
+    
+                // console.log("NEW Image URI: ", imageURI)
+    
+                const fileData = await RNFS.readFile(imageURI, 'base64');
+    
+                // console.log(fileData);
+    
+                attachmentSave();
+            
 
-            try {
+        }else{
 
-
-                let atchNo = Date.now();
-                console.log("attno", atchNo);
-
-                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
-
-                imageURI = Platform.OS === 'android'
-                    ? `file://${newFilePath}`
-                    : `file:///android_asset/${newFilePath}`;
-
-                await RNFS.mkdir(newFolderPath);
-                await RNFS.moveFile(result.assets[0].uri, newFilePath);
-                // console.log('Picture saved successfully.');
-                // console.log(newFilePath);
-
-            } catch (error) {
-                // console.log(error);
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                const result = await launchCamera(options);
+    
+                try {
+    
+    
+                    let atchNo = Date.now();
+                    console.log("attno", atchNo);
+    
+                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+    
+                    imageURI = Platform.OS === 'android'
+                        ? `file://${newFilePath}`
+                        : `file:///android_asset/${newFilePath}`;
+    
+                    await RNFS.mkdir(newFolderPath);
+                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                    // console.log('Picture saved successfully.');
+                    // console.log(newFilePath);
+    
+                } catch (error) {
+                    // console.log(error);
+                }
+    
+    
+                const newCaptureImages = [...cameraPhoto, imageURI];
+                setCameraPhoto(newCaptureImages);
+                // console.log("Cache URI: ", result.assets[0].uri);
+    
+                // console.log("NEW Image URI: ", imageURI)
+    
+                const fileData = await RNFS.readFile(imageURI, 'base64');
+    
+                // console.log(fileData);
+    
+                attachmentSave();
             }
 
-
-            const newCaptureImages = [...cameraPhoto, imageURI];
-            setCameraPhoto(newCaptureImages);
-            // console.log("Cache URI: ", result.assets[0].uri);
-
-            // console.log("NEW Image URI: ", imageURI)
-
-            const fileData = await RNFS.readFile(imageURI, 'base64');
-
-            // console.log(fileData);
-
-            attachmentSave();
         }
+
+
+    
     }
 
     const naviBack = () => {
@@ -1521,7 +1572,7 @@ const NewOneOffSettlement = () => {
                     const empdata = resp1?.filter((a: any) => a.ID == parseInt(userID))[0];
                     setSelectJobOwner(empdata.Name);
                     setJobOwner(empdata.ID);
-                    getJobNoByJobOwner(empdata.EPFNo);
+                    getJobNoByJobOwner(empdata.EPFNo+"");
                     setIOULimit(parseFloat(empdata.IOULimit));
 
                 }
@@ -1816,8 +1867,9 @@ const NewOneOffSettlement = () => {
 
     const getJobNoByJobOwner = (ID: any) => {
 
-        getJobNOByOwners(ID, (res: any) => {
+        console.log(" job no list  owner epf -----   " , ID);
 
+        getJobNOByOwners(ID, (res: any) => {
             setJob_NoList(res);
 
         });
@@ -2100,6 +2152,7 @@ const NewOneOffSettlement = () => {
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Requested amount(LKR)*"
                                                     keyType='decimal-pad'
+                                                    returnKeyType='done' 
                                                     stateValue={requestAmount}
                                                     editable={true}
                                                     setState={(val: any) => setFormatAmount(val)}
@@ -2113,6 +2166,7 @@ const NewOneOffSettlement = () => {
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Remarks"
                                                     stateValue={remarks}
+                                                    max={30}
                                                     setState={(val: any) => setRemarks(val)}
                                                     editable={true}
                                                     style={ComStyles.IOUInput}
@@ -2357,7 +2411,7 @@ const NewOneOffSettlement = () => {
 
                             if (IOUTypeID == '1') {
 
-                                getJobNoByJobOwner(item.EPFNo);
+                                getJobNoByJobOwner(item.EPFNo+"");
                                 setIOULimit(parseFloat(item.IOULimit));
 
                             } else if (IOUTypeID == '2') {

@@ -136,9 +136,15 @@ const PendingList = () => {
 
     if (selectedItems.length > 0) {
 
+      // if(txtRemark==""){
+      //   Alert.alert("Please Enter Remark");
+      // }else{
+       
+      //   // slideInModal();
+      // }
+
       setTxtRemark('');
-      setisDialog(true);
-      // slideInModal();
+        setisDialog(true);
 
 
     } else {
@@ -336,36 +342,57 @@ const PendingList = () => {
   // }
 
   const ApproveAlert = () => {
-    Alert.alert('Approved Request !', 'Are you sure you want to Approved Request ?', [
-      {
-        text: 'No',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      { text: 'Yes', onPress: () => approveRemark(txtRemark) },
-    ]);
+
+       if(txtRemark==""){
+        Alert.alert("Please Enter Remark");
+      }else{
+       
+        Alert.alert('Approved Request !', 'Are you sure you want to Approved Request ?', [
+          {
+            text: 'No',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          { text: 'Yes', onPress: () => approveRemark(txtRemark) },
+        ]);
+        // getPendingList(type)
+
+      }
+  
   }
 
   const RejectAlert = () => {
-    Alert.alert('Reject Request !', 'Are you sure you want to Reject Request ?', [
-      {
-        text: 'No',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      { text: 'Yes', onPress: () => rejectRemark(txtRemark) },
-    ]);
+
+    if(txtRemark==""){
+      Alert.alert("Please Enter Remark");
+    }else{
+      Alert.alert('Reject Request !', 'Are you sure you want to Reject Request ?', [
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        { text: 'Yes', onPress: () => rejectRemark(txtRemark) },
+      ]);
+    }
+
   }
 
   const CancelAlert = () => {
-    Alert.alert('Cancel Request !', 'Are you sure you want to canceled Request ?', [
-      {
-        text: 'No',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      { text: 'Yes', onPress: () => cancelRemark(txtRemark) },
-    ]);
+    if(txtRemark==""){
+      Alert.alert("Please Enter Remark");
+    }else{
+      Alert.alert('Cancel Request !', 'Are you sure you want to canceled Request ?', [
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        { text: 'Yes', onPress: () => cancelRemark(txtRemark) },
+      ]);
+    }
+
+    
   }
 
   //------------Apply approve remark---------------
@@ -437,7 +464,7 @@ const PendingList = () => {
                     if (internetresp) {
 
                       UpdateNew_API(prams);
-
+                      navigation.navigate('IOU', { status: 'Approved', })
                     } else {
 
                       navigation.navigate('IOU', { status: 'Approved', })
@@ -2206,6 +2233,7 @@ const PendingList = () => {
 
     setPendingList([]);
     setloandingspinner(true);
+console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 
 
     if (type === 'IOU') {
@@ -2218,6 +2246,8 @@ const PendingList = () => {
 
 
         getPendingHODApprovalIOUList((res: any) => {
+          console.log(res,"================================================");
+          
           setPendingList(res);
           setloandingspinner(false);
         })
@@ -2270,9 +2300,7 @@ const PendingList = () => {
           //console.log("roll 5--------", res[0].Amount)
         })
 
-      }
-
-      else {
+      } else {
 
         if (UserRoleID == '3' || UserRoleID == '4') {
           //Job owner or transport officer
@@ -2574,6 +2602,7 @@ const PendingList = () => {
 
 
         if (response.status == 200) {
+         
 
           // updateSyncStatus(IOUNo, (result: any) => {
 
@@ -2584,7 +2613,7 @@ const PendingList = () => {
           if(response.data.ErrorId == 0){
             console.log("success ===222==== ", response.data);
             //update sync status 
-
+            // navigation.navigate('IOU', { status: 'Approved', })
 
             
 
@@ -2769,7 +2798,7 @@ const PendingList = () => {
 
 
 
-              </View>
+              </View> 
             )
           }
 
@@ -2824,17 +2853,10 @@ const PendingList = () => {
 
 
 
-              <View style={{ marginBottom: 70 }} />
+              <View style={{ marginBottom: 40 }} />
             </View>
 
-
-
-
         }
-
-
-
-
       </View>
 
 

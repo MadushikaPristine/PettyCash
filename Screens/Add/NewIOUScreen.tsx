@@ -199,7 +199,7 @@ const NewIOUScreen = () => {
     let newFilePath = `${newFolderPath}/${AttachementNo}.jpg`;
     const newGalleryPath = `${newFolderPath}/${AttachementNo}.jpg`;
 
-    let imageURI = Platform.OS === 'android'
+    let imageURI = Platform.OS === 'ios'
         ? `file://${newFilePath}`
         : `file:///android_asset/${newFilePath}`;
 
@@ -212,6 +212,8 @@ const NewIOUScreen = () => {
         mediaType: 'photo',
         quality: 0.5,
         includeBase64: true,
+        maxWidth:400,
+        maxHeight:300,
     };
 
     const naviBack = () => {
@@ -235,64 +237,112 @@ const NewIOUScreen = () => {
 
     const openCamera = async () => {
 
+        if (Platform.OS === "ios") {
 
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-            {
-                title: 'Petty Cash App Camera Permission',
-                message:
-                    'Petty Cash  App needs access to your camera. ',
-                buttonNeutral: 'Ask Me Later',
-                buttonNegative: 'Cancel',
-                buttonPositive: 'OK',
-            },
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('You can use the camera');
+            console.log(" ios camera open -----   ");
 
             const result = await launchCamera(options);
+    
+    
+                try {
+                    let atchNo = Date.now();
+                    console.log("attno", atchNo);
+    
+                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+    
+                    imageURI = Platform.OS === 'ios'
+                        ? `file://${newFilePath}`
+                        : `file:///android_asset/${newFilePath}`;
+    
+    
+                    await RNFS.mkdir(newFolderPath);
+                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                    // console.log('Picture saved successfully.');
+                    // console.log(newFilePath);
+    
+                } catch (error) {
+                    console.log(error);
+                }
+    
+    
+                const newCaptureImages = [...cameraPhoto, imageURI];
+                setCameraPhoto(newCaptureImages);
+    
+                const fileData = await RNFS.readFile(imageURI, 'base64');
+    
+                imgArray.push(
+                    {
+                        "id": imgArray.length + 1,
+                        "imageUri": imageURI
+                    }
+                );
+    
+                attachmentSave();
+            
 
+        }else{
 
-            try {
-                let atchNo = Date.now();
-                console.log("attno", atchNo);
-
-                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
-
-                imageURI = Platform.OS === 'android'
-                    ? `file://${newFilePath}`
-                    : `file:///android_asset/${newFilePath}`;
-
-
-                await RNFS.mkdir(newFolderPath);
-                await RNFS.moveFile(result.assets[0].uri, newFilePath);
-                // console.log('Picture saved successfully.');
-                // console.log(newFilePath);
-
-            } catch (error) {
-                console.log(error);
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.CAMERA,
+                {
+                    title: 'Petty Cash App Camera Permission',
+                    message:
+                        'Petty Cash  App needs access to your camera. ',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                },
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('You can use the camera');
+    
+                const result = await launchCamera(options);
+    
+    
+                try {
+                    let atchNo = Date.now();
+                    console.log("attno", atchNo);
+    
+                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+    
+                    imageURI = Platform.OS === 'android'
+                        ? `file://${newFilePath}`
+                        : `file:///android_asset/${newFilePath}`;
+    
+    
+                    await RNFS.mkdir(newFolderPath);
+                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                    // console.log('Picture saved successfully.');
+                    // console.log(newFilePath);
+    
+                } catch (error) {
+                    console.log(error);
+                }
+    
+    
+                const newCaptureImages = [...cameraPhoto, imageURI];
+                setCameraPhoto(newCaptureImages);
+    
+                const fileData = await RNFS.readFile(imageURI, 'base64');
+    
+                imgArray.push(
+                    {
+                        "id": imgArray.length + 1,
+                        "imageUri": imageURI
+                    }
+                );
+    
+                attachmentSave();
+    
+            } else {
+                console.log('Camera permission denied');
+                const result = await launchImageLibrary(options);
+                setGalleryPhoto(result.assets[0].uri);
             }
 
-
-            const newCaptureImages = [...cameraPhoto, imageURI];
-            setCameraPhoto(newCaptureImages);
-
-            const fileData = await RNFS.readFile(imageURI, 'base64');
-
-            imgArray.push(
-                {
-                    "id": imgArray.length + 1,
-                    "imageUri": imageURI
-                }
-            );
-
-            attachmentSave();
-
-        } else {
-            console.log('Camera permission denied');
-            const result = await launchImageLibrary(options);
-            setGalleryPhoto(result.assets[0].uri);
         }
+
+      
 
     }
 
@@ -1111,7 +1161,7 @@ const NewIOUScreen = () => {
                     setSelectJobOwner(empdata.Name);
                     setJobOwner(empdata.ID);
 
-                    getJobNoByJobOwner(empdata.EPFNo);
+                    getJobNoByJobOwner(empdata.EPFNo+"");
                     setIOULimit(parseFloat(empdata.IOULimit));
 
 
@@ -2555,6 +2605,7 @@ const NewIOUScreen = () => {
                                                     <InputText
                                                         placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                         placeholder="Remarks"
+                                                        max={30}
                                                         stateValue={remarks}
                                                         setState={(val: any) => setRemarks(val)}
                                                         editable={true}
@@ -2900,7 +2951,7 @@ const NewIOUScreen = () => {
 
                             if (IOUTypeID == '1') {
 
-                                getJobNoByJobOwner(item.EPFNo);
+                                getJobNoByJobOwner(item.EPFNo+"");
                                 setIOULimit(parseFloat(item.IOULimit));
 
                             } else if (IOUTypeID == '2') {

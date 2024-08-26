@@ -85,11 +85,14 @@ export const getJobNoAll = (Name: any, callBack: any) => {
 
 export const getJobNOByOwners = (ID:any , callBack: any) => {
 
-    DB.searchData(
+    console.log(" owner id 8    7777777b    " , ID);
+   
+
+    DB.searchData(  //ifnull(Job_No || ' - ' || CustomerName,Job_No) as 
         "SELECT ifnull(Job_No || ' - ' || CustomerName,Job_No) as Job_No , DocEntry FROM JOB_NO WHERE OwnerEPFNo=?",
         [ID],
         (resp: any, err: any) => {
-            //console.log("************** all IOU Types ************  " + resp.length);
+            console.log("************** all IOU Types ************  " + resp , " -- error ---- " , err);
             callBack(resp, err);
         },
     );

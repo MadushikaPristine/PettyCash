@@ -20,6 +20,7 @@ import AttachmentView from "./AttachmentView";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
 import JobsView from "./JobsView";
+// import CheckBox from '@react-native-community/checkbox';
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -198,8 +199,9 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
   return (
 
-    <SafeAreaView>
-      <TouchableWithoutFeedback onPress={onShowPopup}>
+    // <SafeAreaView>
+    <View>
+      <TouchableOpacity onPress={onShowPopup}>
         <View style={styles.list}>
           <Image
             source={{ uri: user_avatar }}
@@ -227,14 +229,19 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
 
               <View style={{ borderColor: '#270DCB' }}>
-                <Checkbox
-
-                  color="#270DCB"
-                  uncheckedColor="#270DCB"
+                <Checkbox.Android
+                  color="blue"
+                  uncheckedColor={ComponentsStyles.COLORS.BLACK}
                   status={selectedItems.includes(user_id) ? 'checked' : 'unchecked'}
                   onPress={() => right(user_id)}
-
+                 
                 />
+
+                 {/* <CheckBox
+                    disabled={false}
+                    value={selectedItems.includes(user_id) ? true : false}
+                    onValueChange={() => right(user_id)}
+                  /> */}
 
               </View>
 
@@ -244,7 +251,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
 
         </View>
-      </TouchableWithoutFeedback>
+      </TouchableOpacity>
       <BottomPopup
         ref={(target) => popupRef = target}
         onTouchOutside={onClosePopup}
@@ -342,7 +349,7 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
           </View>
         </View> */}
 
-        <View style={{ flexDirection: 'row', marginTop: 5, marginBottom: 8, marginLeft: 5, marginRight: 5 }}>
+        <View style={{ flexDirection: 'row', marginTop: 25, marginBottom: 8, marginLeft: 5, marginRight: 5 }}>
           <View style={{ flex: 1 }}>
             <Text
               style={{
@@ -614,9 +621,9 @@ const RequestList = ({ jobremarks, RequestID, isCheckBoxVisible, ap_status, firs
 
         </ScrollView>
       </Modal>
+      </View>
 
-
-    </SafeAreaView>
+    // </SafeAreaView>
 
 
 

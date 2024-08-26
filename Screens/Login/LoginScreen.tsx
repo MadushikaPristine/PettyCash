@@ -42,6 +42,10 @@ import { getAppstoreAppVersion } from "react-native-appstore-version-checker";
 import DeviceInfo from "react-native-device-info";
 import AppLink from 'react-native-app-link';
 import { Dialog } from "react-native-paper";
+import { requestPermission } from "../../Services/permissionServise";
+import { red100 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
+
+requestPermission();
 
 
 const LoginScreen = () => {
@@ -179,7 +183,7 @@ const LoginScreen = () => {
 
             const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=" + DB_LIVE + "&username=" + uName + "&password=" + encryptedPassword + "&sap=" + SAP_LIVE_DB;
 
-            // console.log("Login URL === ", URL);
+            console.log("Login URL === ", URL);
 
             var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++LOGIN ++++++++++++++++";
 
@@ -523,7 +527,8 @@ const LoginScreen = () => {
                 contentContainerStyle={{
                     flexGrow: 1,
                     justifyContent: 'space-between'
-                }}>
+                }}
+                >
 
                 <View style={comStyles.CONTENT}>
 
@@ -531,7 +536,7 @@ const LoginScreen = () => {
                         <Image source={require('../../assets/images/CompanyName.png')} style={style.name} />
                     </View>
 
-                    <View style={{ alignItems: "center", justifyContent: "center", flex: 0.5 }}>
+                    <View style={{ alignItems: "center", justifyContent: "center"}}>
                         {/* <View style={style.box2}> */}
                         <Text style={style.welcometxt}>Welcome Back</Text>
                         <Text style={style.subtxt1}>Please enter user name and password
@@ -580,7 +585,7 @@ const LoginScreen = () => {
                         <View style={{ padding: 10 }} />
 
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 150 }}>
 
 
                             <Text style={style.footer}>Powered by</Text>

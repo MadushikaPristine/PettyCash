@@ -323,10 +323,10 @@ export const getPendingIOUHome = (callBack: any) => {
 
     DB.searchData(
         // 'SELECT IOU.IOU_ID AS ID, IOU.Amount, EMPLOYEE.EmpName FROM IOU INNER JOIN EMPLOYEE ON IOU.EmpId = EMPLOYEE.Emp_ID INNER JOIN WHERE Approve_Status=0 ORDER BY _Id DESC',
-        'SELECT * FROM IOU WHERE Approve_Status=1 ORDER BY _Id DESC LIMIT 10',
-        [],
+        'SELECT * FROM IOU WHERE Approve_Status=? OR Approve_Status=?  ORDER BY _Id DESC LIMIT 10',
+        [1,5],
         (resp: any, err: any) => {
-            //console.log(" pending iou ", resp);
+            console.log(" pending ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  iou ", resp);
 
             callBack(resp, err);
         },
@@ -372,14 +372,21 @@ export const getCancelledIOU = (callBack: any) => {
 
 export const getPendingIOUList = (roleID:any , callBack: any) => {
 
+
+    console.log("^^^^^^^^^^^^^^^^^^^^^^"+roleID);
+    
+
     if(roleID == '3'){
         //Job owner  
-
+        console.log("^^^^^^^^^^^^^22^^^^^^^^^"+roleID);
         DB.searchData(
-            'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.Approve_Status=1 AND IOU.IOU_Type=1 ORDER BY IOU._Id DESC',
-            [],
+            'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.Approve_Status=? AND IOU.IOU_Type=? ORDER BY IOU._Id DESC',
+            // 'SELECT * FROM USER ',
+            [1,1],
             (resp: any, err: any) => {
     
+               
+                
                 callBack(resp, err);
             },
         );
@@ -388,10 +395,10 @@ export const getPendingIOUList = (roleID:any , callBack: any) => {
 
         //transport officer
         DB.searchData(
-            'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.Approve_Status=1 AND IOU.IOU_Type=2 ORDER BY IOU._Id DESC',
-            [],
+            'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.Approve_Status=? AND IOU.IOU_Type=? ORDER BY IOU._Id DESC',
+            [1,2],
             (resp: any, err: any) => {
-    
+                console.log(resp);
                 callBack(resp, err);
             },
         );
@@ -409,6 +416,8 @@ export const getAllPendingIOUList = (callBack: any) => {
         [],
         (resp: any, err: any) => {
 
+            console.log(resp);
+            
             callBack(resp, err);
         },
     );
@@ -431,8 +440,8 @@ export const getPendingIOUListByJobOwner = (callBack: any, OwnerName: any) => {
 export const getPendingHODApprovalIOUList = (callBack: any) => {
 
     DB.searchData(
-        'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, EMPLOYEE.EmpName as employee, EMPLOYEE.Emp_ID as USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID   LEFT OUTER JOIN EMPLOYEE ON EMPLOYEE.Emp_ID = IOU.EmpId  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type  WHERE IOU.Approve_Status=5  ORDER BY IOU._Id DESC',
-        [],
+        'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, EMPLOYEE.EmpName as employee, EMPLOYEE.Emp_ID as USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID   LEFT OUTER JOIN EMPLOYEE ON EMPLOYEE.Emp_ID = IOU.EmpId  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type  WHERE IOU.Approve_Status=?  ORDER BY IOU._Id DESC',
+        [5],
         (resp: any, err: any) => {
 
             callBack(resp, err);

@@ -19,9 +19,9 @@ import ListBox from "../Components/ListBox";
 import { ProgressBar } from "react-native-paper";
 import ActionButton from "../Components/ActionButton";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { getIOUForUpload, getIOUToatalAmount, getPendingIOU, getPendingIOUHome, saveIOU, updateIDwithStatus } from "../SQLiteDBAction/Controllers/IOUController";
-import { getIOUSETToatalAmount, getPendingIOUSettlement, getPendingIOUSettlementHome, saveIOUSettlement } from "../SQLiteDBAction/Controllers/IouSettlementController";
-import { getONEOFFToatalAmount, getPendingOneOffSettlement, getPendingOneOffSettlementHome, saveOneOffSettlement } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
+import { checkOpenRequests, getAllPendingIOUList, getIOUForUpload, getIOUToatalAmount, getPendingHODApprovalIOUList, getPendingIOU, getPendingIOUHome, getPendingIOUList, saveIOU, updateIDwithStatus } from "../SQLiteDBAction/Controllers/IOUController";
+import { getAllPendingIOUSetList, getHODPendingIOUSetList, getIOUSETToatalAmount, getPendingIOUSetList, getPendingIOUSettlement, getPendingIOUSettlementHome, saveIOUSettlement } from "../SQLiteDBAction/Controllers/IouSettlementController";
+import { getAllPendingOneOffSetList, getHODPendingOneOffSetList, getONEOFFToatalAmount, getPendingOneOffSetList, getPendingOneOffSettlement, getPendingOneOffSettlementHome, saveOneOffSettlement } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
 import AsyncStorageConstants from "../Constant/AsyncStorageConstants";
 import * as DB from '../SQLiteDBAction/DBService';
 import { getIsLogFileView, getLoginUserID, getLoginUserName, getLoginUserRoll, get_ASYNC_CHECKSYNC, get_ASYNC_JOBOWNER_APPROVAL_AMOUNT, get_ASYNC_LOGIN_ROUND } from "../Constant/AsynStorageFuntion";
@@ -53,6 +53,7 @@ import { logger, saveJsonObject_To_Loog } from "../Constant/Logger";
 let SyncArray1: any[] = [];
 let arrayindex = 0;
 let userID: any;
+let UserRoleID: any;
 
 const HomeScreen = () => {
 
@@ -90,21 +91,145 @@ const HomeScreen = () => {
 
     const navigation = useNavigation();
 
+    const getIOU_request = () => {
 
+        if (UserRoleID == '5') {
+
+            console.log(" HOD LOgged ");
+    
+    
+            getPendingHODApprovalIOUList((res: any) => {
+              console.log(res,"================================================");
+              
+              setIOUList(res);
+            })
+    
+    
+          } else {
+    
+            if (UserRoleID == '3' || UserRoleID == '4') {
+              //Job owner or transport officer
+    
+              console.log(" Job owner or transport officer ");
+    
+    
+              getPendingIOUList(UserRoleID, (result: any) => {
+                setIOUList(result);
+    
+                // console.log(result)
+              });
+    
+            } else {
+              //Requester
+    
+              console.log(" Requester ");
+    
+    
+              getAllPendingIOUList((result: any) => {
+                setIOUList(result);
+    
+                // console.log(result)
+              });
+    
+            }
+    
+          }
+    
+    }
+
+
+    const getsettlment_request = () => {
+
+        if (UserRoleID == '5') {
+
+            // console.log("roll 5--------");
+            getHODPendingIOUSetList((res: any) => {
+    
+    
+                setIOUSettlementList(res);
+    
+              //console.log("roll 5--------", res[0].Amount)
+            })
+    
+          } else {
+    
+            if (UserRoleID == '3' || UserRoleID == '4') {
+              //Job owner or transport officer
+    
+              getPendingIOUSetList(UserRoleID, (resp: any) => {
+    
+                setIOUSettlementList(resp);
+              });
+    
+            } else {
+              //Requester
+    
+              getAllPendingIOUSetList((resp: any) => {
+    
+                setIOUSettlementList(resp);
+              });
+    
+            }
+    
+    
+          }
+    
+    }
+
+    const getONEoffsettlment_request = () => {
+        console.log("one of ----");
+        
+
+        if (UserRoleID === '5') {
+            //HOD
+            console.log("roll 5--------");
+            getHODPendingOneOffSetList((res: any) => {
+                setOneOffettlementList(res);
+            })
+    
+          } else {
+    
+            if (UserRoleID === '3' || UserRoleID === '4') {
+              //Job owner or transport officer
+              console.log("roll 3 ..... 4--------");
+              getPendingOneOffSetList(UserRoleID, (res: any) => {
+                setOneOffettlementList(res);
+              });
+    
+            } else {
+                console.log("roll requester--------");
+              getAllPendingOneOffSetList((res: any) => {
+                setOneOffettlementList(res);
+              });
+    
+    
+            }
+    
+
+    
+          }
+    }
 
     const setFlatListData = () => {
 
-        getPendingIOUHome((result: any) => {
-            setIOUList(result);
-        });
+        getIOU_request();
+        getsettlment_request();
+        getONEoffsettlment_request();
 
-        getPendingIOUSettlementHome((response: any) => {
-            setIOUSettlementList(response);
-        });
+        // getPendingIOUHome((result: any) => {
+        //     setIOUList(result);
+        // });
 
-        getPendingOneOffSettlementHome((res: any) => {
-            setOneOffettlementList(res);
-        });
+        // getPendingIOUSettlementHome((response: any) => {
+        //     setIOUSettlementList(response);
+        // });
+
+        // getPendingOneOffSettlementHome((res: any) => {
+
+        //     console.log(res,"==============================================");
+            
+        //     setOneOffettlementList(res);
+        // });
 
         // getIOUToatalAmount ((resp: any) => {
         //     setIOUTotalAmount(resp);
@@ -220,6 +345,7 @@ const HomeScreen = () => {
         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, type);
 
         navigation.navigate('PendingList');
+        // navigation.navigate('PendingRequestList');
 
     }
 
@@ -234,8 +360,28 @@ const HomeScreen = () => {
     const createRequest = (type: any) => {
 
         if (type == 'IOU') {
-            navigation.navigate('NewIOU');
-            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
+            getLoginUserID().then(result => {
+            checkOpenRequests(parseInt(result + ""), (resp: any) => {
+                if (resp.length > 0) {
+                    Alert.alert('Can not create a new Request', 'You already have an open status request', [
+                        {
+                            text: 'Ok',
+                            onPress: () => console.log('Cancel Pressed'),
+                            style: 'cancel',
+                        },
+                        // { text: 'Yes', onPress: (back) },
+                    ]);
+                } else {
+                    navigation.navigate('NewIOU');
+                    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
+                }
+
+            });
+
+        })
+
+
+           
         } else if (type == 'SETTLEMENT') {
             navigation.navigate('NewIOUSettlement');
             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
@@ -292,6 +438,12 @@ const HomeScreen = () => {
                 checkCurrentTime();
             })
 
+            getLoginUserRoll().then(res1 => {
+                setRoll(res1 + "");
+                UserRoleID = res1;
+                console.log("User Role: ", res1);
+              })
+
 
             //createChannels();
             setviewLogFileList(false);
@@ -300,11 +452,12 @@ const HomeScreen = () => {
 
     const OnLoadData = () => {
 
-        setFlatListData();
+       
         getTotalAmount();
 
         getLoginUserRoll().then(res => {
             setRoll(res);
+            setFlatListData();
             // console.log("User Roll: ", res);
         })
 
@@ -2451,7 +2604,7 @@ const HomeScreen = () => {
                                         arrayindex++;
 
                                         SyncArray1.push({
-                                            name: 'IOUSET JOBS Downloading...',
+                                            name: 'IOU Set Jobs Downloading...',
                                             id: arrayindex,
                                         });
 
@@ -2463,7 +2616,7 @@ const HomeScreen = () => {
                                         arrayindex++;
 
                                         SyncArray1.push({
-                                            name: 'IOUSET JOBS Download Failed...',
+                                            name: 'IOU Set Jobs Download Failed...',
                                             id: arrayindex,
                                         });
 
@@ -2477,7 +2630,7 @@ const HomeScreen = () => {
                                         arrayindex++;
 
                                         SyncArray1.push({
-                                            name: 'IOUSET JOBS Download Successfully...',
+                                            name: 'IOU Set Jobs Download Successfully...',
                                             id: arrayindex,
                                         });
 
@@ -2498,7 +2651,7 @@ const HomeScreen = () => {
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'No available IOUSET JOBS for Download...',
+                                    name: 'No available IOU Set Jobs for Download...',
                                     id: arrayindex,
                                 });
 
@@ -2519,7 +2672,7 @@ const HomeScreen = () => {
                             arrayindex++;
 
                             SyncArray1.push({
-                                name: 'IOUSET JOBS Download Failed...',
+                                name: 'IOU Set Jobs Download Failed...',
                                 id: arrayindex,
                             });
 
@@ -2541,7 +2694,7 @@ const HomeScreen = () => {
                         arrayindex++;
 
                         SyncArray1.push({
-                            name: 'IOUSET JOBS Download Failed...',
+                            name: 'IOU Set Jobs Download Failed...',
                             id: arrayindex,
                         });
 
@@ -2587,7 +2740,7 @@ const HomeScreen = () => {
                                         arrayindex++;
 
                                         SyncArray1.push({
-                                            name: 'ONEOFF JOBS Downloading...',
+                                            name: 'One-off Jobs Downloading...',
                                             id: arrayindex,
                                         });
 
@@ -2599,7 +2752,7 @@ const HomeScreen = () => {
                                         arrayindex++;
 
                                         SyncArray1.push({
-                                            name: 'ONEOFF JOBS Download Failed...',
+                                            name: 'One-off Jobs Download Failed...',
                                             id: arrayindex,
                                         });
 
@@ -2613,7 +2766,7 @@ const HomeScreen = () => {
                                         arrayindex++;
 
                                         SyncArray1.push({
-                                            name: 'ONEOFF JOBS Download Successfully...',
+                                            name: 'One-off Jobs Download Successfully...',
                                             id: arrayindex,
                                         });
 
@@ -2634,7 +2787,7 @@ const HomeScreen = () => {
                                 arrayindex++;
 
                                 SyncArray1.push({
-                                    name: 'No available ONEOFF JOBS for Download...',
+                                    name: 'No available One-off Jobs for Download...',
                                     id: arrayindex,
                                 });
 
@@ -2655,7 +2808,7 @@ const HomeScreen = () => {
                             arrayindex++;
 
                             SyncArray1.push({
-                                name: 'ONEOFF JOBS Download Failed...',
+                                name: 'One-off Jobs Download Failed...',
                                 id: arrayindex,
                             });
 
@@ -2677,7 +2830,7 @@ const HomeScreen = () => {
                         arrayindex++;
 
                         SyncArray1.push({
-                            name: 'ONEOFF JOBS Download Failed...',
+                            name: 'One-off Jobs Download Failed...',
                             id: arrayindex,
                         });
 
@@ -3197,7 +3350,7 @@ const HomeScreen = () => {
                                 return (
                                     <View style={{ width: width - 210, padding: 5 }}>
                                         <ListBox
-                                            IOUNo={item.IOU_ID}
+                                            IOUNo={item.ID}
                                             nameAddress={true}
                                             date={moment.utc(item.RequestDate).format('YYYY-MM-DD - h:mm A')}
                                             // price={item.Amount + "  LKR"}
@@ -3208,12 +3361,12 @@ const HomeScreen = () => {
                                             })}
                                             status="New"
                                             isIcon={true}
-                                            onPressIcon={() => console.log(item.IOU_ID)}
+                                            onPressIcon={() => console.log(item.ID)}
                                         />
                                     </View>
                                 );
                             }}
-                            keyExtractor={item => `${item._Id}`}
+                            keyExtractor={item => `${item.Id}`}
                         />
 
 
@@ -3256,7 +3409,7 @@ const HomeScreen = () => {
                                 return (
                                     <View style={{ width: width - 210, padding: 5 }}>
                                         <ListBox
-                                            IOUNo={item.IOUSettlement_ID}
+                                            IOUNo={item.ID}
                                             nameAddress={true}
                                             date={moment.utc(item.RequestDate).format('YYYY-MM-DD - h:mm A')}
                                             price={item.Amount == null || '' ? "0.00 LKR" : item.Amount.toLocaleString("en-LK", {
@@ -3266,13 +3419,13 @@ const HomeScreen = () => {
                                             })}
                                             status="New"
                                             isIcon={true}
-                                            onPressIcon={() => console.log(item.IOUSettlement_ID)}
+                                            onPressIcon={() => console.log(item.ID)}
                                         />
 
                                     </View>
                                 );
                             }}
-                            keyExtractor={item => `${item._Id}`}
+                            keyExtractor={item => `${item.Id}`}
                         />
                 }
 
@@ -3293,7 +3446,7 @@ const HomeScreen = () => {
 
                 {
 
-                    IOUList.length == 0 ?
+OneOFfSettlementList.length == 0 ?
 
                         <View style={{ justifyContent: "center", alignContent: "center", alignItems: "center", marginTop: 10 }}>
 
@@ -3312,7 +3465,7 @@ const HomeScreen = () => {
                                 return (
                                     <View style={{ width: width - 210, padding: 5 }}>
                                         <ListBox
-                                            IOUNo={item.ONEOFFSettlement_ID}
+                                            IOUNo={item.ID}
                                             nameAddress={true}
                                             date={moment.utc(item.RequestDate).format('YYYY-MM-DD - h:mm A')}
                                             price={item.Amount == null || '' ? "0.00 LKR" : item.Amount.toLocaleString("en-LK", {
@@ -3322,13 +3475,13 @@ const HomeScreen = () => {
                                             })}
                                             status="New"
                                             isIcon={true}
-                                            onPressIcon={() => console.log(item.ONEOFFSettlement_ID)}
+                                            onPressIcon={() => console.log(item.ID)}
                                         />
 
                                     </View>
                                 );
                             }}
-                            keyExtractor={item => `${item._Id}`}
+                            keyExtractor={item => `${item.Id}`}
                         />
 
                 }
@@ -3552,3 +3705,5 @@ const homeStyle = StyleSheet.create({
 });
 
 export default HomeScreen;
+
+

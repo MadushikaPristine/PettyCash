@@ -167,7 +167,7 @@ export const getPendingIOUSettlementHome = (callBack: any) => {
 
     DB.searchData(
         // 'SELECT IOU_SETTLEMENT.IOUSettlement_ID AS ID, IOU_SETTLEMENT.Amount, EMPLOYEE.EmpName FROM IOU_SETTLEMENT INNER JOIN EMPLOYEE ON IOU_SETTLEMENT.EmpId = EMPLOYEE.Emp_ID INNER JOIN WHERE Approve_Status=0 ORDER BY _Id DESC',
-        'SELECT * FROM IOU_SETTLEMENT WHERE Approve_Status=1 ORDER BY _Id DESC LIMIT 10',
+        'SELECT * FROM IOU_SETTLEMENT WHERE Approve_Status=1  OR Approve_Status=5 ORDER BY _Id DESC LIMIT 10',
         [],
         (resp: any, err: any) => {
             // console.log("************** Last iou settlement ************  " + resp.length);
