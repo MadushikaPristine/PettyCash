@@ -87,18 +87,18 @@ export const DeleteSETSyncedDetailLine = (callBack: any) => {
 
     DB.deleteData(
         [
-          {
-            table: 'IOU_SETTLEMENT_JOBS',
-            query: "WHERE IsSync=? ",
-            params: [1],
-          },
+            {
+                table: 'IOU_SETTLEMENT_JOBS',
+                query: "WHERE IsSync=? ",
+                params: [1],
+            },
         ],
         (resp: any, err: any) => {
-          console.log(resp, ">>>>>>", err);
-    
-          callBack(resp, err);
+            console.log(resp, ">>>>>>", err);
+
+            callBack(resp, err);
         },
-      );
+    );
 
 
 }
@@ -129,18 +129,23 @@ export const getIOUSETJOBDataBYRequestID = (ID: any, callBack: any) => {
     )
 }
 export const getIOUSETJOBsBYSettlementID = (ID: any, callBack: any) => {
+    try {
+        DB.searchData(
+            'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, e.Description as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IFNULL(IOU_SETTLEMENT_JOBS.Requested_Amount,0) as Requested_Amount,IOU_SETTLEMENT_JOBS.Remark as Remark ,IOU_SETTLEMENT_JOBS.IstoEdit FROM IOU_SETTLEMENT_JOBS  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = IOU_SETTLEMENT_JOBS.Expences_Type WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
+            [ID],
+            (resp: any, err: any) => {
+                console.log("************** Last iou ************  " + resp);
+                callBack(resp);
+            },
+        )
+    } catch (error) {
+        console.log(" catch error ---- ", error);
 
-    DB.searchData(
-        'SELECT IOU_SETTLEMENT_JOBS._Id,IOU_SETTLEMENT_JOBS.Job_NO as IOUTypeNo,IOU_SETTLEMENT_JOBS.AccNo,IOU_SETTLEMENT_JOBS.CostCenter,IOU_SETTLEMENT_JOBS.Resource, e.Description as ExpenseType, IFNULL(IOU_SETTLEMENT_JOBS.Amount,0) as Amount, IFNULL(IOU_SETTLEMENT_JOBS.Requested_Amount,0) as Requested_Amount,IOU_SETTLEMENT_JOBS.Remark as Remark ,IOU_SETTLEMENT_JOBS.IstoEdit FROM IOU_SETTLEMENT_JOBS  LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = IOU_SETTLEMENT_JOBS.Expences_Type WHERE IOU_SETTLEMENT_JOBS.Request_ID=?',
-        [ID],
-        (resp: any, err: any) => {
-            // console.log("************** Last iou ************  " + resp.length);
-            callBack(resp);
-        },
-    )
+    }
+
 }
 
-export const UpdateSettJobbyId = (AccNo: any, Costcenter: any, Resource: any, Amount: any, Remark: any, ExpID:any, ID: any, callBack: any) => {
+export const UpdateSettJobbyId = (AccNo: any, Costcenter: any, Resource: any, Amount: any, Remark: any, ExpID: any, ID: any, callBack: any) => {
 
     DB.updateData(
         'UPDATE IOU_SETTLEMENT_JOBS SET AccNo=? , CostCenter=? , Resource=? , Amount=? , Remark=? , Expences_Type=?  WHERE _Id=?',

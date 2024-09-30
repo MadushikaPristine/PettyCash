@@ -55,7 +55,7 @@ const NotificationScreen = () => {
       <SafeAreaView style={ComponentsStyles.CONTAINER}>
         <View style={styles.screen}>
             <Header title="Petty Cash Request" isBtn={true}  btnOnPress={() => navigation.navigate('Home')}/>
-            <Text style={styles.listHeadling}>Today</Text>
+            {/* <Text style={styles.listHeadling}>Today</Text>
 
             <FlatList
             showsHorizontalScrollIndicator={false}
@@ -99,7 +99,7 @@ const NotificationScreen = () => {
           }
           keyExtractor={item => `${item._id}`}
         />
-        
+         */}
         </View>
         </SafeAreaView>
         

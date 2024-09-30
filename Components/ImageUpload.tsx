@@ -27,66 +27,35 @@ const ImageUpload = ({ isvisible,camerabtn, gallerybtn, cancelbtn,placeholder,he
     return (
 
         <View style={styles.container}>
-
             <TouchableOpacity style={styles.dashStyle} onPress={closeModal} />
-
-
             <Text style={styles.headertext}>{headertxt}</Text>
             <Text style={styles.textsub}>{subtxt}</Text>
-
-
-            {/* <View>
-                <TextInput
-                    placeholder={"Add approval remark here(Optional)"}
-                    style={styles.inputContainer}
-                    multiline={true}
-                    numberOfLines={10} />
-            </View> */}
-
-
             <ActionButton
                 onPress={camerabtn}
                 title='Take a photo'
                 styletouchable={{ width: '100%' }}
             />
-
             <View style={{ padding: 5 }} />
-
             {isvisible ? 
-
             <View>
-
             <ActionButton
             onPress={gallerybtn}
             title="Open Gallery"
             styletouchable={{ width: '100%' }}
-
         />
-
         <View style={{ padding: 5 }} />
-
-        </View>
-            
+        </View>  
         :
         <></>
         }
-
-        
-
             <ActionButton
                 onPress={cancelbtn}
                 title="cancel"
                 style={{ backgroundColor: "gray" }}
                 styletouchable={{ width: '100%' }}
-
             />
-
-
-
         </View>
-
     );
-
 }
 
 const styles = StyleSheet.create({
@@ -109,12 +78,10 @@ const styles = StyleSheet.create({
         color: ComponentsStyles.COLORS.HEADER_BLACK,
     },
     textsub: {
-
         margin: 5,
         fontSize: 16,
-        color: ComponentsStyles.COLORS.PROCEED_ASH,
+        color: ComponentsStyles.COLORS.SUB_COLOR,
         fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR,
-
     },
 
     dashStyle: {

@@ -65,6 +65,9 @@ export default ({
         YELLOW: '#FCEA4E',
         BROWN: '#810017',
         DETAIL_ASH: '#626566',
+        MAIN_COLOR: '#831414',
+        SUB_COLOR: '#C18989', 
+        CARDDAta_COLOR: '#3E1A1A', 
 
     },
     CONTENTLOG: {

@@ -466,8 +466,7 @@ export const getPendingSecondApprovalIOUList = (amount: any, callBack: any) => {
 export const getIOUJobsListByID = (RequestID: any, callBack: any) => {
 
     // console.log(" ID SETT === " , RequestID);
-
-
+try {
     DB.searchData(
         'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU.IOU_ID=?',
         [RequestID],
@@ -475,6 +474,10 @@ export const getIOUJobsListByID = (RequestID: any, callBack: any) => {
             callBack(resp, err);
         },
     );
+} catch (error) {
+    console.log(" query error response ------" , error);
+    
+}  
 };
 
 

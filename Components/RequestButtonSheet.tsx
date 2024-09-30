@@ -76,14 +76,6 @@ const RequestButtonSheet = ({ modalclose,PendingList,IOU,SettlementScreen,OneOff
 
 
         <View style={styles.container}>
-            {/* <Modal
-                    backdropOpacity={0.3}
-                    isVisible={modalVisible}
-                    onBackdropPress={() => modalClose()}
-                    style={styles.contentView}
-                > */}
-            {/* <View style={styles.modalMainContainer}> */}
-
             <TouchableOpacity style={styles.dashStyle} onPress={modalclose} />
 
             <View style={{ width: '100%', }}>
@@ -92,7 +84,7 @@ const RequestButtonSheet = ({ modalclose,PendingList,IOU,SettlementScreen,OneOff
                     style={styles.loginBtn}
                     textStyle={styles.txtStyle}
                     is_icon={true}
-                    iconColor={comStyles.COLORS.ICON_BLUE}
+                    iconColor={comStyles.COLORS.MAIN_COLOR}
                     icon_name='square'
                     onPress={PendingList}
                     //disabled={roll=='Requester' ? false : true}
@@ -102,7 +94,7 @@ const RequestButtonSheet = ({ modalclose,PendingList,IOU,SettlementScreen,OneOff
                     style={styles.loginBtn}
                     textStyle={styles.txtStyle}
                     is_icon={true}
-                    iconColor={comStyles.COLORS.ICON_BLUE}
+                    iconColor={comStyles.COLORS.MAIN_COLOR}
                     icon_name='square'
                     onPress={IOU}
                     //disabled={roll=='Requester' ? true : false}
@@ -112,7 +104,7 @@ const RequestButtonSheet = ({ modalclose,PendingList,IOU,SettlementScreen,OneOff
                     style={styles.loginBtn}
                     textStyle={styles.txtStyle}
                     is_icon={true}
-                    iconColor={comStyles.COLORS.ICON_BLUE}
+                    iconColor={comStyles.COLORS.MAIN_COLOR}
                     icon_name='square'
                     onPress={SettlementScreen}
                     //disabled={roll=='Requester' ? true : false}
@@ -122,7 +114,7 @@ const RequestButtonSheet = ({ modalclose,PendingList,IOU,SettlementScreen,OneOff
                     style={styles.loginBtn}
                     textStyle={styles.txtStyle}
                     is_icon={true}
-                    iconColor={comStyles.COLORS.ICON_BLUE}
+                    iconColor={comStyles.COLORS.MAIN_COLOR}
                     icon_name='square'
                     onPress={OneOffScreen} 
                     //disabled={roll=='Requester' ? true : false}
@@ -172,7 +164,7 @@ const styles = StyleSheet.create({
     loginBtn: {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: comStyles.COLORS.ICON_BLUE,
+        borderColor: comStyles.COLORS.MAIN_COLOR,
         marginBottom: 10,
         marginTop: 20,
         justifyContent: "flex-start",
@@ -194,7 +186,7 @@ const styles = StyleSheet.create({
     },
 
     txtStyle: {
-        color: comStyles.COLORS.ICON_BLUE
+        color: comStyles.COLORS.MAIN_COLOR
     },
     dashStyle: {
         width: 50,

@@ -24,6 +24,7 @@ import { getHODDetailsID } from "../../SQLiteDBAction/Controllers/DepartmentCont
 import moment from "moment";
 import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
+import DropdownAlert, { DropdownAlertData, DropdownAlertType } from "react-native-dropdownalert";
 
 
 let width = Dimensions.get("screen").width;
@@ -31,7 +32,7 @@ const height = Dimensions.get('screen').height;
 let loggedUserID: any;
 let UserRoleID: any;
 
-
+let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 const PendingList = () => {
 
   const listArray = [];
@@ -139,12 +140,12 @@ const PendingList = () => {
       // if(txtRemark==""){
       //   Alert.alert("Please Enter Remark");
       // }else{
-       
+
       //   // slideInModal();
       // }
 
       setTxtRemark('');
-        setisDialog(true);
+      setisDialog(true);
 
 
     } else {
@@ -343,29 +344,29 @@ const PendingList = () => {
 
   const ApproveAlert = () => {
 
-       if(txtRemark==""){
-        Alert.alert("Please Enter Remark");
-      }else{
-       
-        Alert.alert('Approved Request !', 'Are you sure you want to Approved Request ?', [
-          {
-            text: 'No',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          { text: 'Yes', onPress: () => approveRemark(txtRemark) },
-        ]);
-        // getPendingList(type)
+    if (txtRemark == "") {
+      Alert.alert("Please Enter Remark");
+    } else {
 
-      }
-  
+      Alert.alert('Approved Request !', 'Are you sure you want to Approved Request ?', [
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        { text: 'Yes', onPress: () => approveRemark(txtRemark) },
+      ]);
+      // getPendingList(type)
+
+    }
+
   }
 
   const RejectAlert = () => {
 
-    if(txtRemark==""){
+    if (txtRemark == "") {
       Alert.alert("Please Enter Remark");
-    }else{
+    } else {
       Alert.alert('Reject Request !', 'Are you sure you want to Reject Request ?', [
         {
           text: 'No',
@@ -379,9 +380,9 @@ const PendingList = () => {
   }
 
   const CancelAlert = () => {
-    if(txtRemark==""){
+    if (txtRemark == "") {
       Alert.alert("Please Enter Remark");
-    }else{
+    } else {
       Alert.alert('Cancel Request !', 'Are you sure you want to canceled Request ?', [
         {
           text: 'No',
@@ -392,7 +393,7 @@ const PendingList = () => {
       ]);
     }
 
-    
+
   }
 
   //------------Apply approve remark---------------
@@ -438,57 +439,66 @@ const PendingList = () => {
 
                 },
               ];
-              Update_IOU_FirstApprovel(jsonData, (result: any) => {
+              Conection_Checking(async (res: any) => {
+                if (res != false) {
+                  Update_IOU_FirstApprovel(jsonData, (result: any) => {
 
-                if (result == "success") {
+                    if (result == "success") {
 
-                  const prams =
-                  {
-                    "PCRCode": parseInt(resultiouID[0].WebRefID),
-                    "Type": "IOU Request",
-                    "StatusID": 2,
-                    "ModifyBy": parseInt(loggedUserID),
-                    "Remark": remark,
-                    "HOD": null,
-                    "ActionStep": 1,
-                    "FirstActionBy": parseInt(loggedUserID),
-                    "SecondActionBy": null,
-                    "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    "SecondActionAt": "",
-                    "AIsLimit": "",
-                    "AIouLimit": "",
-                  }
+                      const prams =
+                      {
+                        "PCRCode": parseInt(resultiouID[0].WebRefID),
+                        "Type": "IOU Request",
+                        "StatusID": 2,
+                        "ModifyBy": parseInt(loggedUserID),
+                        "Remark": remark,
+                        "HOD": null,
+                        "ActionStep": 1,
+                        "FirstActionBy": parseInt(loggedUserID),
+                        "SecondActionBy": null,
+                        "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                        "SecondActionAt": "",
+                        "AIsLimit": "",
+                        "AIouLimit": "",
+                      }
 
-                  Conection_Checking((internetresp: any) => {
+                      Conection_Checking((internetresp: any) => {
 
-                    if (internetresp) {
+                        if (internetresp) {
 
-                      UpdateNew_API(prams);
-                      navigation.navigate('IOU', { status: 'Approved', })
+                          UpdateNew_API(prams);
+                          navigation.navigate('IOU', { status: 'Approved', })
+                        } else {
+
+                          navigation.navigate('IOU', { status: 'Approved', })
+
+                        }
+
+
+
+                      });
+
+
+
                     } else {
 
-                      navigation.navigate('IOU', { status: 'Approved', })
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
 
                     }
 
-
-
-                  });
-
-
-
+                  })
                 } else {
-
-                  Alert.alert('Request Approve Failed !', '', [
-                    {
-                      text: 'Ok', onPress: () => console.log("ok Pressed")
-                    },
-                  ]);
-
+                  await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Sync Failed',
+                    message: "Please Check your internet connection",
+                  });
                 }
-
-              })
-
+              });
             } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
               // iouType != 3 & approvestatues = 1  
 
@@ -521,8 +531,140 @@ const PendingList = () => {
                     },
                   ];
 
+                  Conection_Checking(async (res: any) => {
+                    if (res != false) {
+                      Update_IOU_ValidateAmount(jsonData, (result: any) => {
 
-                  Update_IOU_ValidateAmount(jsonData, (result: any) => {
+                        if (result == "success") {
+
+                          const prams =
+                          {
+                            "PCRCode": parseInt(resultiouID[0].WebRefID),
+                            "Type": "IOU Request",
+                            "StatusID": 5,
+                            "ModifyBy": parseInt(loggedUserID),
+                            "Remark": remark,
+                            "HOD": parseInt(departmenthod[0].HODNo),
+                            "ActionStep": 1,
+                            "FirstActionBy": parseInt(loggedUserID),
+                            "SecondActionBy": null,
+                            "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                            "SecondActionAt": "",
+                            "AIsLimit": "YES",
+                            "AIouLimit": resultiou[0].IOULimit,
+                          }
+                          UpdateNew_API(prams);
+                          navigation.navigate('IOU', { status: 'Approved', })
+
+                        } else {
+
+                          Alert.alert('Request Approve Failed !', '', [
+                            {
+                              text: 'Ok', onPress: () => console.log("ok Pressed")
+                            },
+                          ]);
+
+                        }
+
+                      })
+                    } else {
+                      await alert({
+                        type: DropdownAlertType.Error,
+                        title: 'Sync Failed',
+                        message: "Please Check your internet connection",
+                      });
+                    }
+                  });
+                })
+              } else {
+                // else
+                // is not exceed
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = NO
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 2
+                //     // saveApproveAllData(departmenthod[0].HODNo, loggedUserID, moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'), "YES", resultiou[0].IOULimit, remark, selectedItems[i], (result: any) => {
+                console.log("1111111111111111111111111111111");
+                const jsonData = [
+                  {
+                    FirstActionBy: loggedUserID,
+                    FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                    AIsLimit: "NO",
+                    AIOULimit: resultiou[0].IOULimit,
+                    Remark: remark,
+                    Approve_Status: 2,
+                    IOU_ID: selectedItems[i],
+                    ActionStep: 1
+                  },
+                ];
+                Conection_Checking(async (res: any) => {
+                  if (res != false) {
+                    Update_IOU_ValidateAmount(jsonData, (result: any) => {
+
+
+                      if (result == "success") {
+
+                        const prams =
+                        {
+                          "PCRCode": parseInt(resultiouID[0].WebRefID),
+                          "Type": "IOU Request",
+                          "StatusID": 2,
+                          "ModifyBy": parseInt(loggedUserID),
+                          "Remark": remark,
+                          "HOD": null,
+                          "ActionStep": 1,
+                          "FirstActionBy": parseInt(loggedUserID),
+                          "SecondActionBy": null,
+                          "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                          "SecondActionAt": "",
+                          "AIsLimit": "NO",
+                          "AIouLimit": resultiou[0].IOULimit,
+                        }
+                        UpdateNew_API(prams);
+                        navigation.navigate('IOU', { status: 'Approved', })
+
+                      } else {
+
+                        Alert.alert('Request Approve Failed !', '', [
+                          {
+                            text: 'Ok', onPress: () => console.log("ok Pressed")
+                          },
+                        ]);
+
+                      }
+
+                    })
+                  } else {
+                    await alert({
+                      type: DropdownAlertType.Error,
+                      title: 'Sync Failed',
+                      message: "Please Check your internet connection",
+                    });
+                  }
+                });
+              }
+              // UpdateFirstApprovel
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
+              // iouType != 3 & approvestatues = 5 (second Action)
+              //Second actionby = log wela inna user id
+              //SecondAction act = aprove karana datetime eka
+              ///remark 
+              //approvestatus = 2
+              const jsonData = [
+                {
+                  SecondActionBy: loggedUserID,
+                  SecondActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                  Remark: remark,
+                  Approve_Status: 2,
+                  IOU_ID: selectedItems[i],
+                  ActionStep: 2
+                },
+              ];
+              Conection_Checking(async (res: any) => {
+                if (res != false) {
+                  Update_IOU_SecondApprovel(jsonData, (result: any) => {
 
                     if (result == "success") {
 
@@ -530,17 +672,17 @@ const PendingList = () => {
                       {
                         "PCRCode": parseInt(resultiouID[0].WebRefID),
                         "Type": "IOU Request",
-                        "StatusID": 5,
+                        "StatusID": 2,
                         "ModifyBy": parseInt(loggedUserID),
                         "Remark": remark,
-                        "HOD": parseInt(departmenthod[0].HODNo),
-                        "ActionStep": 1,
-                        "FirstActionBy": parseInt(loggedUserID),
-                        "SecondActionBy": null,
-                        "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                        "SecondActionAt": "",
-                        "AIsLimit": "YES",
-                        "AIouLimit": resultiou[0].IOULimit,
+                        "HOD": null,
+                        "ActionStep": 2,
+                        "FirstActionBy": null,
+                        "SecondActionBy": parseInt(loggedUserID),
+                        "FirstActionAt": "",
+                        "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                        "AIsLimit": "",
+                        "AIouLimit": "",
                       }
                       UpdateNew_API(prams);
                       navigation.navigate('IOU', { status: 'Approved', })
@@ -556,159 +698,27 @@ const PendingList = () => {
                     }
 
                   })
-                })
-
-              } else {
-                // else
-
-                // is not exceed
-                //frist actionby = log wela inna user id
-                //fristaction act = aprove karana datetime eka
-                // AisLimit = NO
-                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
-                ///remark 
-                //approvestatus = 2
-                //     // saveApproveAllData(departmenthod[0].HODNo, loggedUserID, moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'), "YES", resultiou[0].IOULimit, remark, selectedItems[i], (result: any) => {
-
-                console.log("1111111111111111111111111111111");
-
-                const jsonData = [
-                  {
-                    FirstActionBy: loggedUserID,
-                    FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    AIsLimit: "NO",
-                    AIOULimit: resultiou[0].IOULimit,
-                    Remark: remark,
-                    Approve_Status: 2,
-                    IOU_ID: selectedItems[i],
-                    ActionStep: 1
-                  },
-                ];
-
-                Update_IOU_ValidateAmount(jsonData, (result: any) => {
-
-
-                  if (result == "success") {
-
-                    const prams =
-                    {
-                      "PCRCode": parseInt(resultiouID[0].WebRefID),
-                      "Type": "IOU Request",
-                      "StatusID": 2,
-                      "ModifyBy": parseInt(loggedUserID),
-                      "Remark": remark,
-                      "HOD": null,
-                      "ActionStep": 1,
-                      "FirstActionBy": parseInt(loggedUserID),
-                      "SecondActionBy": null,
-                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                      "SecondActionAt": "",
-                      "AIsLimit": "NO",
-                      "AIouLimit": resultiou[0].IOULimit,
-                    }
-                    UpdateNew_API(prams);
-                    navigation.navigate('IOU', { status: 'Approved', })
-
-                  } else {
-
-                    Alert.alert('Request Approve Failed !', '', [
-                      {
-                        text: 'Ok', onPress: () => console.log("ok Pressed")
-                      },
-                    ]);
-
-                  }
-
-                })
-
-              }
-              // UpdateFirstApprovel
-
-
-
-            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
-              // iouType != 3 & approvestatues = 5 (second Action)
-
-
-              //Second actionby = log wela inna user id
-              //SecondAction act = aprove karana datetime eka
-              ///remark 
-              //approvestatus = 2
-
-              const jsonData = [
-                {
-                  SecondActionBy: loggedUserID,
-                  SecondActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  Remark: remark,
-                  Approve_Status: 2,
-                  IOU_ID: selectedItems[i],
-                  ActionStep: 2
-                },
-              ];
-
-              Update_IOU_SecondApprovel(jsonData, (result: any) => {
-
-                if (result == "success") {
-
-                  const prams =
-                  {
-                    "PCRCode": parseInt(resultiouID[0].WebRefID),
-                    "Type": "IOU Request",
-                    "StatusID": 2,
-                    "ModifyBy": parseInt(loggedUserID),
-                    "Remark": remark,
-                    "HOD": null,
-                    "ActionStep": 2,
-                    "FirstActionBy": null,
-                    "SecondActionBy": parseInt(loggedUserID),
-                    "FirstActionAt": "",
-                    "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    "AIsLimit": "",
-                    "AIouLimit": "",
-                  }
-                  UpdateNew_API(prams);
-                  navigation.navigate('IOU', { status: 'Approved', })
-
                 } else {
-
-                  Alert.alert('Request Approve Failed !', '', [
-                    {
-                      text: 'Ok', onPress: () => console.log("ok Pressed")
-                    },
-                  ]);
-
+                  await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Sync Failed',
+                    message: "Please Check your internet connection",
+                  });
                 }
-
-              })
+              });
             }
-
           })
-
-
         })
-
       } else if (type === 'IOU Settlement') {
-
         getAllLoginUserDetails(loggedUserID, (resultiou: any) => {
-
-
           // setIOULimit(resultiou[0].IOULimit);
-
           getIOUSettlement_Data(selectedItems[i], (resultiouID: any) => {
-
-
-
             if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
-
               // iouType = 3 & approvestatues = 5  (Frist Aprovel)
-
-
               //frist actionby = log wela inna user id
               //fristaction act = aprove karana datetime eka
               ///remark
               //approvestatus = 2
-
-
               const jsonData = [
                 {
                   FirstActionBy: loggedUserID,
@@ -719,75 +729,9 @@ const PendingList = () => {
                   ActionStep: 1
                 },
               ];
-              Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
-
-                if (result == "success") {
-
-                  const prams =
-                  {
-                    "PCRCode": parseInt(resultiouID[0].WebRefID),
-                    "Type": "IOU Settlement",
-                    "StatusID": 2,
-                    "ModifyBy": parseInt(loggedUserID),
-                    "Remark": remark,
-                    "HOD": null,
-                    "ActionStep": 1,
-                    "FirstActionBy": parseInt(loggedUserID),
-                    "SecondActionBy": null,
-                    "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    "SecondActionAt": "",
-                    "AIsLimit": "",
-                    "AIouLimit": "",
-                  }
-                  UpdateNew_API(prams);
-                  navigation.navigate('SettlementScreen', { status: 'Approved', })
-
-                } else {
-
-                  Alert.alert('Request Approve Failed !', '', [
-                    {
-                      text: 'Ok', onPress: () => console.log("ok Pressed")
-                    },
-                  ]);
-
-                }
-
-              })
-
-            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
-              // iouType != 3 & approvestatues = 1  
-
-
-              // Amount Eke Condition eka enna oni
-              if (resultiouID[0].Amount > resultiou[0].IOULimit) {
-                // if
-
-                // exeeed
-                // hod = logwela inna userge department eke HOD
-                //frist actionby = log wela inna user id
-                //fristaction act = aprove karana datetime eka
-                // AisLimit = YES
-                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
-                ///remark 
-                //approvestatus = 5
-
-                getHODDetailsID(loggedUserID, (departmenthod: any) => {
-                  const jsonData = [
-                    {
-                      HOD: departmenthod[0].HODNo,
-                      FirstActionBy: loggedUserID,
-                      FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                      AIsLimit: "YES",
-                      AIOULimit: resultiou[0].IOULimit,
-                      Remark: remark,
-                      Approve_Status: 5,
-                      IOU_ID: selectedItems[i],
-                      ActionStep: 1
-                    },
-                  ];
-
-
-                  Update_IOUSettelment_ValidateAmount(jsonData, (result: any) => {
+              Conection_Checking(async (res: any) => {
+                if (res != false) {
+                  Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
 
                     if (result == "success") {
 
@@ -795,17 +739,17 @@ const PendingList = () => {
                       {
                         "PCRCode": parseInt(resultiouID[0].WebRefID),
                         "Type": "IOU Settlement",
-                        "StatusID": 5,
+                        "StatusID": 2,
                         "ModifyBy": parseInt(loggedUserID),
                         "Remark": remark,
-                        "HOD": parseInt(departmenthod[0].HODNo),
+                        "HOD": null,
                         "ActionStep": 1,
                         "FirstActionBy": parseInt(loggedUserID),
                         "SecondActionBy": null,
                         "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
                         "SecondActionAt": "",
-                        "AIsLimit": "YES",
-                        "AIouLimit": resultiou[0].IOULimit,
+                        "AIsLimit": "",
+                        "AIouLimit": "",
                       }
                       UpdateNew_API(prams);
                       navigation.navigate('SettlementScreen', { status: 'Approved', })
@@ -821,12 +765,88 @@ const PendingList = () => {
                     }
 
                   })
+                } else {
+                  await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Sync Failed',
+                    message: "Please Check your internet connection",
+                  });
+                }
+              });
+            } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
+              // iouType != 3 & approvestatues = 1  
+              // Amount Eke Condition eka enna oni
+              if (resultiouID[0].Amount > resultiou[0].IOULimit) {
+                // if
+                // exeeed
+                // hod = logwela inna userge department eke HOD
+                //frist actionby = log wela inna user id
+                //fristaction act = aprove karana datetime eka
+                // AisLimit = YES
+                //AIO LIMIT = User table eke IOUlimit eka set karanna oni
+                ///remark 
+                //approvestatus = 5
+                getHODDetailsID(loggedUserID, (departmenthod: any) => {
+                  const jsonData = [
+                    {
+                      HOD: departmenthod[0].HODNo,
+                      FirstActionBy: loggedUserID,
+                      FirstActionAt: moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      AIsLimit: "YES",
+                      AIOULimit: resultiou[0].IOULimit,
+                      Remark: remark,
+                      Approve_Status: 5,
+                      IOU_ID: selectedItems[i],
+                      ActionStep: 1
+                    },
+                  ];
+                  Conection_Checking(async (res: any) => {
+                    if (res != false) {
+                      Update_IOUSettelment_ValidateAmount(jsonData, (result: any) => {
+
+                        if (result == "success") {
+
+                          const prams =
+                          {
+                            "PCRCode": parseInt(resultiouID[0].WebRefID),
+                            "Type": "IOU Settlement",
+                            "StatusID": 5,
+                            "ModifyBy": parseInt(loggedUserID),
+                            "Remark": remark,
+                            "HOD": parseInt(departmenthod[0].HODNo),
+                            "ActionStep": 1,
+                            "FirstActionBy": parseInt(loggedUserID),
+                            "SecondActionBy": null,
+                            "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                            "SecondActionAt": "",
+                            "AIsLimit": "YES",
+                            "AIouLimit": resultiou[0].IOULimit,
+                          }
+                          UpdateNew_API(prams);
+                          navigation.navigate('SettlementScreen', { status: 'Approved', })
+
+                        } else {
+
+                          Alert.alert('Request Approve Failed !', '', [
+                            {
+                              text: 'Ok', onPress: () => console.log("ok Pressed")
+                            },
+                          ]);
+
+                        }
+
+                      })
+                    } else {
+                      await alert({
+                        type: DropdownAlertType.Error,
+                        title: 'Sync Failed',
+                        message: "Please Check your internet connection",
+                      });
+                    }
+                  });
                 })
-
-
               } else {
                 // else
-
                 // is not exied
                 //frist actionby = log wela inna user id
                 //fristaction act = aprove karana datetime eka
@@ -835,9 +855,7 @@ const PendingList = () => {
                 ///remark 
                 //approvestatus = 2
                 //     // saveApproveAllData(departmenthod[0].HODNo, loggedUserID, moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'), "YES", resultiou[0].IOULimit, remark, selectedItems[i], (result: any) => {
-
                 console.log("1111111111111111111111111111111");
-
                 const jsonData = [
                   {
                     FirstActionBy: loggedUserID,
@@ -850,57 +868,59 @@ const PendingList = () => {
                     ActionStep: 1
                   },
                 ];
+                Conection_Checking(async (res: any) => {
+                  if (res != false) {
+                    Update_IOUSettelment_ValidateAmount(jsonData, (result: any) => {
 
-                Update_IOUSettelment_ValidateAmount(jsonData, (result: any) => {
 
+                      if (result == "success") {
 
-                  if (result == "success") {
+                        const prams =
+                        {
+                          "PCRCode": parseInt(resultiouID[0].WebRefID),
+                          "Type": "IOU Settlement",
+                          "StatusID": 2,
+                          "ModifyBy": parseInt(loggedUserID),
+                          "Remark": remark,
+                          "HOD": null,
+                          "ActionStep": 1,
+                          "FirstActionBy": parseInt(loggedUserID),
+                          "SecondActionBy": null,
+                          "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                          "SecondActionAt": "",
+                          "AIsLimit": "NO",
+                          "AIouLimit": resultiou[0].IOULimit,
+                        }
+                        UpdateNew_API(prams);
+                        navigation.navigate('SettlementScreen', { status: 'Approved', })
 
-                    const prams =
-                    {
-                      "PCRCode": parseInt(resultiouID[0].WebRefID),
-                      "Type": "IOU Settlement",
-                      "StatusID": 2,
-                      "ModifyBy": parseInt(loggedUserID),
-                      "Remark": remark,
-                      "HOD": null,
-                      "ActionStep": 1,
-                      "FirstActionBy": parseInt(loggedUserID),
-                      "SecondActionBy": null,
-                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                      "SecondActionAt": "",
-                      "AIsLimit": "NO",
-                      "AIouLimit": resultiou[0].IOULimit,
-                    }
-                    UpdateNew_API(prams);
-                    navigation.navigate('SettlementScreen', { status: 'Approved', })
+                      } else {
 
+                        Alert.alert('Request Approve Failed !', '', [
+                          {
+                            text: 'Ok', onPress: () => console.log("ok Pressed")
+                          },
+                        ]);
+
+                      }
+
+                    })
                   } else {
-
-                    Alert.alert('Request Approve Failed !', '', [
-                      {
-                        text: 'Ok', onPress: () => console.log("ok Pressed")
-                      },
-                    ]);
-
+                    await alert({
+                      type: DropdownAlertType.Error,
+                      title: 'Sync Failed',
+                      message: "Please Check your internet connection",
+                    });
                   }
-
-                })
-
+                });
               }
               // UpdateFirstApprovel
-
-
-
             } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
               // iouType != 3 & approvestatues = 5 (second Action)
-
-
               //Second actionby = log wela inna user id
               //SecondAction act = aprove karana datetime eka
               ///remark 
               //approvestatus = 2
-
               const jsonData = [
                 {
                   SecondActionBy: loggedUserID,
@@ -911,65 +931,60 @@ const PendingList = () => {
                   ActionStep: 2
                 },
               ];
+              Conection_Checking(async (res: any) => {
+                if (res != false) {
+                  Update_IOUSettlement_SecondApprovel(jsonData, (result: any) => {
 
-              Update_IOUSettlement_SecondApprovel(jsonData, (result: any) => {
+                    if (result == "success") {
 
-                if (result == "success") {
+                      const prams =
+                      {
+                        "PCRCode": parseInt(resultiouID[0].WebRefID),
+                        "Type": "IOU Settlement",
+                        "StatusID": 2,
+                        "ModifyBy": parseInt(loggedUserID),
+                        "Remark": remark,
+                        "HOD": null,
+                        "ActionStep": 2,
+                        "FirstActionBy": null,
+                        "SecondActionBy": parseInt(loggedUserID),
+                        "FirstActionAt": "",
+                        "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                        "AIsLimit": "",
+                        "AIouLimit": "",
+                      }
+                      UpdateNew_API(prams);
+                      navigation.navigate('SettlementScreen', { status: 'Approved', })
 
-                  const prams =
-                  {
-                    "PCRCode": parseInt(resultiouID[0].WebRefID),
-                    "Type": "IOU Settlement",
-                    "StatusID": 2,
-                    "ModifyBy": parseInt(loggedUserID),
-                    "Remark": remark,
-                    "HOD": null,
-                    "ActionStep": 2,
-                    "FirstActionBy": null,
-                    "SecondActionBy": parseInt(loggedUserID),
-                    "FirstActionAt": "",
-                    "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    "AIsLimit": "",
-                    "AIouLimit": "",
-                  }
-                  UpdateNew_API(prams);
-                  navigation.navigate('SettlementScreen', { status: 'Approved', })
+                    } else {
 
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
+
+                    }
+
+                  })
                 } else {
-
-                  Alert.alert('Request Approve Failed !', '', [
-                    {
-                      text: 'Ok', onPress: () => console.log("ok Pressed")
-                    },
-                  ]);
-
+                  await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Sync Failed',
+                    message: "Please Check your internet connection",
+                  });
                 }
-
-              })
+              });
             }
-
           })
-
-
         })
-
-
       } else if (type === 'One-Off Settlement') {
         getAllLoginUserDetails(loggedUserID, (resultiou: any) => {
-
-
           setIOULimit(resultiou[0].IOULimit);
-
           getOneOffReAllData(selectedItems[i], (resultiouID: any) => {
-
-
             console.log(resultiouID[0].Amount, '==========', IOULimit);
-
             if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
-
               // iouType = 3 & approvestatues = 5  (Frist Aprovel)
-
-
               //frist actionby = log wela inna user id
               //fristaction act = aprove karana datetime eka
               ///remark
@@ -984,45 +999,52 @@ const PendingList = () => {
                   ActionStep: 1
                 },
               ];
-              Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
+              Conection_Checking(async (res: any) => {
+                if (res != false) {
+                  Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
 
-                if (result == "success") {
+                    if (result == "success") {
 
-                  const prams =
-                  {
-                    "PCRCode": parseInt(resultiouID[0].WebRefID),
-                    "Type": "OneOff Settlement",
-                    "StatusID": 2,
-                    "ModifyBy": parseInt(loggedUserID),
-                    "Remark": remark,
-                    "HOD": null,
-                    "ActionStep": 1,
-                    "FirstActionBy": parseInt(loggedUserID),
-                    "SecondActionBy": null,
-                    "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    "SecondActionAt": "",
-                    "AIsLimit": "",
-                    "AIouLimit": "",
-                  }
-                  UpdateNew_API(prams);
-                  navigation.navigate('OneOffScreen', { status: 'Approved', })
+                      const prams =
+                      {
+                        "PCRCode": parseInt(resultiouID[0].WebRefID),
+                        "Type": "OneOff Settlement",
+                        "StatusID": 2,
+                        "ModifyBy": parseInt(loggedUserID),
+                        "Remark": remark,
+                        "HOD": null,
+                        "ActionStep": 1,
+                        "FirstActionBy": parseInt(loggedUserID),
+                        "SecondActionBy": null,
+                        "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                        "SecondActionAt": "",
+                        "AIsLimit": "",
+                        "AIouLimit": "",
+                      }
+                      UpdateNew_API(prams);
+                      navigation.navigate('OneOffScreen', { status: 'Approved', })
 
+                    } else {
+
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
+
+                    }
+
+                  })
                 } else {
-
-                  Alert.alert('Request Approve Failed !', '', [
-                    {
-                      text: 'Ok', onPress: () => console.log("ok Pressed")
-                    },
-                  ]);
-
+                  await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Sync Failed',
+                    message: "Please Check your internet connection",
+                  });
                 }
-
-              })
-
+              });
             } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
               // iouType != 3 & approvestatues = 1  
-
-
               // Amount Eke Condition eka enna oni
               if (resultiouID[0].Amount > resultiou[0].IOULimit) {
                 // if
@@ -1051,41 +1073,50 @@ const PendingList = () => {
                     },
                   ];
 
+                  Conection_Checking(async (res: any) => {
+                    if (res != false) {
+                      Update_ONE_OF_ValidateAmount(jsonData, (result: any) => {
 
-                  Update_ONE_OF_ValidateAmount(jsonData, (result: any) => {
+                        if (result == "success") {
 
-                    if (result == "success") {
+                          const prams =
+                          {
+                            "PCRCode": parseInt(resultiouID[0].WebRefID),
+                            "Type": "OneOff Settlement",
+                            "StatusID": 5,
+                            "ModifyBy": parseInt(loggedUserID),
+                            "Remark": remark,
+                            "HOD": parseInt(resultiouID[0].HOD),
+                            "ActionStep": 1,
+                            "FirstActionBy": parseInt(loggedUserID),
+                            "SecondActionBy": null,
+                            "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                            "SecondActionAt": "",
+                            "AIsLimit": "YES",
+                            "AIouLimit": resultiou[0].IOULimit,
+                          }
+                          UpdateNew_API(prams);
+                          navigation.navigate('OneOffScreen', { status: 'Approved', })
 
-                      const prams =
-                      {
-                        "PCRCode": parseInt(resultiouID[0].WebRefID),
-                        "Type": "OneOff Settlement",
-                        "StatusID": 5,
-                        "ModifyBy": parseInt(loggedUserID),
-                        "Remark": remark,
-                        "HOD": parseInt(resultiouID[0].HOD),
-                        "ActionStep": 1,
-                        "FirstActionBy": parseInt(loggedUserID),
-                        "SecondActionBy": null,
-                        "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                        "SecondActionAt": "",
-                        "AIsLimit": "YES",
-                        "AIouLimit": resultiou[0].IOULimit,
-                      }
-                      UpdateNew_API(prams);
-                      navigation.navigate('OneOffScreen', { status: 'Approved', })
+                        } else {
 
+                          Alert.alert('Request Approve Failed !', '', [
+                            {
+                              text: 'Ok', onPress: () => console.log("ok Pressed")
+                            },
+                          ]);
+
+                        }
+
+                      })
                     } else {
-
-                      Alert.alert('Request Approve Failed !', '', [
-                        {
-                          text: 'Ok', onPress: () => console.log("ok Pressed")
-                        },
-                      ]);
-
+                      await alert({
+                        type: DropdownAlertType.Error,
+                        title: 'Sync Failed',
+                        message: "Please Check your internet connection",
+                      });
                     }
-
-                  })
+                  });
                 })
 
               } else {
@@ -1114,52 +1145,55 @@ const PendingList = () => {
                     ActionStep: 1
                   },
                 ];
+                Conection_Checking(async (res: any) => {
+                  if (res != false) {
+                    Update_ONE_OF_ValidateAmount(jsonData, (result: any) => {
 
-                Update_ONE_OF_ValidateAmount(jsonData, (result: any) => {
 
+                      if (result == "success") {
 
-                  if (result == "success") {
+                        const prams =
+                        {
+                          "PCRCode": parseInt(resultiouID[0].WebRefID),
+                          "Type": "OneOff Settlement",
+                          "StatusID": 2,
+                          "ModifyBy": parseInt(loggedUserID),
+                          "Remark": remark,
+                          "HOD": null,
+                          "ActionStep": 1,
+                          "FirstActionBy": parseInt(loggedUserID),
+                          "SecondActionBy": null,
+                          "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                          "SecondActionAt": "",
+                          "AIsLimit": "NO",
+                          "AIouLimit": resultiou[0].IOULimit,
+                        }
+                        UpdateNew_API(prams);
+                        navigation.navigate('OneOffScreen', { status: 'Approved', })
 
-                    const prams =
-                    {
-                      "PCRCode": parseInt(resultiouID[0].WebRefID),
-                      "Type": "OneOff Settlement",
-                      "StatusID": 2,
-                      "ModifyBy": parseInt(loggedUserID),
-                      "Remark": remark,
-                      "HOD": null,
-                      "ActionStep": 1,
-                      "FirstActionBy": parseInt(loggedUserID),
-                      "SecondActionBy": null,
-                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                      "SecondActionAt": "",
-                      "AIsLimit": "NO",
-                      "AIouLimit": resultiou[0].IOULimit,
-                    }
-                    UpdateNew_API(prams);
-                    navigation.navigate('OneOffScreen', { status: 'Approved', })
+                      } else {
 
+                        Alert.alert('Request Approve Failed !', '', [
+                          {
+                            text: 'Ok', onPress: () => console.log("ok Pressed")
+                          },
+                        ]);
+
+                      }
+
+                    })
                   } else {
-
-                    Alert.alert('Request Approve Failed !', '', [
-                      {
-                        text: 'Ok', onPress: () => console.log("ok Pressed")
-                      },
-                    ]);
-
+                    await alert({
+                      type: DropdownAlertType.Error,
+                      title: 'Sync Failed',
+                      message: "Please Check your internet connection",
+                    });
                   }
-
-                })
-
+                });
               }
               // UpdateFirstApprovel
-
-
-
             } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
               // iouType != 3 & approvestatues = 5 (second Action)
-
-
               //Second actionby = log wela inna user id
               //SecondAction act = aprove karana datetime eka
               ///remark 
@@ -1175,74 +1209,64 @@ const PendingList = () => {
                   ActionStep: 2
                 },
               ];
+              Conection_Checking(async (res: any) => {
+                if (res != false) {
+                  Update_ONE_OF_SecondApprovel(jsonData, (result: any) => {
 
-              Update_ONE_OF_SecondApprovel(jsonData, (result: any) => {
+                    if (result == "success") {
 
-                if (result == "success") {
+                      const prams =
+                      {
+                        "PCRCode": parseInt(resultiouID[0].WebRefID),
+                        "Type": "OneOff Settlement",
+                        "StatusID": 2,
+                        "ModifyBy": parseInt(loggedUserID),
+                        "Remark": remark,
+                        "HOD": null,
+                        "ActionStep": 2,
+                        "FirstActionBy": null,
+                        "SecondActionBy": parseInt(loggedUserID),
+                        "FirstActionAt": "",
+                        "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                        "AIsLimit": "",
+                        "AIouLimit": "",
+                      }
+                      UpdateNew_API(prams);
+                      navigation.navigate('OneOffScreen', { status: 'Approved', })
 
-                  const prams =
-                  {
-                    "PCRCode": parseInt(resultiouID[0].WebRefID),
-                    "Type": "OneOff Settlement",
-                    "StatusID": 2,
-                    "ModifyBy": parseInt(loggedUserID),
-                    "Remark": remark,
-                    "HOD": null,
-                    "ActionStep": 2,
-                    "FirstActionBy": null,
-                    "SecondActionBy": parseInt(loggedUserID),
-                    "FirstActionAt": "",
-                    "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                    "AIsLimit": "",
-                    "AIouLimit": "",
-                  }
-                  UpdateNew_API(prams);
-                  navigation.navigate('OneOffScreen', { status: 'Approved', })
+                    } else {
 
+                      Alert.alert('Request Approve Failed !', '', [
+                        {
+                          text: 'Ok', onPress: () => console.log("ok Pressed")
+                        },
+                      ]);
+
+                    }
+
+                  })
                 } else {
-
-                  Alert.alert('Request Approve Failed !', '', [
-                    {
-                      text: 'Ok', onPress: () => console.log("ok Pressed")
-                    },
-                  ]);
-
+                  await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Sync Failed',
+                    message: "Please Check your internet connection",
+                  });
                 }
-
-              })
+              });
             }
-
           })
-
-
         })
-
-
       }
-
-
-
-
     }
-
   }
-
   //------------Apply reject remark---------------
-
   const rejectRemark = (remark: any) => {
-
     setisDialog(false);
-
     for (let i = 0; i < selectedItems.length; ++i) {
       if (type === 'IOU') {
-
         getIOUDataByID(selectedItems[i], (resultiouID: any) => {
-
           if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
-
             // First Action
-
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -1254,51 +1278,55 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOU_FirstApprovel(jsonData, (resp: any) => {
+
+                  if (resp == "success") {
 
 
-            Update_IOU_FirstApprovel(jsonData, (resp: any) => {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Request",
+                      "StatusID": 3,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
 
-              if (resp == "success") {
+                    navigation.navigate('IOU', {
+                      status: 'Rejected',
+                    })
+
+                  } else {
+
+                    Alert.alert('Request Reject Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
 
 
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Request",
-                  "StatusID": 3,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-
-                navigation.navigate('IOU', {
-                  status: 'Rejected',
-                })
-
+                });
               } else {
-
-                Alert.alert('Request Reject Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-
             });
-
-
-
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
 
             // First Action
@@ -1314,54 +1342,57 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOU_FirstApprovel(jsonData, (resp: any) => {
 
-            Update_IOU_FirstApprovel(jsonData, (resp: any) => {
-
-              if (resp == "success") {
+                  if (resp == "success") {
 
 
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Request",
-                  "StatusID": 3,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Request",
+                      "StatusID": 3,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
 
-                navigation.navigate('IOU', {
-                  status: 'Rejected',
-                })
+                    navigation.navigate('IOU', {
+                      status: 'Rejected',
+                    })
 
+                  } else {
+
+                    Alert.alert('Request Reject Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+
+                });
               } else {
-
-                Alert.alert('Request Reject Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-
             });
-
-
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
-
             //Second Action
-
-
             const jsonData = [
               {
                 SecondActionBy: loggedUserID,
@@ -1373,47 +1404,55 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOU_SecondApprovel(jsonData, (resp: any) => {
 
-            Update_IOU_SecondApprovel(jsonData, (resp: any) => {
-
-              if (resp == "success") {
+                  if (resp == "success") {
 
 
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Request",
-                  "StatusID": 3,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 2,
-                  "FirstActionBy": null,
-                  "SecondActionBy": parseInt(loggedUserID),
-                  "FirstActionAt": "",
-                  "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Request",
+                      "StatusID": 3,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 2,
+                      "FirstActionBy": null,
+                      "SecondActionBy": parseInt(loggedUserID),
+                      "FirstActionAt": "",
+                      "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
 
-                navigation.navigate('IOU', {
-                  status: 'Rejected',
-                })
+                    navigation.navigate('IOU', {
+                      status: 'Rejected',
+                    })
 
+                  } else {
+
+                    Alert.alert('Request Reject Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+
+                });
               } else {
-
-                Alert.alert('Request Reject Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-
             });
-
 
 
           }
@@ -1440,42 +1479,50 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
 
-            Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
 
-              if (result == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Settlement",
+                      "StatusID": 3,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('SettlementScreen', { status: 'Rejected', })
 
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Settlement",
-                  "StatusID": 3,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('SettlementScreen', { status: 'Rejected', })
+                  } else {
 
+                    Alert.alert('Request Approve Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+                })
               } else {
-
-                Alert.alert('Request Approve Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-            })
-
+            });
 
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
             //first
@@ -1491,7 +1538,8 @@ const PendingList = () => {
 
               },
             ];
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
             Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
 
               if (result == "success") {
@@ -1518,7 +1566,14 @@ const PendingList = () => {
 
               }
             });
-
+          } else {
+            await alert({
+              type: DropdownAlertType.Error,
+              title: 'Sync Failed',
+              message: "Please Check your internet connection",
+            });
+          }
+        });
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
             //second
 
@@ -1533,7 +1588,8 @@ const PendingList = () => {
 
               },
             ];
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
             Update_IOUSettlement_SecondApprovel(jsonData, (result: any) => {
 
               if (result == "success") {
@@ -1561,7 +1617,14 @@ const PendingList = () => {
               }
 
             });
-
+          } else {
+            await alert({
+              type: DropdownAlertType.Error,
+              title: 'Sync Failed',
+              message: "Please Check your internet connection",
+            });
+          }
+        });
           }
 
         });
@@ -1587,7 +1650,8 @@ const PendingList = () => {
 
               },
             ];
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
             Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
 
               if (result == "success") {
@@ -1617,7 +1681,14 @@ const PendingList = () => {
 
               }
             });
-
+          } else {
+            await alert({
+              type: DropdownAlertType.Error,
+              title: 'Sync Failed',
+              message: "Please Check your internet connection",
+            });
+          }
+        });
 
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
             // first
@@ -1633,7 +1704,8 @@ const PendingList = () => {
 
               },
             ];
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
             Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
 
               if (result == "success") {
@@ -1663,7 +1735,14 @@ const PendingList = () => {
 
               }
             });
-
+          } else {
+            await alert({
+              type: DropdownAlertType.Error,
+              title: 'Sync Failed',
+              message: "Please Check your internet connection",
+            });
+          }
+        });
 
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
             //second
@@ -1679,7 +1758,8 @@ const PendingList = () => {
 
               },
             ];
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
             Update_ONE_OF_SecondApprovel(jsonData, (result: any) => {
 
               if (result == "success") {
@@ -1708,7 +1788,14 @@ const PendingList = () => {
 
               }
             });
-
+          } else {
+            await alert({
+              type: DropdownAlertType.Error,
+              title: 'Sync Failed',
+              message: "Please Check your internet connection",
+            });
+          }
+        });
 
 
           }
@@ -1725,19 +1812,12 @@ const PendingList = () => {
   //------------Apply cancel remark---------------
 
   const cancelRemark = (remark: any) => {
-
     setisDialog(false);
-
     for (let i = 0; i < selectedItems.length; ++i) {
       if (type === 'IOU') {
-
         getIOUDataByID(selectedItems[i], (resultiouID: any) => {
-
           if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
-
             // First Action
-
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -1746,58 +1826,50 @@ const PendingList = () => {
                 Approve_Status: 4,
                 IOU_ID: selectedItems[i],
                 ActionStep: 1
-
               },
             ];
-
-
-            Update_IOU_FirstApprovel(jsonData, (resp: any) => {
-
-              if (resp == "success") {
-
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Request",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-
-                navigation.navigate('IOU', {
-                  status: 'Rejected',
-                })
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOU_FirstApprovel(jsonData, (resp: any) => {
+                  if (resp == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Request",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('IOU', {
+                      status: 'Rejected',
+                    })
+                  } else {
+                    Alert.alert('Request Cancel Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+                  }
+                });
               } else {
-
-                Alert.alert('Request Cancel Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-
             });
-
-
-
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
-
             // First Action
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -1806,57 +1878,50 @@ const PendingList = () => {
                 Approve_Status: 4,
                 IOU_ID: selectedItems[i],
                 ActionStep: 1
-
               },
             ];
-
-            Update_IOU_FirstApprovel(jsonData, (resp: any) => {
-
-              if (resp == "success") {
-
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Request",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-
-                navigation.navigate('IOU', {
-                  status: 'Rejected',
-                })
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOU_FirstApprovel(jsonData, (resp: any) => {
+                  if (resp == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Request",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('IOU', {
+                      status: 'Rejected',
+                    })
+                  } else {
+                    Alert.alert('Request Cancel Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+                  }
+                });
               } else {
-
-                Alert.alert('Request Cancel Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-
             });
-
-
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
-
             //Second Action
-
-
             const jsonData = [
               {
                 SecondActionBy: loggedUserID,
@@ -1865,69 +1930,56 @@ const PendingList = () => {
                 Approve_Status: 4,
                 IOU_ID: selectedItems[i],
                 ActionStep: 2
-
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOU_SecondApprovel(jsonData, (resp: any) => {
+                  if (resp == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Request",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 2,
+                      "FirstActionBy": null,
+                      "SecondActionBy": parseInt(loggedUserID),
+                      "FirstActionAt": "",
+                      "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
 
-            Update_IOU_SecondApprovel(jsonData, (resp: any) => {
+                    navigation.navigate('IOU', {
+                      status: 'Rejected',
+                    })
 
-              if (resp == "success") {
-
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Request",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 2,
-                  "FirstActionBy": null,
-                  "SecondActionBy": parseInt(loggedUserID),
-                  "FirstActionAt": "",
-                  "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-
-                navigation.navigate('IOU', {
-                  status: 'Rejected',
-                })
-
+                  } else {
+                    Alert.alert('Request Cancel Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+                  }
+                });
               } else {
-
-                Alert.alert('Request Cancel Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-
             });
-
-
-
           }
-
-
-
-
-
         });
-
-
       } else if (type === 'IOU Settlement') {
-
-
         getIOUSettlement_Data(selectedItems[i], (resultiouID: any) => {
-
           if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
             //first
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -1939,42 +1991,50 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
 
-            Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
 
-              if (result == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Settlement",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('SettlementScreen', { status: 'Rejected', })
 
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Settlement",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('SettlementScreen', { status: 'Rejected', })
+                  } else {
 
+                    Alert.alert('Request Cancel Failed !', '', [
+                      {
+                        text: 'Ok', onPress: () => console.log("ok Pressed")
+                      },
+                    ]);
+
+                  }
+
+                })
               } else {
-
-                Alert.alert('Request Cancel Failed !', '', [
-                  {
-                    text: 'Ok', onPress: () => console.log("ok Pressed")
-                  },
-                ]);
-
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
-            })
-
+            });
 
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
             //first
@@ -1990,34 +2050,40 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
 
-            Update_IOUSettlement_FirstApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
 
-              if (result == "success") {
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Settlement",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('SettlementScreen', { status: 'Rejected', })
-
-
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Settlement",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('SettlementScreen', { status: 'Rejected', })
+                  }
+                });
+              } else {
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
             });
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
             //second
 
@@ -2032,49 +2098,48 @@ const PendingList = () => {
 
               },
             ];
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_IOUSettlement_SecondApprovel(jsonData, (result: any) => {
 
-            Update_IOUSettlement_SecondApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
 
-              if (result == "success") {
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "IOU Settlement",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 2,
-                  "FirstActionBy": null,
-                  "SecondActionBy": parseInt(loggedUserID),
-                  "FirstActionAt": "",
-                  "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('SettlementScreen', { status: 'Rejected', })
-
-
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "IOU Settlement",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 2,
+                      "FirstActionBy": null,
+                      "SecondActionBy": parseInt(loggedUserID),
+                      "FirstActionAt": "",
+                      "SecondActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('SettlementScreen', { status: 'Rejected', })
+                  }
+                });
+              } else {
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
-
             });
-
           }
-
         });
 
 
       } else if (type === 'One-Off Settlement') {
-
-
         getOneOffReAllData(selectedItems[i], (resultiouID: any) => {
-
           if (resultiouID[0].IOU_Type == 3 && resultiouID[0].Approve_Status == 5) {
             //first
-
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -2083,44 +2148,44 @@ const PendingList = () => {
                 Approve_Status: 4,
                 IOU_ID: selectedItems[i],
                 ActionStep: 1
-
               },
             ];
-
-            Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
-
-              if (result == "success") {
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "OneOff Settlement",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('OneOffScreen', {
-                  status: 'Rejected',
-                })
-
-
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "OneOff Settlement",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('OneOffScreen', {
+                      status: 'Rejected',
+                    })
+                  }
+                });
+              } else {
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
             });
-
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 1) {
             // first
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -2129,44 +2194,44 @@ const PendingList = () => {
                 Approve_Status: 4,
                 IOU_ID: selectedItems[i],
                 ActionStep: 1
-
               },
             ];
-
-            Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
-
-              if (result == "success") {
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "OneOff Settlement",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('OneOffScreen', {
-                  status: 'Rejected',
-                })
-
-
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_ONE_OF_FirstApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "OneOff Settlement",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('OneOffScreen', {
+                      status: 'Rejected',
+                    })
+                  }
+                });
+              } else {
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
             });
-
-
           } else if (resultiouID[0].IOU_Type != 3 && resultiouID[0].Approve_Status == 5) {
             //second
-
             const jsonData = [
               {
                 FirstActionBy: loggedUserID,
@@ -2175,160 +2240,100 @@ const PendingList = () => {
                 Approve_Status: 4,
                 IOU_ID: selectedItems[i],
                 ActionStep: 1
-
               },
             ];
-
-            Update_ONE_OF_SecondApprovel(jsonData, (result: any) => {
-
-              if (result == "success") {
-
-                const prams =
-                {
-                  "PCRCode": parseInt(resultiouID[0].WebRefID),
-                  "Type": "OneOff Settlement",
-                  "StatusID": 4,
-                  "ModifyBy": parseInt(loggedUserID),
-                  "Remark": remark,
-                  "HOD": null,
-                  "ActionStep": 1,
-                  "FirstActionBy": parseInt(loggedUserID),
-                  "SecondActionBy": null,
-                  "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
-                  "SecondActionAt": "",
-                  "AIsLimit": "",
-                  "AIouLimit": "",
-                }
-                UpdateNew_API(prams);
-                navigation.navigate('OneOffScreen', {
-                  status: 'Rejected',
-                })
-
-
+            Conection_Checking(async (res: any) => {
+              if (res != false) {
+                Update_ONE_OF_SecondApprovel(jsonData, (result: any) => {
+                  if (result == "success") {
+                    const prams =
+                    {
+                      "PCRCode": parseInt(resultiouID[0].WebRefID),
+                      "Type": "OneOff Settlement",
+                      "StatusID": 4,
+                      "ModifyBy": parseInt(loggedUserID),
+                      "Remark": remark,
+                      "HOD": null,
+                      "ActionStep": 1,
+                      "FirstActionBy": parseInt(loggedUserID),
+                      "SecondActionBy": null,
+                      "FirstActionAt": moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss'),
+                      "SecondActionAt": "",
+                      "AIsLimit": "",
+                      "AIouLimit": "",
+                    }
+                    UpdateNew_API(prams);
+                    navigation.navigate('OneOffScreen', {
+                      status: 'Rejected',
+                    })
+                  }
+                });
+              } else {
+                await alert({
+                  type: DropdownAlertType.Error,
+                  title: 'Sync Failed',
+                  message: "Please Check your internet connection",
+                });
               }
             });
-
-
-
           }
-
         });
-
       }
-
-
     }
-    // slideOutModal();
-    // navigation.navigate('IOU', {
-    //   status: 'Cancelled',
-    // })
-    // //console.log(remark);
-    // Alert.alert("Cancel Request");
   }
-
-
-
-
   const getPendingList = (type: any) => {
-
     setPendingList([]);
     setloandingspinner(true);
-console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
-
-
     if (type === 'IOU') {
-
       console.log("role id --- ", UserRoleID);
-
       if (UserRoleID == '5') {
-
         console.log(" HOD LOgged ");
-
-
         getPendingHODApprovalIOUList((res: any) => {
-          console.log(res,"================================================");
-          
           setPendingList(res);
           setloandingspinner(false);
         })
-
-
       } else {
-
         if (UserRoleID == '3' || UserRoleID == '4') {
           //Job owner or transport officer
-
           console.log(" Job owner or transport officer ");
-
-
           getPendingIOUList(UserRoleID, (result: any) => {
             setPendingList(result);
-
             setloandingspinner(false);
             // console.log(result)
           });
-
         } else {
           //Requester
-
-          console.log(" Requester ");
-
-
           getAllPendingIOUList((result: any) => {
             setPendingList(result);
-
             setloandingspinner(false);
             // console.log(result)
           });
-
         }
-
       }
-
-
-
     } else if (type === 'IOU Settlement') {
       if (UserRoleID == '5') {
-
         // console.log("roll 5--------");
         getHODPendingIOUSetList((res: any) => {
-
-
           setPendingList(res);
           setloandingspinner(false);
-
           //console.log("roll 5--------", res[0].Amount)
         })
-
       } else {
-
         if (UserRoleID == '3' || UserRoleID == '4') {
           //Job owner or transport officer
-
           getPendingIOUSetList(UserRoleID, (resp: any) => {
-
             setPendingList(resp);
             setloandingspinner(false);
           });
-
         } else {
           //Requester
-
           getAllPendingIOUSetList((resp: any) => {
-
             setPendingList(resp);
             setloandingspinner(false);
           });
-
         }
-
-
       }
-
-
-
     } else if (type === 'One-Off Settlement') {
-
       if (UserRoleID == '5') {
         //HOD
         // console.log("roll 5--------");
@@ -2336,35 +2341,21 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
           setPendingList(res);
           setloandingspinner(false);
         })
-
       } else {
-
         if (UserRoleID == '3' || UserRoleID == '4') {
           //Job owner or transport officer
-
           getPendingOneOffSetList(UserRoleID, (res: any) => {
             setPendingList(res);
             setloandingspinner(false);
           });
-
         } else {
-
           getAllPendingOneOffSetList((res: any) => {
             setPendingList(res);
             setloandingspinner(false);
           });
-
-
         }
-
-
-
       }
-
-
     }
-
-
   }
 
   //------Filter by Type---------------
@@ -2398,10 +2389,6 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 
     setloandingspinner(true);
     if (type === 'IOU') {
-
-
-      console.log(" range first date ----------------", fdate);
-
       getDateFilterIOUList(fdate, ldate, (result: any) => {
         setPendingList(result);
 
@@ -2425,146 +2412,37 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
         // console.log(result);
       })
     }
-
-
-
   }
 
   const NoRemark = async () => {
     if (type === 'IOU') {
-
       setTxtRemark('');
-
       slideOutModal();
-      // console.log('No Remark');
-
-      // await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, type);
-      // navigation.navigate('PendingList');
     }
 
   }
 
-
-  //-------use Effect------------------
-  useFocusEffect(
-    React.useCallback(() => {
-
-
-      getLoginUserRoll().then(res1 => {
-        setRoll(res1 + "");
-        UserRoleID = res1;
-        console.log("User Role: ", res1);
-      })
-
-      get_ASYNC_JOBOWNER_APPROVAL_AMOUNT().then(resp => {
-        setMaxAmount(parseFloat(resp + ""));
-        // console.log("Maximum Amount: ", resp);
-      })
-
-      getLoginUserID().then(result => {
-        setUid(result + "");
-        loggedUserID = result;
-        // console.log("User ID: ", result);
-
-        Conection_Checking(async (res: any) => {
-          if (res != false) {
-            getIOURequests();
-          }
-        })
-
-
-
-      })
-
-      getCurrentPendingListType().then(res => {
-
-        // console.log(" more info  ........  ", res);
-
-        if (res == 'IOU') {
-
-          // console.log(" IOU tab [][][] ");
-
-
-          setType('IOU');
-          getPendingList('IOU');
-
-        } else if (res == 'SETTLEMENT') {
-
-          // console.log(" SETT tab [][][] ");
-
-          setType('IOU Settlement');
-          getPendingList('IOU Settlement');
-
-        } else if (res == 'ONEOFF') {
-
-          // console.log(" ONE OFF tab [][][] ");
-
-          setType('One-Off Settlement');
-          getPendingList('One-Off Settlement');
-
-        } else if (res == 'all') {
-
-          // console.log(" IOU tab 2 [][][] ");
-
-          setType('IOU');
-          getPendingList('IOU');
-        }
-
-
-      })
-
-
-
-
-      setSelectedItems([]);
-      // approveRemark(remarks);
-
-      Conection_Checking((resp: any) => {
-        setIsInternetAvailable(resp);
-      });
-
-    }, [navigation])
-
-
-  );
-
-
   const getIOURequests = async () => {
-
     const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=' + DB_LIVE + '&emp=' + loggedUserID;
-
     console.log(" url ----  ", URL);
-
-
     await axios.get(URL, { headers })
       .then(response => {
-
         if (response.status === 200) {
-
           //console.log(response.data.header,'=====================');
-
           if (response.data.header.length > 0) {
-
             saveIOU(response.data.header, 1, (resp: any) => {
-
               // console.log("save IOU ------------>>>>>  ", resp);
               if (resp == 1) {
               } else if (resp == 2) {
               } else if (resp == 3) {
               }
-
             });
-
-
           } else {
 
           }
-
         } else {
 
         }
-
-
       })
       .catch((error) => {
 
@@ -2579,54 +2457,27 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 
     var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  UPDATE STATUS  ++++++++++++++++";
 
-    logger(loggerDate, "   *******   " );
-
-
-
+    logger(loggerDate, "   *******   ");
     try {
-
       saveJsonObject_To_Loog(prams);
-
-
       console.log("APPROVE JSON UPLOAD [][][][][]    ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
-
       // await axios.get(URL, { headers })
       axios.put(URL, prams, {
         headers: headers
       }).then((response) => {
         // console.log("[s][t][a][t][u][s][]", response);
-
         logger(" UPDATE STATUS Response Status ", response.status + "");
-
         saveJsonObject_To_Loog(response.data);
-
-
         if (response.status == 200) {
-         
-
           // updateSyncStatus(IOUNo, (result: any) => {
 
           // });
-
-          // console.log("success ======= ", response.status);
-
-          if(response.data.ErrorId == 0){
+          if (response.data.ErrorId == 0) {
             console.log("success ===222==== ", response.data);
             //update sync status 
-            // navigation.navigate('IOU', { status: 'Approved', })
-
-            
-
           }
-
-
-          
-
-
         } else {
-
           console.log(" response code ======= ", response.status);
-
         }
       }).catch((error) => {
 
@@ -2650,12 +2501,8 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
   }
   //--------Update status and remark--------------
   const UpdateRequest = async (ID: any, Rtype: any, status: any, remark: string) => {
-
     // console.log(" status ====  " , status);
-
-
     const URL = BASE_URL + '/Mob_UpdateStatus.xsjs?dbName=' + DB_LIVE;
-
     const prams =
     {
       "PCRCode": ID,
@@ -2664,72 +2511,93 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
       "ModifyBy": loggedUserID,
       "Remark": remark,
     }
-
     try {
-
       console.log("Reject JSON UPLOAD ====  ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
-
       // await axios.get(URL, { headers })
       axios.put(URL, prams, {
         headers: headers
       }).then((response) => {
         // console.log("[s][t][a][t][u][s][]", response.status);
         if (response.status == 200) {
-
           // updateSyncStatus(IOUNo, (result: any) => {
-
           // });
-
           // console.log("success ======= ", response.status);
-
-
           console.log("success ===222==== ", response.data);
-
-
         } else {
-
           console.log(" response code ======= ", response.status);
-
         }
       }).catch((error) => {
-
         console.log("error .....   ", error);
-
       });
-
-
     } catch (error) {
       console.log(error);
-
     }
-
-
-
   }
-
   const selectDateRange = () => {
-
     setRange('');
     slideInModal();
-
-
   }
+  //-------use Effect------------------
+  useFocusEffect(
+    React.useCallback(() => {
+      getLoginUserRoll().then(res1 => {
+        setRoll(res1 + "");
+        UserRoleID = res1;
+        console.log("User Role: ", res1);
+      })
+      get_ASYNC_JOBOWNER_APPROVAL_AMOUNT().then(resp => {
+        setMaxAmount(parseFloat(resp + ""));
+        // console.log("Maximum Amount: ", resp);
+      })
+      getLoginUserID().then(result => {
+        setUid(result + "");
+        loggedUserID = result;
+        // console.log("User ID: ", result);
+        Conection_Checking(async (res: any) => {
+          if (res != false) {
+            getIOURequests();
+          }
+        })
+      })
+      getCurrentPendingListType().then(res => {
+        if (res == 'IOU') {
+          setType('IOU');
+          getPendingList('IOU');
+        } else if (res == 'SETTLEMENT') {
+          setType('IOU Settlement');
+          getPendingList('IOU Settlement');
+        } else if (res == 'ONEOFF') {
+          setType('One-Off Settlement');
+          getPendingList('One-Off Settlement');
+        } else if (res == 'all') {
+          setType('IOU');
+          getPendingList('IOU');
+        }
+      })
+      setSelectedItems([]);
+      // approveRemark(remarks);
 
+      Conection_Checking((resp: any) => {
+        setIsInternetAvailable(resp);
+      });
+
+    }, [navigation])
+
+
+  );
 
 
   return (
     <SafeAreaView style={ComponentsStyles.CONTAINER}>
       <View style={styles.screen}>
-
         <Header title="Pending Requests" isBtn={true} btnOnPress={() => navigation.navigate('Home')} />
-
+        <DropdownAlert alert={func => (alert = func)} alertPosition="top" />
         <View style={{ flexDirection: 'row', marginTop: 8, marginBottom: 8, marginLeft: 15, marginRight: 15 }}>
           <View style={{ flex: 1 }} />
           {/* <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.BOLD, color: ComponentsStyles.COLORS.HEADER_BLACK, fontSize: 16,marginRight:15 }}>Filter</Text> */}
           <TouchableOpacity onPress={() => selectDateRange()}>
             <IconA name='calendar' size={20} color={ComponentsStyles.COLORS.BLACK} />
           </TouchableOpacity>
-
         </View>
         <View style={styles.listTab}>
           {
@@ -2745,9 +2613,7 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
               </TouchableOpacity>
             ))
           }
-
         </View>
-
         <Spinner
           visible={loandingspinner}
           textContent={'Loading...'}
@@ -2757,8 +2623,6 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
             fontSize: 15
           }}
         />
-
-
         <FlatList
           showsHorizontalScrollIndicator={false}
           data={pendingList}
@@ -2767,7 +2631,6 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
           renderItem={({ item }) => {
             return (
               <View>
-
                 <RequestList
                   first_name={item.employee}
                   // last_name={item.last_name}
@@ -2795,71 +2658,47 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
                   // isCheckBoxVisible={true}
                   RequestID={item.ID}
                 />
-
-
-
-              </View> 
+              </View>
             )
           }
-
           }
           keyExtractor={item => `${item.Id}`}
         />
-
         <View style={{ marginBottom: 10 }} />
-
         {
           UserRoleID == '1' ?
-
             <></>
-
             :
-
             <View>
-
               <View style={{ marginLeft: 10, marginRight: 10, marginTop: 10, marginBottom: 5 }}>
-
                 <ActionButton
                   title="Approve Request"
                   onPress={() => approve()}
                   style={{ flexDirection: 'row', justifyContent: "center" }}
                 //disabled={roll=='Requester' ? true : false}
                 />
-
               </View>
-
-
               <View style={{ flexDirection: "row", marginLeft: 5, marginRight: 5 }}>
-
-
                 <ActionButton
                   title="Reject Request"
                   onPress={() => reject()}
                   styletouchable={{ width: '48%', marginLeft: 5 }}
-                  style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: "#FF3055" }}
+                  style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: ComponentsStyles.COLORS.RED_COLOR }}
                 //disabled={roll=='Requester' ? true : false}
                 />
-
                 <ActionButton
                   title="Cancel Request"
                   styletouchable={{ width: '48%', marginLeft: 5 }}
                   onPress={() => cancel()}
                   //styletouchable={{ marginLeft: 5, width: '100%' }}
-                  style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: ComponentsStyles.COLORS.BROWN }}
+                  style={{ flexDirection: 'row', justifyContent: "center", backgroundColor: ComponentsStyles.COLORS.SUB_COLOR }}
                 //disabled={roll=='Requester' ? true : false}
                 />
-
               </View>
-
-
-
-              <View style={{ marginBottom: 40 }} />
+              <View style={{ marginBottom: 68 }} />
             </View>
-
         }
       </View>
-
-
       <Animated.View
         style={{
           ...StyleSheet.absoluteFillObject,
@@ -2953,38 +2792,24 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
         <View style={{ padding: 100 }} />
 
       </Animated.View>
-
-
       <Dialog
         visible={isDialog}
         onDismiss={() => closeDialog()}
       >
-
         {
           isApprove ?
             <Dialog.Title style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD }}>Please Enter Approve Remark</Dialog.Title>
             :
-
             <>
               {
                 isReject ?
-
                   <Dialog.Title style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD }}>Please Enter Reject Remark</Dialog.Title>
-
-
                   :
-
                   <Dialog.Title style={{ color: ComponentsStyles.COLORS.BLACK, fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD }}>Please Enter Cancel Remark</Dialog.Title>
-
-
               }
-
             </>
-
         }
-
         <Dialog.Content style={{ alignContent: "center", alignItems: "center" }}>
-
           <InputText
             style={{ paddingLeft: 10, }}
             placeholder="Enter Remark Here"
@@ -2994,22 +2819,17 @@ console.log(type+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
             multiline={true}
             max={200}
           />
-
           <ActionButton
             title={isApprove ? "Approve" : isReject ? "Reject" : "Yes"}
             onPress={() => isApprove ? ApproveAlert() : isReject ? RejectAlert() : CancelAlert()} />
-
           <View style={{ padding: 10 }} />
-
           <ActionButton
             title="Cancel"
             onPress={() => closeDialog()}
             style={{ backgroundColor: ComponentsStyles.COLORS.RED_COLOR }}
           />
           <View style={{ padding: 5 }} />
-
         </Dialog.Content>
-
       </Dialog>
 
     </SafeAreaView>
@@ -3046,7 +2866,7 @@ const styles = StyleSheet.create({
 
   },
   filter: {
-    color: ComponentsStyles.COLORS.ICON_BLUE,
+    color: ComponentsStyles.COLORS.MAIN_COLOR,
     fontSize: 16,
     fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
     padding: 17,
@@ -3077,7 +2897,7 @@ const styles = StyleSheet.create({
   },
   btnTabActive: {
     alignItems: "center",
-    backgroundColor: ComponentsStyles.COLORS.ICON_BLUE
+    backgroundColor: ComponentsStyles.COLORS.MAIN_COLOR
   },
   textTabActive: {
     alignItems: "center",

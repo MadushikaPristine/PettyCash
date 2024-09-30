@@ -56,6 +56,9 @@ import ComponentsStyles from "../../Constant/Components.styles";
 import { getAccNoByExpenseType, getAccNoForJobNo, getGLAccNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 import { Conection_Checking } from "../../Constant/InternetConection_Checking";
 import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
+import DetailsBox from "../../Components/DetailsBox";
+import { Dialog, FAB } from "react-native-paper";
+import DropdownAlert, { DropdownAlertData, DropdownAlertType } from "react-native-dropdownalert";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -82,7 +85,7 @@ let loggedUserID: any;
 let epfNo: any;
 
 // IstoEdit status =========  1 - only edit / 0 - edit and delete
-
+let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 const NewIOUSettlement = () => {
 
     var currentDate1 = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss')
@@ -186,15 +189,17 @@ const NewIOUSettlement = () => {
     //Approval 
     const [IOULimit, setIOULimit] = useState(0.0);
     const [HODId, setHODID] = useState('');
-
+    //Dialog Box
+    const [isDialog, setIsDialog] = useState(false);
+    const [isSubmitDialog, setIsSubmitDialog] = useState(false);
 
     const options = {
         saveToPhotos: true,
         mediaType: 'photo',
         quality: 0.5,
         includeBase64: true,
-        maxWidth:400,
-        maxHeight:300,
+        maxWidth: 400,
+        maxHeight: 300,
     };
 
     var typeID = 0;
@@ -221,89 +226,89 @@ const NewIOUSettlement = () => {
             console.log(" ios camera open -----   ");
 
             const result = await launchCamera(options);
-    
-    
-                try {
-                    let atchNo = Date.now();
-                    console.log("attno", atchNo);
-    
-                    newFilePath = `${newFolderPath}/${atchNo}.jpg`;
-    
-                    imageURI = Platform.OS === 'ios'
-                        ? `file://${newFilePath}`
-                        : `file:///android_asset/${newFilePath}`;
-    
-    
-                    await RNFS.mkdir(newFolderPath);
-                    await RNFS.moveFile(result.assets[0].uri, newFilePath);
-                    // console.log('Picture saved successfully.');
-                    // console.log(newFilePath);
-    
-                } catch (error) {
-                    console.log(error);
-                }
-    
-    
-                const newCaptureImages = [...cameraPhoto, imageURI];
-                setCameraPhoto(newCaptureImages);
-                // console.log("Cache URI: ", result.assets[0].uri);
-    
-                // console.log("NEW Image URI: ", imageURI)
-    
-                const fileData = await RNFS.readFile(imageURI, 'base64');
-    
-                // console.log(fileData);
-    
-                attachmentSave();
-            
 
-        }else{
+
+            try {
+                let atchNo = Date.now();
+                console.log("attno", atchNo);
+
+                newFilePath = `${newFolderPath}/${atchNo}.jpg`;
+
+                imageURI = Platform.OS === 'ios'
+                    ? `file://${newFilePath}`
+                    : `file:///android_asset/${newFilePath}`;
+
+
+                await RNFS.mkdir(newFolderPath);
+                await RNFS.moveFile(result.assets[0].uri, newFilePath);
+                // console.log('Picture saved successfully.');
+                // console.log(newFilePath);
+
+            } catch (error) {
+                console.log(error);
+            }
+
+
+            const newCaptureImages = [...cameraPhoto, imageURI];
+            setCameraPhoto(newCaptureImages);
+            // console.log("Cache URI: ", result.assets[0].uri);
+
+            // console.log("NEW Image URI: ", imageURI)
+
+            const fileData = await RNFS.readFile(imageURI, 'base64');
+
+            // console.log(fileData);
+
+            attachmentSave();
+
+
+        } else {
 
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.CAMERA,
             );
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 const result = await launchCamera(options);
-    
+
                 try {
-    
+
                     let atchNo = Date.now();
                     console.log("attno", atchNo);
-    
+
                     newFilePath = `${newFolderPath}/${atchNo}.jpg`;
-    
+
                     imageURI = Platform.OS === 'android'
                         ? `file://${newFilePath}`
                         : `file:///android_asset/${newFilePath}`;
-    
+
                     await RNFS.mkdir(newFolderPath);
                     await RNFS.moveFile(result.assets[0].uri, newFilePath);
                     // console.log('Picture saved successfully.');
                     // console.log(newFilePath);
-    
+
                 } catch (error) {
                     // console.log(error);
                 }
-    
-    
+
+
                 const newCaptureImages = [...cameraPhoto, imageURI];
                 setCameraPhoto(newCaptureImages);
                 // console.log("Cache URI: ", result.assets[0].uri);
-    
+
                 // console.log("NEW Image URI: ", imageURI)
-    
+
                 const fileData = await RNFS.readFile(imageURI, 'base64');
-    
+
                 // console.log(fileData);
-    
+
                 attachmentSave();
             }
 
         }
-            
 
 
-        
+
+
     }
 
 
@@ -426,7 +431,7 @@ const NewIOUSettlement = () => {
         }).start();
     };
 
-    const submit = () => {
+    const submit = async () => {
 
         let loginError = { field: '', message: '' }
 
@@ -467,36 +472,25 @@ const NewIOUSettlement = () => {
             loginError.message = 'Please select IOU to procced'
             setError(loginError);
         } else if (cameraPhoto.length == 0) {
-            Alert.alert("Please Add Attachments");
+            await alert({
+                type: DropdownAlertType.Error,
+                title: 'No Attachments Available',
+                message: "Please Add Attachments.",
+            });
         }
         else {
             if (amount == 0.0) {
-
-
-                Alert.alert("Please Add Details");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Please Add Job',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
-
+                await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'No Details',
+                    message: "Please Add Details.",
+                });
             } else {
-
                 setError({ field: '', message: '' });
-                setIsSubmit(true);
-                slideInModal();
-
+                setIsSubmitDialog(true);
             }
         }
     }
-
     const getAllIOUTypes = () => {
 
         setIOUTypeList([]);
@@ -510,95 +504,49 @@ const NewIOUSettlement = () => {
     }
 
     const getJJobOwnerTransportHOD = (ID: any, type: any) => {
-
         // type = 1 - job owner / 2 - transport officer / 3 - hod
-
         if (type == 1) {
             //get job owners
-
             // console.log(" Owner ID ==  ", ID);
-
-
             getJobOWnerDetails(ID, (res: any) => {
-
                 // console.log(" response === ", res);
-
                 setSelectJobOwner(res[0].Name);
                 setJobOwner(res[0].ID);
-
                 setIOULimit(parseFloat(res[0].IOULimit));
-
-                getJobNoByJobOwner(res[0].EPFNo+"");
-
+                getJobNoByJobOwner(res[0].EPFNo + "");
             });
-
-
-
         } else if (type == 2) {
             //get transport officer
-
-
             getTransportOfficerDetails(ID, (resp: any) => {
                 setSelectJobOwner(resp[0].Name);
                 setJobOwner(resp[0].ID);
                 setIOULimit(parseFloat(resp[0].IOULimit));
             });
-
-
         } else {
-
             //get hod
-
             // console.log(" HOD ID ===  " ,  ID);
-            
-
             getHODDetails(ID, (rest: any) => {
-
                 setSelectJobOwner(rest[0].Name);
                 setJobOwner(rest[0].ID);
-
             });
-
-
-
         }
-
-
     }
-
-
     const editJobs = (jobNo: any) => {
-
         clearJobDetails();
-
         // console.log(" expense ty[e ============  ", expenseTypeID);
-
-
         setIsEdit(true);
         setIsAmount(true);
-
         setsaveTitle("Update");
-
         setIsSubmit(false);
         setIsOpen(false);
-
         console.log(" selected job  ", jobNo);
-
         getJobDetailsById(jobNo, (res: any) => {
-
             console.log(" job details ----- [][][][]   ", res[0]);
-
-
             IOUJobData.push(res[0]);
-
             typeID = res[0].IOU_TYPEID;
-
             setId(res[0]._Id);
             checkIOUJobData(typeID, res);
-
-
             if (typeID == 1) {
-
                 setIsJobOrVehicle(true);
                 setIouTypeJob("Job No");
                 setSearchtxt("Select Job");
@@ -739,155 +687,75 @@ const NewIOUSettlement = () => {
     }
 
     const addjob = () => {
-
-        // if (isEdit) {
-
-        //     //Update IOU Job
-
-        //     console.log(" Update Job .... ");
-
-
-
-        // } else {
-
         // Add new sett JOB
-
         setsaveTitle("Add");
         generateJobNo();
         getVehicleNo();
-
         getExpenseTypeAll((res: any) => {
             setExpenseTypeList(res);
         });
-
         let loginError = { field: '', message: '' }
-
-        // if (IOUTypeID === '') {
-
-        //     loginError.field = 'IOUTypeID';
-        //     loginError.message = 'Please select IOU Type to Add Job'
-        //     setError(loginError);
-
-        // } else {
-
         if (IOUTypeID == "1") {
-
             setIsJobOrVehicle(true);
             setIouTypeJob("Job No");
             setSearchtxt("Select Job");
-
         } else if (IOUTypeID == "2") {
-
             setIsJobOrVehicle(true);
             setIouTypeJob("Vehicle No");
             setSearchtxt("Search Vehicle");
-
         } else {
-
             setIsJobOrVehicle(false);
-
         }
-
         setIsSubmit(false);
         setIsOpen(false);
         slideInModal();
-
-
-
-        //}
-
-
-
-        // }
-
-
     }
 
     const getLastId = () => {
-
         try {
-
             getLastIOUSettlemnt((result: any) => {
-
                 // console.log("... last ID length ...... ", result.length);
-
-
                 if (result.length == 0) {
-
                     setLastID("0");
                     generateIOUNo(0);
-
                 } else {
-
                     setLastID(result[0]._Id);
                     generateIOUNo(result[0]._Id)
                 }
-
-
             });
-
         } catch (error) {
-            // console.log(" error ..... ", error);
-
         }
-
-
-
     }
 
     const generateIOUNo = (ID: any) => {
-
         ClearData();
-
         let newID = parseInt(ID) + 1;
         let randomNum = Math.floor(Math.random() * 1000) + 1;
-
         setIOUSettlementNo("IOUSET_" + randomNum + "_" + newID + "_M");
-
         IOUSETNo = "IOUSET_" + randomNum + "_" + newID + "_M";
-
-        // console.log("AutoGenerated No: ", IOUSETNo);
-
     }
 
     const getSpinnerData = () => {
-
         // console.log("  ----   job array size --------  ", jobArray.length);
-
         setIOUList([]);
-
-
-
         //IOU
         getIOU((result1: any) => {
             setIOUList(result1);
         });
-
     }
-
     const saveSubmit = () => {
-
         let IOUSettlementData: any;
         let HODID: any;
         let IsLimit: any;
-
-
         getLoggedUserHOD((res: any) => {
             console.log(" hod ===  ", res);
-
             setHODID(res[0].ID);
             HODID = res[0].ID;
-
             getSettlementJobAmount(IOUSettlementNo, (res1: any) => {
-
                 amount = parseFloat(res1[0].totAmount);
-
                 if (IOUTypeID === '3') {
-
                     IsLimit = "";
-
                     // console.log(" hod other ---  ", res[0].ID);
-
                     IOUSettlementData = [
                         {
                             PCRCode: IOUSettlementNo,
@@ -913,68 +781,43 @@ const NewIOUSettlement = () => {
                             SecondActionBy: '',
                             SecondActionAt: '',
                             ID: 0
-
-
                         }
                     ]
-
-
-                    saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
-                        // console.log(" save iou .................... ", response);
-
-                        if (response == 3) {
-
-                            getDetailsData(parseInt(res[0].ID), IsLimit);
-
-                            slideOutModal();
-                            Alert.alert("Successfully Submitted!");
-                            // SweetAlert.showAlertWithOptions({
-                            //     title: 'Successfully Submitted!',
-                            //     subTitle: '',
-                            //     confirmButtonTitle: 'OK',
-                            //     confirmButtonColor: '#000',
-                            //     otherButtonTitle: 'Cancel',
-                            //     otherButtonColor: '#dedede',
-                            //     style: 'success',
-                            //     cancellable: true
-                            // },
-                            //     //callback => console.log('callback')
-                            // );
-
-
-                            await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                            navigation.navigate('PendingList');
-
+                    Conection_Checking(async (res: any) => {
+                        if (res != false) {
+                            saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
+                                // console.log(" save iou .................... ", response);
+                                if (response == 3) {
+                                    getDetailsData(parseInt(res[0].ID), IsLimit);
+                                    closeSubmitDialog();
+                                    await alert({
+                                        type: DropdownAlertType.Success,
+                                        title: 'Success',
+                                        message: "Successfully Submitted!.",
+                                    });
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                                    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+                                    navigation.navigate('PendingList');
+                                } else {
+                                    await alert({
+                                        type: DropdownAlertType.Error,
+                                        title: 'Failed',
+                                        message: "IOU Request Failed!",
+                                    });
+                                }
+                            });
                         } else {
-                            Alert.alert("IOU Request Failed!")
-                            // SweetAlert.showAlertWithOptions({
-                            //     title: 'IOU Request Failed!',
-                            //     subTitle: '',
-                            //     confirmButtonTitle: 'OK',
-                            //     confirmButtonColor: '#000',
-                            //     otherButtonTitle: 'Cancel',
-                            //     otherButtonColor: '#dedede',
-                            //     style: 'error',
-                            //     cancellable: true
-                            // },
-                            //     //callback => console.log('callback')
-                            // );
+                            await alert({
+                                type: DropdownAlertType.Error,
+                                title: 'Sync Failed',
+                                message: "Please Check your internet connection",
+                            });
                         }
-
-
                     });
-
-
                 } else if (amount > IOULimit) {
-
                     // limit exceed
-
                     // console.log("limit exceed job no or vehicle type ----  ", res[0].ID);
-
                     IsLimit = "YES";
-
                     IOUSettlementData = [
                         {
                             PCRCode: IOUSettlementNo,
@@ -1000,72 +843,45 @@ const NewIOUSettlement = () => {
                             SecondActionBy: '',
                             SecondActionAt: '',
                             ID: 0
-
-
-
                         }
                     ]
-
-                    saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
-                        // console.log(" save iou .................... ", response);
-
-                        if (response == 3) {
-
-                            getDetailsData(parseInt(res[0].ID), IsLimit);
-
-                            slideOutModal();
-                            Alert.alert("Successfully Submitted!");
-                            // SweetAlert.showAlertWithOptions({
-                            //     title: 'Successfully Submitted!',
-                            //     subTitle: '',
-                            //     confirmButtonTitle: 'OK',
-                            //     confirmButtonColor: '#000',
-                            //     otherButtonTitle: 'Cancel',
-                            //     otherButtonColor: '#dedede',
-                            //     style: 'success',
-                            //     cancellable: true
-                            // },
-                            //     //callback => console.log('callback')
-                            // );
-
-
-                            await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                            AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                            navigation.navigate('PendingList');
-
+                    Conection_Checking(async (res: any) => {
+                        if (res != false) {
+                            saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
+                                // console.log(" save iou .................... ", response);
+                                if (response == 3) {
+                                    getDetailsData(parseInt(res[0].ID), IsLimit);
+                                    closeSubmitDialog();
+                                    await alert({
+                                        type: DropdownAlertType.Success,
+                                        title: 'Success',
+                                        message: "Successfully Submitted!",
+                                    });
+                                    await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                                    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+                                    navigation.navigate('PendingList');
+                                } else {
+                                    await alert({
+                                        type: DropdownAlertType.Error,
+                                        title: 'Failed',
+                                        message: "IOU Request Failed!",
+                                    });
+                                }
+                            });
                         } else {
-                            Alert.alert("IOU Request Failed!")
-                            // SweetAlert.showAlertWithOptions({
-                            //     title: 'IOU Request Failed!',
-                            //     subTitle: '',
-                            //     confirmButtonTitle: 'OK',
-                            //     confirmButtonColor: '#000',
-                            //     otherButtonTitle: 'Cancel',
-                            //     otherButtonColor: '#dedede',
-                            //     style: 'error',
-                            //     cancellable: true
-                            // },
-                            //     //callback => console.log('callback')
-                            // );
+                            await alert({
+                                type: DropdownAlertType.Error,
+                                title: 'Sync Failed',
+                                message: "Please Check your internet connection",
+                            });
                         }
-
-
                     });
-
-
                 } else {
-
                     // limit  not exceed
-
                     if (IOUTypeID === '3') {
                         //other type
-
-
                         // console.log("Other type ----  ", HODID);
-
                         IsLimit = "";
-
                         IOUSettlementData = [
                             {
                                 PCRCode: IOUSettlementNo,
@@ -1091,67 +907,43 @@ const NewIOUSettlement = () => {
                                 SecondActionBy: '',
                                 SecondActionAt: '',
                                 ID: 0
-
-
                             }
                         ]
-
-                        saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
-                            // console.log(" save iou .................... ", response);
-
-                            if (response == 3) {
-
-                                getDetailsData(parseInt(res[0].ID), IsLimit);
-
-                                slideOutModal();
-                                Alert.alert("Successfully Submitted!");
-                                // SweetAlert.showAlertWithOptions({
-                                //     title: 'Successfully Submitted!',
-                                //     subTitle: '',
-                                //     confirmButtonTitle: 'OK',
-                                //     confirmButtonColor: '#000',
-                                //     otherButtonTitle: 'Cancel',
-                                //     otherButtonColor: '#dedede',
-                                //     style: 'success',
-                                //     cancellable: true
-                                // },
-                                //     //callback => console.log('callback')
-                                // );
-
-
-                                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                                navigation.navigate('PendingList');
-
+                        Conection_Checking(async (res: any) => {
+                            if (res != false) {
+                                saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
+                                    // console.log(" save iou .................... ", response);
+                                    if (response == 3) {
+                                        getDetailsData(parseInt(res[0].ID), IsLimit);
+                                        closeSubmitDialog();
+                                        await alert({
+                                            type: DropdownAlertType.Success,
+                                            title: 'Success',
+                                            message: "Successfully Submitted!",
+                                        });
+                                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+                                        navigation.navigate('PendingList');
+                                    } else {
+                                        await alert({
+                                            type: DropdownAlertType.Error,
+                                            title: 'Failed',
+                                            message: "IOU Request Failed!",
+                                        });
+                                    }
+                                });
                             } else {
-                                Alert.alert("IOU Request Failed!")
-                                // SweetAlert.showAlertWithOptions({
-                                //     title: 'IOU Request Failed!',
-                                //     subTitle: '',
-                                //     confirmButtonTitle: 'OK',
-                                //     confirmButtonColor: '#000',
-                                //     otherButtonTitle: 'Cancel',
-                                //     otherButtonColor: '#dedede',
-                                //     style: 'error',
-                                //     cancellable: true
-                                // },
-                                //     //callback => console.log('callback')
-                                // );
+                                await alert({
+                                    type: DropdownAlertType.Error,
+                                    title: 'Sync Failed',
+                                    message: "Please Check your internet connection",
+                                });
                             }
-
-
                         });
-
                     } else {
-
-
                         // console.log("job no or vehicle");
-
                         IsLimit = "NO";
-
                         HODID = '';
-
                         IOUSettlementData = [
                             {
                                 PCRCode: IOUSettlementNo,
@@ -1177,75 +969,44 @@ const NewIOUSettlement = () => {
                                 SecondActionBy: '',
                                 SecondActionAt: '',
                                 ID: 0
-
-
                             }
                         ]
-
-                        saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
-                            // console.log(" save iou .................... ", response);
-
-                            if (response == 3) {
-
-                                getDetailsData(HODID, IsLimit);
-
-                                slideOutModal();
-                                Alert.alert("Successfully Submitted!");
-                                // SweetAlert.showAlertWithOptions({
-                                //     title: 'Successfully Submitted!',
-                                //     subTitle: '',
-                                //     confirmButtonTitle: 'OK',
-                                //     confirmButtonColor: '#000',
-                                //     otherButtonTitle: 'Cancel',
-                                //     otherButtonColor: '#dedede',
-                                //     style: 'success',
-                                //     cancellable: true
-                                // },
-                                //     //callback => console.log('callback')
-                                // );
-
-
-                                await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
-                                AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
-
-                                navigation.navigate('PendingList');
-
+                        Conection_Checking(async (res: any) => {
+                            if (res != false) {
+                                saveIOUSettlement(IOUSettlementData, 0, async (response: any) => {
+                                    // console.log(" save iou .................... ", response);
+                                    if (response == 3) {
+                                        getDetailsData(HODID, IsLimit);
+                                        closeSubmitDialog();
+                                        await alert({
+                                            type: DropdownAlertType.Success,
+                                            title: 'Success',
+                                            message: "Successfully Submitted!",
+                                        });
+                                        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "SETTLEMENT");
+                                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
+                                        navigation.navigate('PendingList');
+                                    } else {
+                                        await alert({
+                                            type: DropdownAlertType.Error,
+                                            title: 'Failed',
+                                            message: "IOU Request Failed!",
+                                        });
+                                    }
+                                });
                             } else {
-                                Alert.alert("IOU Request Failed!")
-                                // SweetAlert.showAlertWithOptions({
-                                //     title: 'IOU Request Failed!',
-                                //     subTitle: '',
-                                //     confirmButtonTitle: 'OK',
-                                //     confirmButtonColor: '#000',
-                                //     otherButtonTitle: 'Cancel',
-                                //     otherButtonColor: '#dedede',
-                                //     style: 'error',
-                                //     cancellable: true
-                                // },
-                                //     //callback => console.log('callback')
-                                // );
+                                await alert({
+                                    type: DropdownAlertType.Error,
+                                    title: 'Sync Failed',
+                                    message: "Please Check your internet connection",
+                                });
                             }
-
-
                         });
-
-
                     }
-
-
-
                 }
-
-
             });
-
-
-
         });
-
-
     }
-
     const attachmentSave = () => {
         const attachementData = [
             {
@@ -1257,162 +1018,88 @@ const NewIOUSettlement = () => {
 
         saveAttachments(attachementData, async (response: any) => {
             if (response == 3) {
-
-                slideOutModal();
-                Alert.alert("Attachment Successfully Submitted!");
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Attachment Successfully Submitted!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
-
-                // await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "IOU");
-
-                // navigation.navigate('PendingList');
-
+                closeDialog();
+                await alert({
+                    type: DropdownAlertType.Success,
+                    title: 'Success',
+                    message: "Attachment Successfully Submitted!",
+                });
             } else {
-                Alert.alert("Attachmnet Not Saved!")
-                // SweetAlert.showAlertWithOptions({
-                //     title: 'Attachmnet Not Saved!',
-                //     subTitle: '',
-                //     confirmButtonTitle: 'OK',
-                //     confirmButtonColor: '#000',
-                //     otherButtonTitle: 'Cancel',
-                //     otherButtonColor: '#dedede',
-                //     style: 'success',
-                //     cancellable: true
-                // },
-                //     //callback => console.log('callback')
-                // );
+                await alert({
+                    type: DropdownAlertType.Error,
+                    title: 'Failed',
+                    message: "Attachmnet Not Saved!",
+                });
             }
         })
     }
-
     const attachement = () => {
-        setIsSubmit(false);
-        setIsOpen(true);
-        slideInModal();
+        setIsDialog(true);
     }
-
     const getLastAttachmentId = () => {
-
         getLastAttachment((result: any) => {
-
             // console.log("... last ID length ...... ", result.length);
-
-
             if (result.length == 0) {
-
                 setLastAttachmentID("0");
                 generateAttachementNo(0);
-
             } else {
-
                 setLastAttachmentID(result[0]._Id);
                 generateAttachementNo(result[0]._Id)
             }
-
-
         });
-
     }
-
     const generateAttachementNo = (ID: any) => {
-
         // console.log("ATTACHMENT ID GENERATE ======================   ");
-
         let newAttachmentID = parseInt(ID) + 1;
         let randomNum = Math.floor(Math.random() * 1000) + 1;
-
         setAttachementNo("IOUSETAtch_" + randomNum + "_" + newAttachmentID + "_M");
         // if (parseInt(ID) === 0) {
         //     let attachementID = 1;
         //     setAttachementNo(IOUNo + attachementID);
-
         // } else {
         //     let attachementID = parseInt(ID) + 1;
         //     setAttachementNo(IOUNo + attachementID);
         // }
-
     }
-
-
     // Add Another JOb Functions ................
-
-
     const generateJobNo = () => {
-
         // getLastJobID((res: any) => {
-
-
         //     // console.log(" job last id .....  ", res[0]._Id);
-
         //     let ID = parseInt(res[0]._Id) + 1;
-
         //     setjobNo("JOB_" + ID);
-
-
         // });
-
         getLastIOUSETJobID((res: any) => {
-
-
             // console.log(" job last id .....  ", res[0]._Id);
-
             let ID = parseInt(res[0]._Id) + 1;
             let randomNum = Math.floor(Math.random() * 1000) + 1;
-
             setjobNo("JOB_" + randomNum + "_" + ID);
-
-
         });
-
     }
-
     const getExpenseTypes = () => {
-
         getExpenseTypeAll((result: any) => {
-
             setExpenseTypeList(result);
         });
-
-
     }
-
     const getJobNo = (Owner: any) => {
         // console.log("Function: ", Owner);
         // console.log("********", selectJobOwner);
-
-
-
         getJobNoAll(Owner, (res: any) => {
             // console.log("Job No............", res);
             setJob_NoList(res);
         })
     }
-
     const getVehicleNo = () => {
         getVehicleNoAll((resp: any) => {
             //console.log("Vehicle No............", resp);
             setVehicle_NoList(resp);
         })
     }
-
     const getAllDepartment = () => {
         getDepartments((result: any) => {
             setDepartmentList(result);
         })
     }
-
     const add_one = (data: any) => {
-
         if (data == 1) {
             //if add is pressed
             Alert.alert('Add !', 'Are you sure you want to Add this ?', [
@@ -1423,9 +1110,7 @@ const NewIOUSettlement = () => {
                 },
                 { text: 'Yes', onPress: () => add() },
             ]);
-
         } else if (data == 2) {
-
             //if submit is pressed
             Alert.alert('Add !', 'Are you sure you want to submit this ?', [
                 {
@@ -1435,9 +1120,7 @@ const NewIOUSettlement = () => {
                 },
                 { text: 'Yes', onPress: () => saveSubmit() },
             ]);
-
         } else if (data == 3) {
-
             //if cancel is pressed in animated view
             Alert.alert('Cancel !', 'Are you sure you want to cancel this ?', [
                 {
@@ -1445,9 +1128,8 @@ const NewIOUSettlement = () => {
                     onPress: () => console.log('Cancel Pressed'),
                     style: 'cancel',
                 },
-                { text: 'Yes', onPress: (slideOutModal) },
+                { text: 'Yes', onPress: (closeSubmitDialog) },
             ]);
-
         } else {
             //if cancel is presed 
             Alert.alert('Cancel !', 'Are you sure you want to cancel this ?', [
@@ -1457,89 +1139,52 @@ const NewIOUSettlement = () => {
                     style: 'cancel',
                 },
                 { text: 'Yes', onPress: (cancelJob) },
-
             ]);
         }
-
     }
-
-
     const add = () => {
-
         // console.log("addddddddddd /////////// ");
-
         let jobError = { field: '', message: '' }
-
         // if (isJobOrVehicle) {
-
         //     jobError.field = 'JobOwner'
         //     jobError.message = 'Job No is required'
         //     setError(jobError);
-
         // } else
         if (expenseTypeID === '') {
-
             jobError.field = 'TicketID'
             jobError.message = 'Expense type is required'
             setError(jobError);
-
         } else if (requestAmount === '') {
-
             jobError.field = 'requestAmount'
             jobError.message = 'Amount  is required'
             setError(jobError);
-
-
         } else if (requestAmount === 'NaN') {
             // addbtn 
-
             jobError.field = 'requestAmount'
             jobError.message = 'Invalid Amount'
             setError(jobError);
-
         }
         else if (accountNo === '') {
-
             jobError.field = 'accNo'
             jobError.message = 'Account No is required '
             setError(jobError);
-
-
         } else {
-
             saveJob();
-
         }
-
     }
-
-
     const saveJob = () => {
-
         console.log("save job ............>>>>>>>>>>> ");
-
         let job_no = Date.now();
-
         let isDecimal = requestAmount.indexOf(".");
         let decimalAmount = 0.0;
-
         if (isDecimal != -1) {
-
             const splitAmount = requestAmount.split(".");
             decimalAmount = parseFloat(splitAmount[0].replaceAll(',', '') + "." + splitAmount[1]);
-
         } else {
-
             decimalAmount = parseFloat(requestAmount.replaceAll(',', ''));
-
         }
-
         if (saveTitle == "Add") {
-
             // new job details
-
-
-
             const saveObject =
             {
                 Job_ID: job_no,
@@ -1560,89 +1205,59 @@ const NewIOUSettlement = () => {
                 IstoEdit: 0,
 
             }
-
-
             const JOBData: any = [];
             JOBData.push(saveObject);
-
             console.log("job data == [][][][]  ", JOBData);
 
 
-            saveIOUSETJOB(JOBData, 0, (response: any) => {
+            saveIOUSETJOB(JOBData, 0, async (response: any) => {
 
                 // console.log(" save job .. ", response);
 
                 amount += decimalAmount;
 
                 if (response == 3) {
-
                     jobArray.push(saveObject);
-
-                    // JOBData = [];
-                    // setJobList(jobArray);
-
-                    // console.log(" JOB List [][][][ ", joblist);
-
-                    Alert.alert("Successfully Added!");
-
+                    await alert({
+                        type: DropdownAlertType.Success,
+                        title: 'Success',
+                        message: "Successfully Added!",
+                    });
                     cancelJob();
                     getAllJobs(IOUSettlementNo);
-
-
                 } else {
-
-                    Alert.alert("Failed!");
-
-
-                    // cancelJob();
+                    await alert({
+                        type: DropdownAlertType.Error,
+                        title: 'Failed',
+                        message: "Save Failed!",
+                    });
                 }
 
             });
 
 
         } else {
-
             //update job details
-
-
-
-            // amount += parseFloat(requestAmount);
-
-
-            // AccNo:any,Costcenter:any,Resource:any,Amount:any,Remark:any,ID:any
-
-            console.log(" suto id ===== ", Id);
-
-
-            UpdateSettJobbyId(accountNo, costCeneter, resource, decimalAmount, remarks, parseInt(expenseTypeID), Id, (result: any) => {
-
-                console.log("result update =======  ", result);
-
-
+            UpdateSettJobbyId(accountNo, costCeneter, resource, decimalAmount, remarks, parseInt(expenseTypeID), Id, async (result: any) => {
                 if (result == "success") {
-
-                    Alert.alert("Successfully Updated!");
+                    await alert({
+                        type: DropdownAlertType.Success,
+                        title: 'Success',
+                        message: "Successfully Updated!",
+                    });
                     cancelJob();
                     getAllJobs(IOUSettlementNo);
-
-
                 } else {
-
-                    Alert.alert("Failed Update!")
-
+                    await alert({
+                        type: DropdownAlertType.Error,
+                        title: 'Failed',
+                        message: "Update Failed!",
+                    });
                 }
-
             });
-
         }
-
-
-
     }
-
-
     const cancelJob = () => {
-
         setSelecteJoborVehicle('');
         setExpenseTypeID('');
         setrequestAmount('');
@@ -1707,17 +1322,11 @@ const NewIOUSettlement = () => {
 
 
     const getIOUJobList = (IOUID: any) => {
-
-
-
         console.log(IOUID);
-
         setiouJobList([]);
-
         getIOUJobsListByID(IOUID, (response: any) => {
-
             // setiouJobList(response);
-            console.log(response);
+            console.log("get iou job list ======= " + response);
             //console.log(ioujoblist.Amount);
             for (let i = 0; i < response.length; i++) {
 
@@ -1765,28 +1374,11 @@ const NewIOUSettlement = () => {
                     amount += parseFloat(newamount);
 
                     if (response == 3) {
-
-                        // jobArray.push(saveObject);
-                        // setJobList(jobArray);
-
                         getAllJobs(IOUSettlementNo);
-
-                        // console.log(" JOB List [][][][ ", joblist);
-
-                        //Alert.alert("Successfully Added!");
-
-
                     }
-
-
                 });
-
-
             }
-
         });
-
-
     }
 
     const getIOUSETJobList = (IOUID: any) => {
@@ -1805,18 +1397,16 @@ const NewIOUSettlement = () => {
     }
 
     const getAllJobs = (IOUSETID: any) => {
-
+        console.log(" settlemet id =======  ", IOUSETID);
         setiouJobList([]);
-
-        getIOUSETJOBsBYSettlementID(IOUSETID, (result: any) => {
-
-            setiouJobList(result);
-
-            console.log(" settlemnt jobs ==== ", result);
-
-
-        });
-
+        try {
+            getIOUSETJOBsBYSettlementID(IOUSETID, (result: any) => {
+                console.log(" settlemnt jobs ==== ", result);
+                setiouJobList(result);
+            });
+        } catch (error) {
+            console.log("catch error iou set jobs=== ", error);
+        }
     }
 
 
@@ -1876,16 +1466,9 @@ const NewIOUSettlement = () => {
     // }
 
     // //-------Edit Request----------------------------------------------
-
-
-
     const editRequest = async (id: any) => {
-
         clearJobDetails();
-
         try {
-
-
             getIOUSETReOpenRequest(id, (result: any) => {
                 // console.log("-----GetIOUReOpenRequest Function Calling-------");
 
@@ -1894,8 +1477,6 @@ const NewIOUSettlement = () => {
                 setCopyJobOwner(result[0].JobOwner_ID);
                 setCopyIOUType(result[0].IOU_Type);
                 setCopyEmployee(result[0].EmpId);
-
-                // console.log("----JobOwner----", copyJobOwner);
                 checkData(id, ReOpenData);
 
             });
@@ -1910,26 +1491,18 @@ const NewIOUSettlement = () => {
     //-------Check edit Request----------------------------------------------
 
     const checkData = async (id: any, ReOpenDetails: any) => {
-
-        // console.log("Check Data Function calling", ReOpenDetails);
-
         getIOUSETJobsListByID(id, (response: any) => {
-
             console.log("settlement jobs ---- ", response);
-
             setJobList(response);
         });
-
         getIOUSETJobList(id);
         getAllJobOwners((result: any) => {
             //console.log(" Job owner ...........  ", result);
-
             setJobOwnerlist(result);
             const data = result?.filter((a: any) => a.JobOwner_ID == ReOpenDetails[0][0]['JobOwner_ID'])[0];
             setSelectJobOwner(data.Name);
             setJobOwner(data.JobOwner_ID);
             // console.log(data, " -----------",);
-
             //console.log(selectJobOwner);
         });
 
@@ -1966,8 +1539,6 @@ const NewIOUSettlement = () => {
     //--------Edit Details Data----------------------------
 
     const getIOUData = async (id: any) => {
-        // console.log("Call function--------", id);
-
         try {
             // const result = await new Promise((resolve, reject) => {
             getIOUdatainfo(id, (result: any) => {
@@ -1979,21 +1550,10 @@ const NewIOUSettlement = () => {
                 setCopyEmployee(result[0].EmpId);
                 // console.log('JobOwnerID---', copyJobOwner, ' --IOUType----', copyIOUType, ' --Employee--', copyEmployee);
                 checkIOUdata(IOUDetails);
-
                 getEmployeeByID(result[0].EmpId, (rest: any) => {
-
                     console.log(result[0].EmpId, "employee details === [][][][", rest);
-
-
                 });
             });
-            // });
-
-
-
-            // console.log('JobOwnerID---', copyJobOwner, ' --IOUType----', copyIOUType, ' --Employee--', copyEmployee);
-
-
         } catch (error) {
             // console.error(error);
         }
@@ -2001,248 +1561,95 @@ const NewIOUSettlement = () => {
 
 
     const checkIOUdata = async (Data: any) => {
-
         console.log("IOU details ---- ", Data);
-
         if (Data[0].IOU_Type == 1) {
             // Job No
-
             getAllJobOwners((result: any) => {
-                //console.log(" Job owner ...........  ", result);
-
                 setJobOwnerlist(result);
                 const data = result?.filter((a: any) => a.ID == Data[0].JobOwner_ID)[0];
                 setSelectJobOwner(data.Name);
                 setJobOwner(data.ID);
-                // console.log("-----------------", data.Name);
-                // console.log("-----------------", Data[0].JobOwner_ID);
-
-                // console.log(selectJobOwner);
                 getJobNo(data.Name);
             });
 
 
         } else if (Data[0].IOU_Type == 2) {
             // vehicle no
-
             getLoginUserID().then(result1 => {
-
                 getAllTransportOfficers((result: any) => {
-
                     setJobOwnerlist(result);
                     console.log(" transport officer ----  ", result);
-
                     const data = result?.filter((a: any) => a.ID == Data[0].JobOwner_ID)[0];
                     setSelectJobOwner(data.Name);
                     setJobOwner(data.ID);
-
                 });
-
             });
-
-
         } else {
             // other
-
             getLoggedUserHOD((res: any) => {
-
-                // console.log(" hod ===" , res);
-
                 setJobOwnerlist(res);
                 setSelectJobOwner(res[0].Name);
                 setJobOwner(res[0].ID);
-
             });
-
-
         }
-
-
-
         getIOUTypes((result: any) => {
-            // console.log("IOU types ......... ", result);
-
             setIOUTypeList(result);
             const ioudata = result?.filter((a: any) => a.IOUType_ID == Data[0].IOU_Type)[0];
             setSelectIOUType(ioudata.Description);
             setIOUTypeID(ioudata.IOUType_ID)
         });
-
-        // // // Employee
-        // getAllUsers((result: any) => {
-        //     //console.log("Employee ......... ", result);
-
-        //     setEmployeeList(result);
-        //     const empdata = result?.filter((a: any) => a.USER_ID == Data[0].EmpId)[0];
-        //     setSelectEmployee(empdata.UserName);
-        //     setEmpID(empdata.USER_ID);
-        // });
-
         getAllEmployee((eresult: any) => {
-
             setEmployeeList(eresult);
             const empdata = eresult?.filter((a: any) => a.Emp_ID == Data[0].EmpId)[0];
             setSelectEmployee(empdata.EmpName);
             setEmpID(empdata.Emp_ID);
-
         });
-
-        // getCostCenter(JobOwner, IOUTypeID);
-
     }
-
-    //-----------------------------------------------------
-
-    useFocusEffect(
-        React.useCallback(() => {
-
-            // console.log(" refresh IOU SETT ----------  > ");
-
-            amount = 0.0;
-            jobArray = [];
-
-            getLastId();
-            getLastAttachmentId();
-            getSpinnerData();
-
-            getLoginUserName().then(res => {
-                setUname(res);
-                // console.log(" user name ....... ", res);
-
-            });
-
-            getLoginUserID().then(result => {
-                setUserID(result);
-                loggedUserID = result;
-
-                getAllLoginUserDetails(result, (resp: any) => {
-                    epfNo = resp[0].EPFNo;
-                });
-            })
-
-            CopyRequest().then(resp => {
-                // console.log("Is Copy: ", resp);
-                setIsReOpen(resp);
-                if (resp == 'true') {
-
-                    getRejectedId().then(result => {
-                        // console.log("ReOpen Request Id: ", result);
-                        setUId(result);
-
-                        editRequest(result);
-
-
-                    })
-
-                }
-            })
-            getAllIOUTypes();
-            getSpinnerEmployee();
-
-        }, [navigation])
-    );
 
     const getSpinnerEmployee = () => {
-
         console.log(" get employeee ");
-
-
         getAllEmployee((result: any) => {
-
             setEmployeeList(result);
-
-            getLoginUserRoll().then(async res => {
-
-                if (res === '1') {
+            get_ASYNC_IS_Auth_Requester().then(async resp => {
+                if (resp === '1') {
+                    //auth user
+                    setIsEditableEmp(false);
+                } else {
                     //requester
-
-                    console.log(" requester -----------   ");
-
-                    get_ASYNC_IS_Auth_Requester().then(async resp => {
-
-                        if (resp === '1') {
-                            //auth requester
-
-                            console.log("auth requester -----------   ");
-                            setIsEditableEmp(false);
-
-                        } else {
-                            //requester
-
-                            console.log(" only requester -----------   ");
-
-                            setIsEditableEmp(true);
-
-                            get_ASYNC_EPFNO().then(async resu => {
-
-                                const empdata = result?.filter((a: any) => a.EPFNo == parseInt(resu + ""))[0];
-                                setSelectEmployee(empdata.Name);
-                                setEmpID(empdata.ID);
-
-                            });
-
-
-
-                        }
+                    setIsEditableEmp(true);
+                    get_ASYNC_EPFNO().then(async resu => {
+                        const empdata = result?.filter((a: any) => a.EPFNo == parseInt(resu + ""))[0];
+                        setSelectEmployee(empdata.Name);
+                        setEmpID(empdata.ID);
 
                     });
-
-                } else {
-                    //
-                    console.log("not a requester -----------   ");
-                    setIsEditableEmp(false);
                 }
 
-
             });
-
-
-
-
-
-
         });
-
     }
-
     //--------Get IOU Types Details Data----------------------
-
     const getDetailsData = (HOD: any, IsLimit: any) => {
-
         var Fileobj: any = [];
-
         getIOUSETJOBDataBYRequestID(IOUSettlementNo, (result: any) => {
-
             // console.log(result, '+++++++++++++++++++++++++++');
             JobDetails = [];
-
             for (let i = 0; i < result.length; i++) {
-
                 // console.log(result[i]);
-
                 JobDetails.push(result[i]);
             }
-
-
             getIOUAttachmentListByID(IOUSettlementNo, async (rest: any) => {
-
                 Fileobj = [];
-
                 if (rest.length > 0) {
-
                     for (let i = 0; i < rest.length; i++) {
-
                         const arr = {
                             "IOUTypeNo": IOUTypeID,
                             "FileName": rest[i].Img_url,
                             "File": await RNFS.readFile(rest[i].Img_url, 'base64'),
                             "FileType": "image/jpeg"
                         }
-
                         Fileobj.push(arr);
-
                         if (i + 1 == rest.length) {
-
                             Conection_Checking(async (res: any) => {
                                 if (res != false) {
                                     UploadIOU(JobDetails, HOD, IsLimit, Fileobj);
@@ -2251,7 +1658,6 @@ const NewIOUSettlement = () => {
 
                         }
                     }
-
                 } else {
                     Conection_Checking(async (res: any) => {
                         if (res != false) {
@@ -2259,35 +1665,17 @@ const NewIOUSettlement = () => {
                         }
                     })
                 }
-
-
-
             })
-
-
-
-
         })
     }
-
     //-----------Upload IOU Request------------------
-
     const UploadIOU = async (detailsData: any, HOD: any, IsLimit: any, Fileobj: any) => {
-
         const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=' + DB_LIVE;
-
         var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload IOU SETTLEMENT  ++++++++++++++++";
-
-        logger(loggerDate , "   *****************   ");
-
-
+        logger(loggerDate, "   *****************   ");
         var obj = [];
-
         try {
-
-
             for (let i = 0; i < detailsData.length; i++) {
-
                 const arr = {
                     "IOUTypeID": detailsData[i].IOUTypeID,
                     "IOUTypeNo": detailsData[i].IOUTypeNo,
@@ -2301,21 +1689,6 @@ const NewIOUSettlement = () => {
 
                 obj.push(arr);
             }
-            // for (let i = 0; i < detailsData.length; i++) {
-
-            //     const arr = {
-            //         "IOUTypeNo": IOUTypeID,
-            //         "FileName": detailsData[i].Img_url,
-            //         "File": await RNFS.readFile(detailsData[i].Img_url, 'base64'),
-            //         "FileType": "image/jepg"
-            //     }
-
-            //     Fileobj.push(arr);
-            // }
-
-
-
-
             const prams = {
                 "CreateAt": currentDate,
                 "Date": currentDate,
@@ -2333,14 +1706,7 @@ const NewIOUSettlement = () => {
                 "Hod": parseFloat(HOD),
                 "RIsLimit": IsLimit,
                 "RIouLimit": IOULimit
-
             }
-
-            // console.log(" type details ---------- === ", obj);
-
-            // console.log(" file object === ", Fileobj);
-
-
             saveJsonObject_To_Loog(prams);
 
             console.log("IOU SET UPLOAD JSON ==== ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
@@ -2349,154 +1715,45 @@ const NewIOUSettlement = () => {
             axios.post(URL, prams, {
                 headers: headers
             }).then((response) => {
-                // console.log("[s][t][a][t][u][s][]", response.status);
-                // console.log("[s][t][a][t][u][s][] IOU SET reponse METHOD   ........  ", response)
-
                 logger(" IOU SETTLEMENT Upload Response Status ", response.status + "");
-
                 saveJsonObject_To_Loog(response.data);
-
                 if (response.status == 200) {
-
                     if (response.data.ErrorId == 0) {
-
                         console.log("success ===222==== ", response.data);
-
                         updateIDwithStatusSET(IOUSettlementNo, response.data.ID, (resp: any) => {
-
-
                             if (resp === 'success') {
-
                                 updateSettlementDetailLineSyncStatus(IOUSettlementNo, (resp1: any) => {
-
                                 });
                             }
-
-
                         });
-
-
                     }
-
-                    // updateIOUSETSyncStatus(IOUSettlementNo, (result: any) => {
-
-
-
-                    // });
-
-                    // console.log("success ======= ", response.statusText);
-
-
-
-
-
                 } else {
-
-                    // console.log(" response code ======= ", response.status);
 
                 }
             }).catch((error) => {
-
                 // console.log("error .....   ", error);
                 logger(" IOU SETTLEMENT Upload ERROR ", "");
-
                 saveJsonObject_To_Loog(error);
-
             });
-
-
         } catch (error) {
             // console.log(error);
-
             logger(" IOU SETTLEMENT Upload ERROR ", error + "");
-
-
-
         }
-        // const prams = {
-        //     "PettycashID": IOUNo,
-        //     "RequestedBy": uName,
-        //     "ReqChannel": "Mobile",
-        //     "Date": currentDate,
-        //     "IOUtype": parseInt(IOUTypeID),
-        //     "EmpNo": parseInt(EmpID),
-        //     "JobOwner": parseInt(Job_Owner),
-        //     "CreateAt": currentDate,
-        //     "TotalAmount": requestAmount,
-        //     "IOUTypeDetails": IOUTypeDetails,
-        //     // [
-        //     //     {
-        //     //         "IOUTypeID": parseInt(IOUTypeID),
-        //     //         "IOUTypeNo": SelecteJoborVehicle,
-        //     //         "ExpenseType": parseInt(expenseTypeID),
-        //     //         "Amount": requestAmount,
-        //     //         "Remark": remarks
-        //     //     } 
-        //     // ]
-
-        //     "attacments": [
-        //         {
-        //             "IOUTypeNo": SelecteJoborVehicle,
-        //             "FileName": "Guidelines - Leave Application.pdf",
-        //             "File": "JVBERi0xLjcNCiW1tbW1DQoxIDAgb2JqDQo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFIvTGFuZyhlbi1VUykgL1N0cnVjdFRyZWVSb290IDM0IDAgUi9NYXJrSW5mbzw8L01hcmtlZCB0cnVlPj4vTWV0YWRhdGEgMjAyIDAgUi9WaWV3ZXJQcmVmZXJlbmNlcyAyMDMgMCBSPj4NCmVuZG9iag0KMiAwIG9iag0KPDwvVHlwZS9QYWdlcy9Db3VudCAzL0tpZHNbIDMgMCBSIDIxIDAgUiAyOSAwIFJdID4+DQplbmRvYmoNCjMgMCBvYmoNCjw8L1R5cGUvUGFnZS9QYXJlbnQgMiAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSL0YyIDkgMCBSL0YzIDExIDAgUi9GNCAxMyAwIFI+Pi9FeHRHU3RhdGU8PC9HUzcgNyAwIFIvR1M4IDggMCBSPj4vWE9iamVjdDw8L0ltYWdlMTggMTggMCBSL0ltYWdlMTkgMTkgMCBSPj4vUHJvY1NldFsvUERGL1RleHQvSW1hZ2VCL0ltYWdlQy9JbWFnZUldID4+L01lZGlhQm94WyAwIDAgNjEyIDc5Ml0gL0NvbnRlbnRzIDQgMCBSL0dyb3VwPDwvVHlwZS9Hcm91cC9TL1RyYW5zcGFyZW5jeS9DUy9EZXZpY2VSR0I+Pi9UYWJzL1MvU3RydWN0UGFyZW50cyAwPj4NCmVuZG9iag0KNCAwIG9iag0KPDwvRmlsdGVyL0ZsYXRlRGVjb2RlL0xlbmd0aCA1MzM+Pg0Kc3RyZWFtDQp4nK2XTYvbMBCG7wb/hzm2hU40Gn1CMDTOZtnCwrYN9FB6KGWb07Z0+/+hIztQp5t4d4wM/pCs6H1GGktvYHUH6/Xqtr/Zguk62Gx7+N02Bk05MlkwEOQas4XH+7b5/AZ+ts1m3zarHQERGgf7H21D0s4AQbRorINoMoYE+wdpd/0pwuGP9AmHoZSOpeu2",
-        //             "FileType": "jpg"
-        //         }
-        //     ]
-        // }
-
-        // console.log('--NEW IOU REQUEST UPLOAD JSON--', prams);
-
-        // axios.post(URL, prams, {
-        //     headers: headers
-        // }).then((response) => {
-        //     console.log("[s][t][a][t][u][s][]", response.status);
-        //     if (response.status == 200) {
-
-
-        //     } else {
-
-        //         console.log(" response code ======= ", response.status);
-
-        //     }
-        // }).catch((error) => {
-
-        //     console.log(" JobNo error .....   ", error);
-
-
-        // });
-
         ClearData();
-
     }
-
     const getJobNoByJobOwner = (ID: any) => {
-
         getJobNOByOwners(ID, (res: any) => {
-
             setJob_NoList(res);
-
         });
-
     }
-
-
     const getGL_AccNo = (typeID: any, code: any) => {
-        // getAccNoForJobNo((res: any) => {
-        //     setAccountList(res);
-        //     setAccountNo(res[0].GL_ACCOUNT);
-        // });
-
         setAccountList([]);
         setAccountNo('');
-
         getGLAccNo(typeID, code, (res: any) => {
             setAccountList(res);
             setAccountNo(res[0].GL_ACCOUNT);
         });
-
     }
-
-
     const getGL_AccByExpenseType = (type: any) => {
         getAccNoByExpenseType(type, (res: any) => {
             setAccountList(res);
@@ -2505,15 +1762,12 @@ const NewIOUSettlement = () => {
     }
 
     const getCostCenter = (ID: any) => {
-
         getCostCenterByJobNo(ID, (res: any) => {
             setCostCenter(res[0].CostCenter);
         });
-
     }
 
     const getEmpDetails = (ID: any) => {
-
         getEmployeeByID(ID, (res: any) => {
             setSelectEmployee(res[0].EmpName);
             setEmpID(res[0].Emp_ID);
@@ -2521,8 +1775,6 @@ const NewIOUSettlement = () => {
     }
 
     const ClearData = () => {
-
-
         setJobOwner('');
         setJobOwnerlist([]);
         setIOUTypeID('');
@@ -2548,26 +1800,16 @@ const NewIOUSettlement = () => {
     }
 
     const setFormatAmount = (amount: any) => {
-
         let isDecimal = amount.indexOf(".");
-
         if (isDecimal != -1) {
-
             // console.log(" decimal number =====    ");
-
             const split = amount.split(".");
-
             setrequestAmount(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''));
-
-
         } else {
-
             setrequestAmount(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')));
         }
-
     }
     const deleteNewJob = (ID: any) => {
-
         Alert.alert('Delete details !', 'Are you sure you want to delete detail?', [
             {
                 text: 'No',
@@ -2576,25 +1818,53 @@ const NewIOUSettlement = () => {
             },
             { text: 'Yes', onPress: (() => deteleJob(ID)) },
         ]);
-
-
-
     }
-
     const deteleJob = (ID: any) => {
-
         DeleteJobByID(ID, (resp: any) => {
             getAllJobs(IOUSettlementNo)
         })
-
     }
-
-
-
+    const closeDialog = () => {
+        setIsDialog(false);
+    }
+    const closeSubmitDialog = () => {
+        setIsSubmitDialog(false);
+    }
+    //-----------------------------------------------------
+    useFocusEffect(
+        React.useCallback(() => {
+            amount = 0.0;
+            jobArray = [];
+            getLastId();
+            getLastAttachmentId();
+            getSpinnerData();
+            getLoginUserName().then(res => {
+                setUname(res + "");
+            });
+            getLoginUserID().then(result => {
+                setUserID(result + "");
+                loggedUserID = result;
+                getAllLoginUserDetails(result, (resp: any) => {
+                    epfNo = resp[0].EPFNo;
+                });
+            })
+            CopyRequest().then(resp => {
+                // console.log("Is Copy: ", resp);
+                setIsReOpen(resp + "");
+                if (resp == 'true') {
+                    getRejectedId().then(result => {
+                        // console.log("ReOpen Request Id: ", result);
+                        setUId(result + "");
+                        editRequest(result);
+                    })
+                }
+            })
+            getAllIOUTypes();
+            getSpinnerEmployee();
+        }, [navigation])
+    );
     return (
-
         <SafeAreaView style={ComStyles.CONTAINER}>
-
             <Animated.View
                 style={{
                     ...StyleSheet.absoluteFillObject,
@@ -2636,44 +1906,24 @@ const NewIOUSettlement = () => {
                                             subtxt="Do you want to add a file?"
                                             closeModal={() => slideOutModal()}
                                         />
-
                                         :
-
-                                        // <AddAnotherJob
-                                        //     isJob={isJobOrVehicle}
-                                        //     txtNo={iouTypeJob}
-                                        //     cancelbtn={() => slideOutModal()} />
-
-
                                         <ScrollView
                                             style={ComStyles.CONTENTLOG}
                                             showsVerticalScrollIndicator={true}>
-
-
                                             <View style={styles.container}>
-
                                                 <View style={{ justifyContent: 'center', alignItems: 'center', alignContent: 'center', flexDirection: 'row' }}>
-
                                                     <TouchableOpacity style={styles.dashStyle} onPress={() => cancelJob()} />
-
                                                 </View>
-
-
                                                 <View style={{ padding: 5 }} />
-
                                                 {
                                                     isJobOrVehicle ?
                                                         // isJob ?
-
                                                         <View>
-
                                                             <View style={{ flexDirection: 'row', }}>
                                                                 <Text style={styles.bodyTextLeft}>
                                                                     {IOUTypeID == "1" ? "Job No*" : "Vehicle No*"}
                                                                 </Text>
                                                             </View>
-
-
                                                             <Dropdown
                                                                 style={[
                                                                     styles.dropdown,
@@ -2686,6 +1936,7 @@ const NewIOUSettlement = () => {
                                                                 iconStyle={styles.iconStyle}
                                                                 data={IOUTypeID == "1" ? Job_NoList : Vehicle_NoList}
                                                                 search
+                                                                autoScroll={false}
                                                                 maxHeight={300}
                                                                 labelField={IOUTypeID == "1" ? "Job_No" : "Vehicle_No"}
                                                                 valueField={IOUTypeID == "1" ? "Job_No" : "Vehicle_No"}
@@ -2694,36 +1945,25 @@ const NewIOUSettlement = () => {
                                                                 value={selectJOBVehicleNo}
                                                                 onFocus={() => setIsFocus(true)}
                                                                 onBlur={() => setIsFocus(false)}
-                                                                onChange={item => {
-
+                                                                onChange={(item: any) => {
                                                                     if (IOUTypeID == "1") {
-
                                                                         const name = item.Job_No + "";
-
                                                                         const no = name.split("-");
-
                                                                         console.log(" job no === ", no[0].trim());
-
                                                                         setSelecteJoborVehicle(no[0].trim());
-
                                                                         setselectJOBVehicleNo(item.Job_No);
                                                                         getGL_AccNo(1, 0);
                                                                         setIsDisableAcc(true);
                                                                         getCostCenter(item.DocEntry);
-
-
                                                                     } else {
-
                                                                         setSelecteJoborVehicle(item.Vehicle_No);
                                                                         setselectJOBVehicleNo(item.Vehicle_No);
                                                                         setIsDisableAcc(true);
                                                                         get_ASYNC_COST_CENTER().then(async res => {
-                                                                            setCostCenter(res);
+                                                                            setCostCenter(res + "");
                                                                         });
                                                                         setResource(item.Vehicle_No);
-
                                                                     }
-
                                                                     setIsFocus(false);
                                                                 }}
                                                                 renderLeftIcon={() => (
@@ -2735,26 +1975,18 @@ const NewIOUSettlement = () => {
                                                                     />
                                                                 )}
                                                             />
-
                                                         </View>
-
-
                                                         :
                                                         <></>
-
                                                 }
-
                                                 {error.field === 'JobOwner' && (
                                                     <Text style={styles.error}>{error.message}</Text>
                                                 )}
-
                                                 <View style={{ flexDirection: 'row', }}>
                                                     <Text style={styles.bodyTextLeft}>
                                                         Expense Type*
                                                     </Text>
                                                 </View>
-
-
                                                 <Dropdown
                                                     style={[
                                                         styles.dropdown,
@@ -2767,6 +1999,7 @@ const NewIOUSettlement = () => {
                                                     iconStyle={styles.iconStyle}
                                                     data={ExpenseTypeList}
                                                     search
+                                                    autoScroll={false}
                                                     maxHeight={300}
                                                     labelField="Description"
                                                     valueField="Description"
@@ -2775,19 +2008,15 @@ const NewIOUSettlement = () => {
                                                     value={selectExpenseType}
                                                     onFocus={() => setIsFocus(true)}
                                                     onBlur={() => setIsFocus(false)}
-                                                    onChange={item => {
-
+                                                    onChange={(item: any) => {
                                                         setSelectExpenseType(item.Description);
                                                         setExpenseTypeID(item.ExpType_ID);
-
                                                         if (IOUTypeID == "2") {
                                                             getGL_AccNo(2, item.ExpType_ID);
                                                             // getGL_AccByExpenseType(item.Description);
                                                         } else if (IOUTypeID == "3") {
                                                             getGL_AccNo(3, item.ExpType_ID);
                                                         }
-
-
                                                         setIsFocus(false);
                                                     }}
                                                     renderLeftIcon={() => (
@@ -2812,7 +2041,7 @@ const NewIOUSettlement = () => {
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Requested amount(LKR)*"
                                                     keyType='numeric'
-                                                    returnKeyType='done' 
+                                                    returnKeyType='done'
                                                     stateValue={requestAmount}
                                                     editable={true}
                                                     setState={(val: any) => setFormatAmount(val)}
@@ -2842,44 +2071,6 @@ const NewIOUSettlement = () => {
                                                         Account No *
                                                     </Text>
                                                 </View>
-                                                {/* <Dropdown
-                                                    style={[
-                                                        styles.dropdown,
-                                                        isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                                                    ]}
-                                                    itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                                                    placeholderStyle={Style.placeholderStyle}
-                                                    selectedTextStyle={Style.selectedTextStyle}
-                                                    inputSearchStyle={Style.inputSearchStyle}
-                                                    iconStyle={styles.iconStyle}
-                                                    data={AccountList}
-                                                    search
-                                                    disable={isDisableAcc}
-                                                    maxHeight={300}
-                                                    labelField="GL_ACCOUNT"
-                                                    valueField="GL_ACCOUNT"
-                                                    placeholder={!isFocus ? 'Account No* ' : '...'}
-                                                    searchPlaceholder="Search Account No"
-                                                    value={accountNo}
-                                                    onFocus={() => setIsFocus(true)}
-                                                    onBlur={() => setIsFocus(false)}
-                                                    onChange={item => {
-
-                                                        setAccountNo(item.GL_ACCOUNT);
-
-
-                                                        setIsFocus(false);
-                                                    }}
-                                                    renderLeftIcon={() => (
-                                                        <AntDesign
-                                                            style={styles.icon}
-                                                            color={isFocus ? 'blue' : 'black'}
-                                                            name="Safety"
-                                                            size={15}
-                                                        />
-                                                    )}
-                                                /> */}
-
                                                 <InputText
                                                     placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                                                     placeholder="Account No*"
@@ -2926,6 +2117,7 @@ const NewIOUSettlement = () => {
                                                     iconStyle={styles.iconStyle}
                                                     data={Vehicle_NoList}
                                                     search
+                                                    autoScroll={false}
                                                     disable={isDisableRes}
                                                     maxHeight={300}
                                                     labelField={"Vehicle_No"}
@@ -2935,7 +2127,7 @@ const NewIOUSettlement = () => {
                                                     value={resource}
                                                     onFocus={() => setIsFocus(true)}
                                                     onBlur={() => setIsFocus(false)}
-                                                    onChange={item => {
+                                                    onChange={(item: any) => {
 
                                                         //setSelecteJoborVehicle(IOUTypeID == "1" ? item.Job_No : item.Vehicle_No);
                                                         setResource(item.Vehicle_No);
@@ -2966,66 +2158,31 @@ const NewIOUSettlement = () => {
                                                         styletouchable={{ width: '49%', marginLeft: 5 }}
                                                         style={{ backgroundColor: ComStyles.COLORS.RED_COLOR }}
                                                         onPress={() => add_one(0)} />
-
-
                                                 </View>
-
-
-
                                             </View>
-
                                         </ScrollView>
                                     //--------------------------------------------------------------------------
                                 }
                             </>
-
                     }
-
-
                 </View>
-
             </Animated.View>
-
             <Header title="Add New IOU Settlement" isBtn={true} btnOnPress={naviBack} />
-
+            <DropdownAlert alert={func => (alert = func)} alertPosition="top" />
             <ScrollView style={ComStyles.CONTENT} nestedScrollEnabled={true}>
-
-                <ViewField
-                    title="Request ID"
-                    Value={IOUSettlementNo}
-                    valustyle={{ color: ComStyles.COLORS.ICON_BLUE }}
+                <View style={{ padding: 5 }} />
+                <DetailsBox
+                    reqNo={IOUSettlementNo}
+                    empNo={epfNo}
+                    RequestBy={uName}
+                    Rdate={currentDate1}
                 />
-
-                <ViewField
-                    title="Request By"
-                    Value={uName}
-                />
-
-                <ViewField
-                    title="Employee No"
-                    Value={epfNo}
-                />
-
-                <ViewField
-                    title="Request Channel"
-                    Value="Mobile App"
-                />
-
-                <ViewField
-                    title="Request Date"
-                    Value={currentDate1}
-                />
-
-                <View style={ComStyles.separateLine} />
-
                 <View>
-
-                    <View style={{ flexDirection: 'row', }}>
+                    <View style={{ flexDirection: 'row', marginTop: 5 }}>
                         <Text style={styles.bodyTextLeft}>
                             IOU *
                         </Text>
                     </View>
-
                     <Dropdown
                         style={[
                             Style.dropdown,
@@ -3038,6 +2195,7 @@ const NewIOUSettlement = () => {
                         iconStyle={Style.iconStyle}
                         data={IOUList}
                         search
+                        autoScroll={false}
                         maxHeight={300}
                         labelField="IOU_ID"
                         valueField="IOU_ID"
@@ -3046,67 +2204,41 @@ const NewIOUSettlement = () => {
                         value={selectIOU}
                         onFocus={() => setIsFocus(true)}
                         onBlur={() => setIsFocus(false)}
-                        onChange={item => {
-
+                        onChange={(item: any) => {
                             // console.log("IOU DATA ====  " , item);
-                            
-
                             DeleteIOuJobs();
-
                             setIOUTypeID(item.IOU_Type);
-
                             getEmpDetails(item.EmpId);
-
                             const iouID = item.IOU_ID + "";
-
                             const code = iouID.split(" - ");
-
                             console.log(" IOU ID === ", code[0].trim());
                             setSelectIOU(item.IOU_ID);
-
-                            setIOUID(code[0].trim());
-
+                            setIOUID(code[0].trim() + "");
                             setiouJobList([]);
-
-
                             getIOUJobList(code[0].trim());
-
                             if (item.IOU_Type == 1) {
-
                                 // console.log(" job");
-
-
                                 setOwnerType("Job Owner");
                                 setIsEditable(false);
                                 setIsDisableRes(false);
                                 getJJobOwnerTransportHOD(item.JobOwner_ID, 1);
                                 setSelectIOUType("Job No");
-
-
                             } else if (item.IOU_Type == 2) {
-
                                 // console.log(" vehicle");
-
                                 setOwnerType("Transport Officer");
                                 setIsEditable(false);
                                 setIsDisableRes(true);
                                 getJJobOwnerTransportHOD(item.JobOwner_ID, 2);
                                 getVehicleNo();
                                 setSelectIOUType("Vehicle No");
-
-
                             } else {
-
                                 // console.log(" other HOD ====   "  ,  item.HOD);
                                 setOwnerType("HOD");
                                 setIsEditable(true);
                                 setIsDisableRes(false);
                                 getJJobOwnerTransportHOD(item.JobOwner_ID, 3);
                                 setSelectIOUType("Other");
-
                             }
-
-
                             setError({ field: '', message: '' });
                             setIsFocus(false);
                         }}
@@ -3122,13 +2254,11 @@ const NewIOUSettlement = () => {
                     {error.field === 'IOU' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
-
                     <View style={{ flexDirection: 'row', }}>
                         <Text style={styles.bodyTextLeft}>
                             IOU Type
                         </Text>
                     </View>
-
                     <InputText
                         placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                         placeholder="IOU Type"
@@ -3137,55 +2267,14 @@ const NewIOUSettlement = () => {
                         editable={false}
                         style={ComStyles.IOUInput}
                     />
-                    {/* 
-                    <Dropdown
-                        style={[
-                            Style.dropdown,
-                            isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                        ]}
-                        itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                        placeholderStyle={Style.placeholderStyle}
-                        selectedTextStyle={Style.selectedTextStyle}
-                        inputSearchStyle={Style.inputSearchStyle}
-                        iconStyle={Style.iconStyle}
-                        data={IOUTypeList}
-                        search
-                        disable={true}
-                        maxHeight={300}
-                        labelField="Description"
-                        valueField="Description"
-                        placeholder={!isFocus ? 'IOU Type' : '...'}
-                        searchPlaceholder="Search Type"
-                        value={selectIOUType}
-                        onFocus={() => setIsFocus(true)}
-                        onBlur={() => setIsFocus(false)}
-                        onChange={item => {
-
-                            setIOUTypeID(item.IOUType_ID);
-                            setSelectIOUType(item.Description);
-
-
-                            setIsFocus(false);
-                        }}
-                        renderLeftIcon={() => (
-                            <AntDesign
-                                style={Style.icon}
-                                color={isFocus ? 'blue' : 'black'}
-                                name="Safety"
-                                size={15}
-                            />
-                        )}
-                    /> */}
                     {error.field === 'IOUTypeID' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
-
                     <View style={{ flexDirection: 'row', }}>
                         <Text style={styles.bodyTextLeft}>
                             {ownerType}
                         </Text>
                     </View>
-
                     <InputText
                         placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                         placeholder={ownerType}
@@ -3194,57 +2283,14 @@ const NewIOUSettlement = () => {
                         editable={false}
                         style={ComStyles.IOUInput}
                     />
-
-                    {/* <Dropdown
-                        style={[
-                            Style.dropdown,
-                            isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                        ]}
-                        itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                        placeholderStyle={Style.placeholderStyle}
-                        selectedTextStyle={Style.selectedTextStyle}
-                        inputSearchStyle={Style.inputSearchStyle}
-                        iconStyle={Style.iconStyle}
-                        data={jobOwnerList}
-                        search
-                        maxHeight={300}
-                        disable={true}
-                        labelField="Name"
-                        valueField="Name"
-                        placeholder={!isFocus ? 'Job Owner' : '...'}
-                        searchPlaceholder="Search Owner"
-                        value={selectJobOwner}
-                        onFocus={() => setIsFocus(true)}
-                        onBlur={() => setIsFocus(false)}
-                        onChange={item => {
-
-                            setSelectJobOwner(item.Name);
-                            setJobOwner(item.JobOwner_ID);
-
-
-                            setIsFocus(false);
-                            getCostCenter(item.JobOwner_ID, IOUTypeID);
-
-                        }}
-                        renderLeftIcon={() => (
-                            <AntDesign
-                                style={Style.icon}
-                                color={isFocus ? 'blue' : 'black'}
-                                name="Safety"
-                                size={15}
-                            />
-                        )}
-                    /> */}
                     {error.field === 'JobOwner' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
-
                     <View style={{ flexDirection: 'row', }}>
                         <Text style={styles.bodyTextLeft}>
                             Employee
                         </Text>
                     </View>
-
                     <InputText
                         placeholderColor={ComStyles.COLORS.HEADER_BLACK}
                         placeholder="Employee"
@@ -3253,65 +2299,11 @@ const NewIOUSettlement = () => {
                         editable={false}
                         style={ComStyles.IOUInput}
                     />
-
-                    {/* <Dropdown
-                        style={[
-                            Style.dropdown,
-                            isFocus && { borderColor: ComStyles.COLORS.BORDER_COLOR },
-                        ]}
-                        itemTextStyle={{ color: ComStyles.COLORS.BLACK, }}
-                        placeholderStyle={Style.placeholderStyle}
-                        selectedTextStyle={Style.selectedTextStyle}
-                        inputSearchStyle={Style.inputSearchStyle}
-                        iconStyle={Style.iconStyle}
-                        data={EmployeeList}
-                        search
-                        maxHeight={300}
-                        disable={true}
-                        labelField="UserName"
-                        valueField="UserName"
-                        placeholder={!isFocus ? 'Employee ' : '...'}
-                        searchPlaceholder="Search Employee"
-                        value={selectEmployee}
-                        onFocus={() => setIsFocus(true)}
-                        onBlur={() => setIsFocus(false)}
-                        onChange={item => {
-
-                            setEmpID(item.USER_ID);
-                            setSelectEmployee(item.UserName)
-
-                            setIsFocus(false);
-                            getJobNo(selectJobOwner);
-                            getCostCenter(selectJobOwner, IOUTypeID);
-                        }}
-                        renderLeftIcon={() => (
-                            <AntDesign
-                                style={Style.icon}
-                                color={isFocus ? 'blue' : 'black'}
-                                name="Safety"
-                                size={15}
-                            />
-                        )}
-                    /> */}
                     {error.field === 'EmpName' && (
                         <Text style={Style.error}>{error.message}</Text>
                     )}
-
-
-
-                    {/* <InputText
-                        placeholderColor={ComStyles.COLORS.HEADER_BLACK}
-                        placeholder="Employee No"
-                        // stateValue={createBy}
-                        editable={false}
-                        style={ComStyles.IOUInput}
-                    /> */}
-
-                    {/* <AddAnotherJob /> */}
                     <View>
-
                         <ScrollView horizontal={true}>
-
                             <FlatList
                                 //nestedScrollEnabled={true}
                                 data={ioujoblist}
@@ -3320,7 +2312,6 @@ const NewIOUSettlement = () => {
                                 renderItem={({ item }) => {
                                     return (
                                         <View style={{ width: width - 30, padding: 5 }}>
-
                                             <NewJobsView
                                                 IOU_Type={IOUTypeID}
                                                 amount={item.Requested_Amount}
@@ -3337,91 +2328,24 @@ const NewIOUSettlement = () => {
                                                 isDelete={item.IstoEdit == 0 ? true : false}
                                                 onPressDeleteIcon={() => deleteNewJob(item._Id)}
                                             />
-
-
                                         </View>
                                     )
                                 }
-
                                 }
                                 keyExtractor={item => `${item._Id}`}
                             />
-
-
-
-
                         </ScrollView>
 
-
                     </View>
-
                     <View style={ComStyles.separateLine} />
-
-
-
                 </View>
-
                 <ActionButton
                     is_icon={true}
                     iconColor={ComStyles.COLORS.WHITE}
                     icon_name="plus"
                     title="Add Details"
                     onPress={() => addjob()} />
-                <View style={ComStyles.separateLine} />
-                {/* 
-                <View>
-
-                    <ScrollView horizontal={true}>
-
-                        <FlatList
-                            //nestedScrollEnabled={true}
-                            data={joblist}
-
-                            //horizontal={false}
-                            renderItem={({ item }) => {
-                                return (
-                                    <View>
-
-                                        <NewJobsView
-                                            IOU_Type={IOUTypeID}
-                                            amount={item.Amount}
-                                            IOUTypeNo={item.IOUTypeNo}
-                                            ExpenseType={item.ExpenseType == 1 ? "Meals" : (item.ExpenseType == 2 ? "Batta" : (item.ExpenseType == 3 ? "Labour" : (item.ExpenseType == 4 ? "Project Materials" : (item.ExpenseType == 5 ? "Travelling" : (item.ExpenseType == 6 ? "Other" : "")))))}
-                                            jobremarks={item.Remark}
-                                            accNo={item.AccNo}
-                                            costCenter={item.CostCenter}
-                                            resource={item.Resource}
-                                            isEdit={false}
-
-
-                                        />
-
-
-
-
-
-
-                                    </View>
-                                )
-                            }
-
-                            }
-                            keyExtractor={item => `${item.Job_ID}`}
-                        />
-
-
-
-
-                    </ScrollView>
-
-
-                </View> */}
-
-
-                {/* <View style={ComStyles.separateLine} /> */}
-
                 <TouchableOpacity onPress={() => attachement()}>
-
                     <View style={Style.container}>
                         <AntDesign
                             name='cloudupload'
@@ -3429,18 +2353,9 @@ const NewIOUSettlement = () => {
                             style={Style.iconStyle1}
                         />
                         <Text style={Style.selectedTextStyle2}>Upload Attachments</Text>
-
-
                     </View>
-
                 </TouchableOpacity>
-
                 <View style={Style.container}>
-                    {/* <Image style={{height:70, width:70, justifyContent: 'space-between'}} source={{uri: galleryPhoto}} />
-                    <Image style={{height:70, width:70, }} source={{uri: cameraPhoto}} />
-                    <Image style={{height:70, width:70, }} source={{uri: cameraPhoto}} />
-                     */}
-
                     {cameraPhoto.length > 0 ? (
                         <FlatList
                             data={cameraPhoto}
@@ -3450,17 +2365,11 @@ const NewIOUSettlement = () => {
                             contentContainerStyle={{ marginTop: 10 }}
                         />
                     ) : (
-                        // <Image
-                        //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                        //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                        // />
                         <>
                             <Text style={{ color: ComStyles.COLORS.DETAIL_ASH, fontSize: 13, textAlign: "center", alignItems: "center" }}>No Added Attachments</Text>
-
                         </>
                     )
                     }
-
                     {galleryPhoto.length > 0 ? (
                         <FlatList
                             data={galleryPhoto}
@@ -3470,48 +2379,48 @@ const NewIOUSettlement = () => {
                             contentContainerStyle={{ marginTop: 10 }}
                         />
                     ) : (
-                        // <Image
-                        //     source={{ uri: 'https://thumbs.dreamstime.com/b/vector-paper-check-sell-receipt-bill-template-vector-paper-cash-sell-receipt-139437685.jpg' }}
-                        //     style={{ height: 70, width: 70, justifyContent: 'space-between' }}
-                        // />
                         <></>
                     )}
-
                 </View>
-
             </ScrollView>
-
             <View style={{ marginLeft: 13, marginRight: 13 }}>
-
                 <ActionButton
                     title="Submit Request"
                     onPress={() => submit()} />
-
-
             </View>
-
-
             <View style={{ marginBottom: 70 }} />
-
-
-            <Modal isVisible={isModalVisible} style={{ backgroundColor: ComponentsStyles.COLORS.WHITE, borderRadius: 10 }}>
-
-
-                <View style={{ flexDirection: 'row', marginTop: 5, marginBottom: 8, marginLeft: 5, marginRight: 5 }}>
-
-                    <ScrollView>
-
-
-
-
-                    </ScrollView>
-                </View>
-            </Modal>
-
+            {/* -----   Attatchment Dialog box -------------- */}
+            <Dialog
+                visible={isDialog}
+                onDismiss={() => closeDialog()}
+                style={{ backgroundColor: ComStyles.COLORS.WHITE }}>
+                <Dialog.Content>
+                    <ImageUpload
+                        camerabtn={() => openCamera()}
+                        gallerybtn={() => openGallery()}
+                        cancelbtn={() => closeDialog()}
+                        headertxt="Select file"
+                        subtxt="Do you want to add a file?"
+                        closeModal={() => closeDialog()}
+                    />
+                    <View style={{ padding: 5 }} />
+                </Dialog.Content>
+            </Dialog>
+            {/* -----   Submit Dialog box -------------- */}
+            <Dialog
+                visible={isSubmitDialog}
+                onDismiss={() => closeSubmitDialog()}
+                style={{ backgroundColor: ComStyles.COLORS.WHITE }}>
+                <Dialog.Content>
+                    <SubmitCancelModal
+                        cancelbtn={() => add_one(3)}
+                        approvebtn={() => add_one(2)}
+                    />
+                    <View style={{ padding: 5 }} />
+                </Dialog.Content>
+            </Dialog>
         </SafeAreaView>
-
     );
-
 }
 export default NewIOUSettlement;
 
@@ -3532,7 +2441,7 @@ const Style = StyleSheet.create({
     selectedTextStyle: {
         fontFamily: ComStyles.FONT_FAMILY.SEMI_BOLD,
         fontSize: 12,
-        color: ComStyles.COLORS.ICON_BLUE,
+        color: ComStyles.COLORS.MAIN_COLOR,
     },
     iconStyle: {
         width: 20,
@@ -3563,12 +2472,12 @@ const Style = StyleSheet.create({
     },
     iconStyle1: {
         marginRight: 5,
-        color: ComStyles.COLORS.ICON_BLUE,
+        color: ComStyles.COLORS.MAIN_COLOR,
     },
     selectedTextStyle2: {
         fontFamily: ComStyles.FONT_FAMILY.BOLD,
         fontSize: 20,
-        color: ComStyles.COLORS.ICON_BLUE,
+        color: ComStyles.COLORS.MAIN_COLOR,
         marginTop: 5
     },
     modalCont: {
@@ -3581,7 +2490,21 @@ const Style = StyleSheet.create({
     },
     error: {
         color: 'red'
-    }
+    },
+    fab: {
+        position: 'absolute',
+        margin: 10,
+        right: 0,
+        bottom: 0,
+        backgroundColor: ComStyles.COLORS.MAIN_COLOR, // Custom background color
+        borderRadius: 28, // Ensure it's rounded
+        width: 56, // Width to maintain circular shape
+        height: 56, // Height to maintain circular shape
+    },
+    iconFab: {
+        borderRadius: 12,
+        padding: 1,
+    },
 
 })
 
@@ -3630,7 +2553,7 @@ const styles = StyleSheet.create({
     selectedTextStyle: {
         fontFamily: ComStyles.FONT_FAMILY.SEMI_BOLD,
         fontSize: 12,
-        color: ComStyles.COLORS.ICON_BLUE,
+        color: ComStyles.COLORS.MAIN_COLOR,
     },
     iconStyle: {
         width: 20,

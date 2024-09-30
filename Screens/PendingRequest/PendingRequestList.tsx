@@ -41,11 +41,8 @@ const PendingRequestList = () => {
     };
 
     const selectDateRange = () => {
-
         setRange('');
         slideInModal();
-
-
     }
 
     const OnPressedIOU = () => {

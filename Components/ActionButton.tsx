@@ -58,7 +58,7 @@ const ActionButton = ({styletouchable, style, disabled, textStyle, title, onPres
 const styles = StyleSheet.create({
     CONTAINER: {
         width: '100%',
-        backgroundColor: comStyles.COLORS.ICON_BLUE,
+        backgroundColor: comStyles.COLORS.MAIN_COLOR,
         padding: 10,
         borderRadius: 5,
        

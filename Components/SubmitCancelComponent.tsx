@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
 
         margin: 5,
         fontSize: 16,
-        color: ComponentsStyles.COLORS.PROCEED_ASH,
+        color: ComponentsStyles.COLORS.SUB_COLOR,
         fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR,
         padding: 20,
     },

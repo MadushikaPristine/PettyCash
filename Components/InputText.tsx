@@ -57,7 +57,7 @@ const InputText = ({ returnKeyType,borderStyle,bdrStyle, imgStyle, is_back_icon,
                     <IconA name={icon_name}
                         size={27}
                         onPress={onpress}
-                        color={comStyles.COLORS.ICON_BLUE} />
+                        color={comStyles.COLORS.MAIN_COLOR} />
                 </View>
                 : <></>
             }
@@ -127,10 +127,10 @@ const styles = StyleSheet.create({
         alignItems: "center"
     },
     inputTextStyle: {
-        color: ComponentsStyles.COLORS.ICON_BLUE,
+        color: ComponentsStyles.COLORS.MAIN_COLOR,
         fontSize: 15,
         height: 45,
-        borderColor: ComponentsStyles.COLORS.ICON_BLUE,
+        borderColor: ComponentsStyles.COLORS.MAIN_COLOR,
         borderWidth: 1,
         paddingLeft: 100,
         borderRadius: 6,

@@ -9,7 +9,8 @@ import ActionButton from "./ActionButton";
 import { getLoginUserID, getLoginUserRoll } from "../Constant/AsynStorageFuntion";
 import { checkOpenRequests } from "../SQLiteDBAction/Controllers/IOUController";
 import { checkOpenRequestsOneOff } from "../SQLiteDBAction/Controllers/OneOffSettlementController";
-
+import DropdownAlert, { DropdownAlertData, DropdownAlertType } from "react-native-dropdownalert";
+let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 const ButtonSheetComponent = () => {
 
     const navigation = useNavigation();
@@ -28,17 +29,10 @@ const ButtonSheetComponent = () => {
     }
 
     const newIOU = () => {
-
-
-
         // ====================================================
-
         getLoginUserID().then(result => {
-
-            checkOpenRequests(parseInt(result + ""), (resp: any) => {
-
+            checkOpenRequests(parseInt(result + ""), async (resp: any) => {
                 if (resp.length > 0) {
-
                     Alert.alert('Can not create a new Request', 'You already have an open status request', [
                         {
                             text: 'Ok',
@@ -47,28 +41,19 @@ const ButtonSheetComponent = () => {
                         },
                         // { text: 'Yes', onPress: (back) },
                     ]);
-
+                    // await alert({
+                    //     type: DropdownAlertType.Error,
+                    //     title: 'Can not create a new Request',
+                    //     message: "You already have an open status request",
+                    // });
                     setModalVisible(false);
-
                 } else {
-
                     setModalVisible(false);
                     navigation.navigate('NewIOU');
-
                 }
-
             });
-
         })
-
         // ================================================
-
-
-
-        // setModalVisible(false);
-        // navigation.navigate('NewIOU');
-
-
     }
     const NewIOUSettlement = () => {
 
@@ -133,7 +118,6 @@ const ButtonSheetComponent = () => {
     return (
 
         <View style={styles.headerContainer}>
-
             <TouchableOpacity style={{ alignSelf: 'center' }} onPress={() => { setModalVisible(true) }}>
                 <Icon name={"add-box"} size={30} color={"white"} style={{}} />
             </TouchableOpacity>
@@ -155,7 +139,7 @@ const ButtonSheetComponent = () => {
                                 style={styles.loginBtn}
                                 textStyle={styles.txtStyle}
                                 is_icon={true}
-                                iconColor={comStyles.COLORS.ICON_BLUE}
+                                iconColor={comStyles.COLORS.MAIN_COLOR}
                                 icon_name='square'
                                 onPress={() => newIOU()}
 
@@ -165,7 +149,7 @@ const ButtonSheetComponent = () => {
                                 style={styles.loginBtn}
                                 textStyle={styles.txtStyle}
                                 is_icon={true}
-                                iconColor={comStyles.COLORS.ICON_BLUE}
+                                iconColor={comStyles.COLORS.MAIN_COLOR}
                                 icon_name='square'
                                 onPress={() => NewIOUSettlement()}
                             />
@@ -174,7 +158,7 @@ const ButtonSheetComponent = () => {
                                 style={styles.loginBtn}
                                 textStyle={styles.txtStyle}
                                 is_icon={true}
-                                iconColor={comStyles.COLORS.ICON_BLUE}
+                                iconColor={comStyles.COLORS.MAIN_COLOR}
                                 icon_name='square'
                                 onPress={() => NewOneOffSettlement()}
                             //disabled={roll=='Requester' ? false : true}
@@ -194,19 +178,16 @@ const ButtonSheetComponent = () => {
 
 }
 const styles = StyleSheet.create({
-
     headerContainer: {
         justifyContent: 'center'
     },
     container: {
         width: 100,
     },
-
     contentView: {
         justifyContent: 'flex-end',
         margin: 0,
     },
-
     modalMainContainer: {
         justifyContent: "center",
         alignItems: "center",
@@ -215,33 +196,28 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 20,
         borderTopLeftRadius: 20,
     },
-
     loginBtn: {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: comStyles.COLORS.ICON_BLUE,
+        borderColor: comStyles.COLORS.MAIN_COLOR,
         marginBottom: 10,
         marginTop: 20,
         justifyContent: "flex-start",
         alignItems: "flex-start",
         alignContent: "flex-start",
-
     },
-
     rejectBtn: {
         backgroundColor: comStyles.COLORS.HIGH_BUTTON_RED,
         marginBottom: 30
     },
-
     ActionButton: {
         marginTop: 10,
         justifyContent: "center",
         alignItems: "center",
         alignContent: "center",
     },
-
     txtStyle: {
-        color: comStyles.COLORS.ICON_BLUE
+        color: comStyles.COLORS.MAIN_COLOR
     },
     dashStyle: {
         width: 50,

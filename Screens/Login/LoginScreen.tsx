@@ -44,14 +44,9 @@ import AppLink from 'react-native-app-link';
 import { Dialog } from "react-native-paper";
 import { requestPermission } from "../../Services/permissionServise";
 import { red100 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
-
 requestPermission();
-
-
 const LoginScreen = () => {
-
     const navigation = useNavigation();
-
     const [uName, setuName] = useState('');
     const [pword, setPword] = useState('');
     const [error, setError] = useState({ field: '', message: '' });
@@ -59,83 +54,51 @@ const LoginScreen = () => {
     const [isEditUName, setisEditUName] = useState(true);
     const [isEditPW, setisEditPW] = useState(true);
     const [ViewDialog, setViewDialog] = useState(false);
-
-
     const saveDBData = () => {
-
-
         // DB_ExpenseType.saveExpenseType(ExpenseType, (res: any, error: any) => {
         //     console.log("Add Expense Types >>>>>>>>>>>>. ", res);
         // })
-
         // DB_IOUType.saveIOUType(IOUType, (res: any, error: any) => {
         //     console.log("Add IOU Types >>>>>>>>>>>>. ", res);
         // })
-
         DB_EmpType.saveEmployeeType(EmpType, (res: any, error: any) => {
             // console.log("Add Emp Types >>>>>>>>>>>>. ", res);
         })
-
         DB_Emp.saveEmployee(Employee, (res: any, error: any) => {
             // console.log("Add Employee >>>>>>>>>>>>. ", res);
         })
-
-
-
     }
-
     const checkVersionUpdate = () => {
         if (Platform.OS == 'ios') {
-
         } else {
-
             // openDialog();
-
             try {
-
-
                 getAppstoreAppVersion("com.pettycashapp")
                     .then((appVersion: any) => {
-
                         console.log("appVersion on Playstore==== ", appVersion);
-
                         console.log('Build number in android', parseFloat(DeviceInfo.getBuildNumber()))
                         if (parseFloat(DeviceInfo.getBuildNumber()) > parseFloat(appVersion) || parseFloat(DeviceInfo.getBuildNumber()) == parseFloat(appVersion)) {
-
                         }
                         else {
                             // update modal open
                             openDialog();
                         }
-
                     })
                     .catch((err: any) => {
                         console.log("error msg", err);
                     });
-
             } catch (error) {
                 console.log(" error ===   ", error);
-
             }
-
-
         }
     }
-
-
     const goToStore = () => {
-
         AppLink.openInStore({ appName: 'TPL Wallet', appStoreId: '1450157260', playStoreId: 'com.pettycashapp' }).then(() => {
         })
             .catch((err: any) => {
-
             });
-
     }
-
-
     const login = async () => {
-
         let loginError = { field: '', message: '' }
         if (uName === '') {
             loginError.field = 'uName';
@@ -146,26 +109,17 @@ const LoginScreen = () => {
             loginError.message = 'Password is required';
             setError(loginError);
         } else {
-
-
             setloandingspinner(true);
-
             setError({ field: '', message: '' });
             createTables();
             CreateTableIndexKey();
             // saveDBData();
-
-
             var turn;
-
             // internet connection is available 
-
             let enteredPassword = pword;
             let secretKey = "0123456789123456";
-
             let key = CryptoJS.enc.Utf8.parse(secretKey);
             let iv = CryptoJS.enc.Utf8.parse(secretKey);
-
 
             let encrypted = CryptoJS.AES.encrypt(
                 JSON.stringify(pword), key, {
@@ -174,132 +128,71 @@ const LoginScreen = () => {
                 mode: CryptoJS.mode.ECB,
                 padding: CryptoJS.pad.Pkcs7
             });
-
             var encryptedPassword = encrypted.toString();
             // console.log("Encrypted Password:", encryptedPassword);
-
             var u_name = "dinushkam";
             var p_word = "GdBzSuV6mAdEyA6/H4plMQ==";
-
             const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=" + DB_LIVE + "&username=" + uName + "&password=" + encryptedPassword + "&sap=" + SAP_LIVE_DB;
-
             console.log("Login URL === ", URL);
-
             var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++LOGIN ++++++++++++++++";
 
             // logger(loggerDate,"Login URL " + "   *******   " +URL );
             // logger(loggerDate,"Login URL " + "   *******   " +URL );
 
-
             Conection_Checking(async (res: any) => {
                 if (res != false) {
-
                     try {
-
                         await axios.get(URL, { headers }
                         ).then(async response => {
-
-
                             logger(response.status + "", "Login Response Status ");
                             saveJsonObject_To_Loog(response.data);
-
-
                             console.log(" login response ==== ", response.data);
-
                             if (response.status === 200) {
-
                                 setloandingspinner(false);
-
                                 if (response.data.count == 1) {
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserRoll, response.data.roleId);
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_NAME, response.data.displayName);
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_UserID, response.data.userId);
-
                                     if (response.data.isAuthUser != null) {
-
                                         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_IS_Auth_Requester, response.data.isAuthUser);
-
                                     }
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_COSTCENTER, response.data.costCenter);
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_EPFNO, response.data.epfno);
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_USER_NAME, uName);
-
                                     await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_PASSWORD, pword);
-
-
                                     get_ASYNC_LOGIN_ROUND().then(async res => {
-
                                         if (res !== null) {
                                             // close and re login
-
                                             if (res === "0") {
-
                                                 turn = parseInt(res + "") + 2;
-
                                             } else {
-
                                                 turn = parseInt(res + "") + 1;
-
                                             }
-
-
                                             if (res === "1") {
                                                 //relogin after logout
                                                 // console.log(" relogin after logout ---------------------------------");
-
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "1");
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_ROUND, turn + "");
                                                 navigation.navigate("BottomNavi");
-
-
                                             } else {
                                                 //relogin
-
                                                 // console.log(" relogin  ---------------------------------", response.data.count);
-
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "2");
                                                 await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_ROUND, turn + "");
                                                 navigation.navigate("BottomNavi");
-
-
                                             }
-
-
-
-
-
                                         } else {
                                             //first time login
-
-
                                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CHECK_SYNC, "1");
                                             // console.log("initial login ---------------------------------");
                                             await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_LOGIN_ROUND, "0");
-
                                             get_ASYNC_CHECKSYNC().then(res => {
                                                 // console.log(" sync status >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
-
                                             })
-
                                             navigation.navigate("BottomNavi");
-
-
                                         }
-
                                     })
-
-
-
-
-
                                 } else {
-
                                     Alert.alert(
                                         "Login Failed!",
                                         "Invalid username or password.",
@@ -307,16 +200,9 @@ const LoginScreen = () => {
                                             { text: "OK", onPress: () => console.log(response.data) }
                                         ]
                                     );
-
-
                                 }
-
-
-
                             } else {
-
                                 setloandingspinner(false);
-
                                 Alert.alert(
                                     "Bad Request!",
                                     "Login Failed...",
@@ -324,19 +210,11 @@ const LoginScreen = () => {
                                         { text: "OK", onPress: () => console.log(response.data) }
                                     ]
                                 );
-
                             }
                         }
-
-
-
                         ).catch((err: any) => {
-
                             console.log(" response error =====  ", err);
-
                             logger("Login ERROR ====  ", err + "");
-
-
                             setloandingspinner(false);
                             Alert.alert(
                                 "Login Failed!",
@@ -345,15 +223,10 @@ const LoginScreen = () => {
                                     { text: "OK", onPress: () => console.log(err) }
                                 ]
                             );
-
                         });
-
                     } catch (error) {
-
                         logger("Login ERROR ====  ", error + "");
-
                         readLogs();
-
                         Alert.alert(
                             "Bad Request!",
                             "Login Failed...",
@@ -361,13 +234,9 @@ const LoginScreen = () => {
                                 { text: "OK", onPress: () => console.log(error) }
                             ]
                         );
-
                     }
-
                 } else {
-
                     setloandingspinner(false);
-
                     Alert.alert(
                         "No Internet Connection!",
                         "Please Connect Internet! ...",
@@ -375,133 +244,50 @@ const LoginScreen = () => {
                             { text: "OK", onPress: () => console.log("no internet") }
                         ]
                     );
-
-
                 }
             })
-
-
-
             //-------------------------------------------------------------
-
-            // const URL2 = BASE_URL + "/Mob_GetRequestMaxAmount.xsjs?dbName=TPL_REPORT_TEST";
-
-            // await axios.get(URL2, { headers }
-            // ).then(async response => {
-            //     if (response.status === 200) {
-
-            //         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_JOBOWNER_APPROVAL_AMOUNT, response.data[0].JobOwnerApprovalAmount);
-
-            //         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_MAXIMUM_REQUEST_AMOUNT, response.data[0].IOUMaxAmount);
-
-
-            //     } else {
-
-            //         Alert.alert(
-            //             "Bad Request!",
-            //             "Download Amount Failed...",
-            //             [
-            //                 { text: "OK", onPress: () => console.log(response.data) }
-            //             ]
-            //         );
-
-            //     }
-            // }
-
-
-
-            // ).catch((err: any) => {
-            //     Alert.alert(
-            //         "Download Amount Failed!",
-            //         "Server not Connected...",
-            //         [
-            //             { text: "OK", onPress: () => console.log(err) }
-            //         ]
-            //     );
-            // });
-
-
-            //Alert.alert('Login successfully')
         }
     }
-
     useFocusEffect(
         React.useCallback(() => {
-
             setuName('');
             setPword('');
-
             CreateLogFile();
-
             checkVersionUpdate();
-
-
             getLoginUName().then(res => {
                 console.log(" user name >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
-
                 if (res != null) {
-
                     getLoginPassword().then(resp => {
-
                         console.log(" pword >>>>>>>>>>>>>>>>>>>>>>>>>>     ", resp);
-
                         if (resp != null) {
-
                             setisEditUName(false);
-                            setisEditPW(false);
-
+                            // setisEditPW(false);
                             setuName(res + "");
-                            setPword(resp + "");
-
-
-
+                            // setPword(resp + "");
                             console.log(" un and pw already added ====  ");
-
-
                         } else {
-
                             setisEditUName(true);
                             setisEditPW(true);
-
-
                             setuName('');
                             setPword('');
-
                         }
-
                     });
-
-
                 } else {
-
-
-
                     setisEditUName(true);
                     setisEditPW(true);
-
-
-
                     setuName('');
                     setPword('');
-
-
                 }
-
             })
-
-
         }, [navigation])
     )
-
     const closeDialog = () => {
         // setViewDialog(false);
     }
-
     const openDialog = () => {
         setViewDialog(true);
     }
-
-
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
 

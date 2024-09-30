@@ -66,25 +66,19 @@ const ScreenComponent = () => {
 
 
 const NavigationScreen = () => {
-
     const navigation = useNavigation();
     const [roll, setRoll] = useState('');
-
     const [modalStyle, setModalStyle] = useState(new Animated.Value(height));
-
     const refRBSheet = useRef<RBSheet>(null);
-
     const slideInModal = () => {
         // setIsShowSweep(false);
         // console.log('sampleIn');
-
         Animated.timing(modalStyle, {
             toValue: height / 2.2,
             duration: 500,
             useNativeDriver: false,
         }).start();
     };
-
     const slideOutModal = () => {
         // setIsShowSweep(true);
         Keyboard.dismiss();
@@ -94,54 +88,34 @@ const NavigationScreen = () => {
             useNativeDriver: false,
         }).start();
     };
-
-
     const IOU = () => {
-        
             slideOutModal();
             navigation.navigate("IOU")
-        
-
     }
-
     const PendingList = async () => {
         slideOutModal();
-
         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, "all");
         navigation.navigate('PendingList')
     }
-
     const SettlementScreen = () => {
-        
             slideOutModal();
             navigation.navigate("SettlementScreen")
-        
-
     }
-
     const OneOffScreen = () => {
-        
             slideOutModal();
             navigation.navigate("OneOffScreen")
-        
-
     }
-
-
     useFocusEffect(
         React.useCallback(() => {
-
             getLoginUserRoll().then(res => {
                 setRoll(res);
                 // console.log("User Roll: ", res);
             })
-
         }, [])
     );
 
 
     return (
-
         <>
             <Animated.View
                 style={{
@@ -161,7 +135,6 @@ const NavigationScreen = () => {
                     }),
                 }}>
                 <View style={styles.modalCont}>
-
                     <RequestButtonSheet
                         modalclose={() => slideOutModal()}
                         OneOffScreen={() => OneOffScreen()}
@@ -182,7 +155,7 @@ const NavigationScreen = () => {
                     tabBarStyle: {
                         position: "absolute",
                         elevation: 0,
-                        backgroundColor: comStyles.COLORS.ICON_BLUE,
+                        backgroundColor: comStyles.COLORS.MAIN_COLOR,
                         borderTopLeftRadius: 15,
                         borderTopRightRadius: 15,
                         height: 65,
@@ -206,7 +179,7 @@ const NavigationScreen = () => {
                         return <IconA name={iconName} size={size} color={color} />;
                     },
 
-                    tabBarActiveTintColor: comStyles.COLORS.DASH_COLOR,
+                    tabBarActiveTintColor: comStyles.COLORS.SUB_COLOR,
                     tabBarInactiveTintColor: comStyles.COLORS.WHITE,
                 })}
             >

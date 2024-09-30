@@ -49,17 +49,17 @@ import LogFileDialogBox from "../Components/LogFileDialogBox";
 import { getIOUAttachmentListByID } from "../SQLiteDBAction/Controllers/AttachmentController";
 import RNFS from 'react-native-fs';
 import { logger, saveJsonObject_To_Loog } from "../Constant/Logger";
-
+import CardView from "../Components/CardView";
+import DropdownAlert, { DropdownAlertData, DropdownAlertType } from "react-native-dropdownalert";
+let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 let SyncArray1: any[] = [];
 let arrayindex = 0;
 let userID: any;
 let UserRoleID: any;
 
 const HomeScreen = () => {
-
     const width = Dimensions.get('screen').width;
     let formattedTotal: any;
-
     // List View
     const [IOUList, setIOUList] = useState([]);
     const [IOUSettlementList, setIOUSettlementList] = useState([]);
@@ -70,148 +70,92 @@ const HomeScreen = () => {
     const [roll, setRoll] = useState('');
     const [uName, setUname] = useState('');
     const [viewLogFileList, setviewLogFileList] = useState(false);
-
     //Sync Modal
     const [isModalVisible, setModalVisible] = useState(false);
     const [CloseBtnSync, SetCloseBtnSync] = useState(false);
     const [SyncArray, setSyncArray]: any[] = useState([]);
     const [onRefresh, setOnRefresh] = useState(false);
-
     const [TotalIOUAmount, setTotalIOUAmount] = useState(0);
     const [TotalIOUSETAmount, setTotalIOUSETAmount] = useState(0);
     const [TotalONEOFFAmount, setTotalONEOFFAmount] = useState(0);
     const [TotalPayableAmount, setTotalPayableAmount] = useState(0);
     const [HeaderText, setHeaderText] = useState('');
-
-    // const [userID, setUserID] = useState('');
-
-    //let TotalIOUAmount = 0.00;
-    //let TotalIOUSETAmount = 0.00;
-    //let TotalONEOFFAmount = 0.00;
-
     const navigation = useNavigation();
 
     const getIOU_request = () => {
-
         if (UserRoleID == '5') {
-
             console.log(" HOD LOgged ");
-    
-    
             getPendingHODApprovalIOUList((res: any) => {
-              console.log(res,"================================================");
-              
-              setIOUList(res);
+                console.log(res, "================================================");
+                setIOUList(res);
             })
-    
-    
-          } else {
-    
+        } else {
             if (UserRoleID == '3' || UserRoleID == '4') {
-              //Job owner or transport officer
-    
-              console.log(" Job owner or transport officer ");
-    
-    
-              getPendingIOUList(UserRoleID, (result: any) => {
-                setIOUList(result);
-    
-                // console.log(result)
-              });
-    
+                //Job owner or transport officer
+                console.log(" Job owner or transport officer ");
+                getPendingIOUList(UserRoleID, (result: any) => {
+                    setIOUList(result);
+                    // console.log(result)
+                });
             } else {
-              //Requester
-    
-              console.log(" Requester ");
-    
-    
-              getAllPendingIOUList((result: any) => {
-                setIOUList(result);
-    
-                // console.log(result)
-              });
-    
+                //Requester
+                console.log(" Requester ");
+                getAllPendingIOUList((result: any) => {
+                    setIOUList(result);
+                    // console.log(result)
+                });
             }
-    
-          }
-    
+        }
     }
-
-
     const getsettlment_request = () => {
-
         if (UserRoleID == '5') {
-
             // console.log("roll 5--------");
             getHODPendingIOUSetList((res: any) => {
-    
-    
                 setIOUSettlementList(res);
-    
-              //console.log("roll 5--------", res[0].Amount)
+                //console.log("roll 5--------", res[0].Amount)
             })
-    
-          } else {
-    
+        } else {
             if (UserRoleID == '3' || UserRoleID == '4') {
-              //Job owner or transport officer
-    
-              getPendingIOUSetList(UserRoleID, (resp: any) => {
-    
-                setIOUSettlementList(resp);
-              });
-    
+                //Job owner or transport officer
+                getPendingIOUSetList(UserRoleID, (resp: any) => {
+                    setIOUSettlementList(resp);
+                });
             } else {
-              //Requester
-    
-              getAllPendingIOUSetList((resp: any) => {
-    
-                setIOUSettlementList(resp);
-              });
-    
+                //Requester
+                getAllPendingIOUSetList((resp: any) => {
+                    setIOUSettlementList(resp);
+                });
             }
-    
-    
-          }
-    
+        }
     }
-
     const getONEoffsettlment_request = () => {
         console.log("one of ----");
-        
-
         if (UserRoleID === '5') {
             //HOD
             console.log("roll 5--------");
             getHODPendingOneOffSetList((res: any) => {
                 setOneOffettlementList(res);
             })
-    
-          } else {
-    
+        } else {
+
             if (UserRoleID === '3' || UserRoleID === '4') {
-              //Job owner or transport officer
-              console.log("roll 3 ..... 4--------");
-              getPendingOneOffSetList(UserRoleID, (res: any) => {
-                setOneOffettlementList(res);
-              });
-    
+                //Job owner or transport officer
+                console.log("roll 3 ..... 4--------");
+                getPendingOneOffSetList(UserRoleID, (res: any) => {
+                    setOneOffettlementList(res);
+                });
+
             } else {
                 console.log("roll requester--------");
-              getAllPendingOneOffSetList((res: any) => {
-                setOneOffettlementList(res);
-              });
-    
-    
+                getAllPendingOneOffSetList((res: any) => {
+                    setOneOffettlementList(res);
+                });
+
+
             }
-    
-
-    
-          }
+        }
     }
-
     const setFlatListData = () => {
-
         getIOU_request();
         getsettlment_request();
         getONEoffsettlment_request();
@@ -227,7 +171,7 @@ const HomeScreen = () => {
         // getPendingOneOffSettlementHome((res: any) => {
 
         //     console.log(res,"==============================================");
-            
+
         //     setOneOffettlementList(res);
         // });
 
@@ -237,10 +181,7 @@ const HomeScreen = () => {
         // })
 
     }
-
-
     const getTotalAmount = () => {
-
         let iouamount = 0.0;
         let iousetamount = 0.0;
         let oneoffamount = 0.0;
@@ -256,11 +197,8 @@ const HomeScreen = () => {
             // console.log("getTotalAmount:", totalAmount);
             // console.log("getTotalAmount", resp[0].TotalAmount);
             // console.log("getTotalIOUAmount-----", TotalIOUAmount);
-
         });
-
         // console.log("getTotalIOUAmount-----", TotalIOUAmount);
-
         getIOUSETToatalAmount((resp2: any) => {
             setTotalIOUSETAmount(resp2[0].TotalAmount);
             iousetamount = resp2[0].TotalAmount;
@@ -273,9 +211,7 @@ const HomeScreen = () => {
             // console.log("getTotalSETAmount", totalAmount);
             // console.log("getTotalSETAmount");
         });
-
         // console.log("getTotalIOUSETAmount");
-
         getONEOFFToatalAmount((resp3: any) => {
             setTotalONEOFFAmount(resp3[0].TotalAmount);
             oneoffamount = resp3[0].TotalAmount;
@@ -289,38 +225,17 @@ const HomeScreen = () => {
             // console.log("getTotalONEAmount");
 
             // getTotalPayableAmount();
-
             let Total = iouamount + iousetamount + oneoffamount;
-
             console.log("set Amount ===   ", Total);
-
             setTotalPayableAmount(Total);
-
             formattedTotal = Total.toLocaleString("en-LK", {
                 style: "currency",
                 currency: "LKR",
                 minimumFractionDigits: 2,
             });
-
             setTotalPayableAmount(formattedTotal);
-
         });
-
-
-
-
-
-
-
     }
-
-
-
-
-    // console.log("getTotalIOUAmount-----", TotalIOUAmount);
-
-    // console.log(formattedTotal);
-
     const getTotalPayableAmount = () => {
 
         let Total = TotalIOUAmount + TotalIOUSETAmount + TotalONEOFFAmount;
@@ -336,52 +251,28 @@ const HomeScreen = () => {
         });
 
         setTotalPayableAmount(formattedTotal);
-
-
     }
-
     const setPendingListType = async (type: any) => {
-
         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_CURRENT_PENDING_LIST_TYPE, type);
-
         navigation.navigate('PendingList');
         // navigation.navigate('PendingRequestList');
-
     }
-
-    // const createChannels = () => {
-    //     PushNotification.createChannel(
-    //         {
-    //             channelId: "test-channel",
-    //             channelName: "Test Channel"
-    //         }
-    //     )
-    // }
     const createRequest = (type: any) => {
-
         if (type == 'IOU') {
             getLoginUserID().then(result => {
-            checkOpenRequests(parseInt(result + ""), (resp: any) => {
-                if (resp.length > 0) {
-                    Alert.alert('Can not create a new Request', 'You already have an open status request', [
-                        {
-                            text: 'Ok',
-                            onPress: () => console.log('Cancel Pressed'),
-                            style: 'cancel',
-                        },
-                        // { text: 'Yes', onPress: (back) },
-                    ]);
-                } else {
-                    navigation.navigate('NewIOU');
-                    AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
-                }
-
-            });
-
-        })
-
-
-           
+                checkOpenRequests(parseInt(result + ""), async (resp: any) => {
+                    if (resp.length > 0) {
+                        await alert({
+                            type: DropdownAlertType.Error,
+                            title: 'Can not create a new Request',
+                            message: "You already have an open status request",
+                        });
+                    } else {
+                        navigation.navigate('NewIOU');
+                        AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
+                    }
+                });
+            })
         } else if (type == 'SETTLEMENT') {
             navigation.navigate('NewIOUSettlement');
             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
@@ -390,13 +281,10 @@ const HomeScreen = () => {
             AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "False");
         }
     }
-
     const checkCurrentTime = () => {
         var today = new Date()
         var curHr = today.getHours()
-
         if (curHr < 12) {
-
             setHeaderText('Good Morning !');
             // console.log('Good Morning!');
         } else if (curHr < 18) {
@@ -407,157 +295,49 @@ const HomeScreen = () => {
             // console.log('Good Evening!');
         }
     }
-
-    useEffect(() => {
-
-        setviewLogFileList(false);
-        checkCurrentTime();
-
-    }, [HeaderText]);
-
-
-
-    useFocusEffect(
-        React.useCallback(() => {
-            const backHandler = BackHandler.addEventListener(
-                'hardwareBackPress',
-                handleBackButton
-            );
-
-
-            getLoginUserID().then(res => {
-
-                userID = res;
-                // setUserID(res);
-
-                // console.log( ,"logged user id ==== " , res);
-                SetCloseBtnSync(false)
-                SyncArray1 = [];
-                setSyncArray([]);
-                OnLoadData();
-                checkCurrentTime();
-            })
-
-            getLoginUserRoll().then(res1 => {
-                setRoll(res1 + "");
-                UserRoleID = res1;
-                console.log("User Role: ", res1);
-              })
-
-
-            //createChannels();
-            setviewLogFileList(false);
-        }, [navigation])
-    );
-
     const OnLoadData = () => {
-
-       
         getTotalAmount();
-
         getLoginUserRoll().then(res => {
             setRoll(res);
             setFlatListData();
             // console.log("User Roll: ", res);
         })
-
         getLoginUserName().then(res => {
             setUname(res);
             // console.log(" user name ....... ", res);
 
         });
-
-        // get_ASYNC_LOGIN_ROUND().then(resp => {
-        //     // console.log(" login round ---- " , resp);
-
-        // })
-
-        // get_ASYNC_JOBOWNER_APPROVAL_AMOUNT().then(rest => {
-        //     // console.log("JobOwner_Maximum_Aomunt----", rest)
-        // })
-
-
         get_ASYNC_CHECKSYNC().then(result => {
-
-            // console.log(" sync statu --- " , result);
-
-
             if (result === "1") {
-
-                // console.log(" first sync --- ");
-
                 toggleModal();
                 Conection_Checking((res: any) => {
                     if (res != false) {
                         console.log("conection is tru");
                         Download_IOU_Types();
-
-                        // UploadIOU();
-
                     } else {
                         console.log("no connection");
-
                     }
                 })
-
-
-
             }
-
         })
-
-
     }
-
-    // const HandleBackButton = () => {
-
-    //     Alert.alert(
-    //         'Exit App',
-    //         'Exiting the application?', [{
-    //             text: 'Cancel',
-    //             onPress: () => console.log('Cancel Pressed'),
-    //             style: 'cancel'
-    //         }, {
-    //             text: 'OK',
-    //             onPress: () => BackHandler.exitApp()
-    //         },], {
-    //         cancelable: false
-    //     }
-    //     )
-    //     return true;
-
-
-    // }
     const handleBackButton = () => {
         // Disable the default back button behavior
         console.log("Hardware back button is pressed");
-
         return true;
-
     };
-
     // Sync Modal Functions ------
-
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
-
     // -------------------- Upload IOU Requests -------------------------------------
-
     // const UploadIOU = () => {
-
     //     try {
-
     //         getIOUForUpload((result: any) => {
-
     //             if (result.length > 0) {
-
     //                 console.log(" iou array ====    ", result);
-
     //                 var obj = [];
-
     //                 for (let i = 0; i < result.length; i++) {
-
     //                     let IOUID = result[i].IOU_ID;
     //                     let IOUTypeID = result[i].IOU_Type;
     //                     let HOD = result[i].HOD;
@@ -567,32 +347,18 @@ const HomeScreen = () => {
     //                     let EmpID = result[i].EmpId;
     //                     let Job_Owner = result[i].JobOwner_ID;
     //                     let amount = result[i].Amount;
-
     //                     let JobDetails: any[] = [];
     //                     var Fileobj: any[] = [];
-
-                       
-                
     //                     getIOUJOBDataBYRequestID(IOUID, (result: any) => {
-                
     //                         console.log(result, '+++++++++++++++++++++++++++');
-                
-                
     //                         for (let i = 0; i < result.length; i++) {
-                
     //                             // console.log(result[i]);
-                
     //                             JobDetails.push(result[i]);
     //                         }
-                
     //                         getIOUAttachmentListByID(IOUID, async (rest: any) => {
-                
     //                             Fileobj = [];
-                
     //                             if (rest.length > 0) {
-                
     //                                 for (let i = 0; i < rest.length; i++) {
-                
     //                                     const arr = {
     //                                         "IOUTypeNo": IOUTypeID,
     //                                         "FileName": rest[i].Img_url,
@@ -600,9 +366,7 @@ const HomeScreen = () => {
     //                                         "FileType": "image/jpeg"
     //                                     }
     //                                     Fileobj.push(arr);
-                
     //                                     if (i + 1 == rest.length) {
-
     //                                         const prams = {
     //                                             "PettycashID": IOUID,
     //                                             "RequestedBy": parseInt(userID),
@@ -619,18 +383,13 @@ const HomeScreen = () => {
     //                                             "RIsLimit": result[i].RIsLimit,
     //                                             "RIouLimit": result[i].RIOULimit
     //                                         }
-                
-                
     //                                         Conection_Checking(async (res: any) => {
     //                                             if (res != false) {
     //                                                 UploadIOURequest(IOUID,IOUTypeID,JobDetails, HOD, IsLimit, Fileobj,prams);
     //                                             }
     //                                         })
-                
-                
     //                                     }
     //                                 }
-                
     //                             } else {
     //                                 Conection_Checking(async (res: any) => {
     //                                     if (res != false) {
@@ -638,53 +397,27 @@ const HomeScreen = () => {
     //                                     }
     //                                 })
     //                             }
-                
-                
-                
     //                         })
-                
     //                     })
-
-
     //                 }
-
-
     //             } else {
     //                 //No Available data for upload
-
     //             }
-
     //         });
-
-
-
     //     } catch (error) {
-
-
-
     //     }
-
     // }
-
     // const UploadIOURequest = async (IOUNo:any, IOUTypeID:any, detailsData: any, HOD: any, isLimit: any, Fileobj: any, prams:any) => {
-
     //     console.log(" details data --------------   ", detailsData);
-
-
     //     const URL = BASE_URL + '/Mob_PostIOURequests.xsjs?dbName=' + DB_LIVE;
-
     //     var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++  Upload IOU  ++++++++++++++++";
-
     //     logger(loggerDate, " UPLOAD IOU REQUEST URL " + "   *******   " + URL);
 
     //     var obj = [];
 
     //     try {
-
     //         if (parseInt(IOUTypeID) == 1) {
-
     //             for (let i = 0; i < detailsData.length; i++) {
-
     //                 const arr = {
     //                     "IOUTypeID": detailsData[i].IOUTypeID,
     //                     "IOUTypeNo": detailsData[i].IOUTypeNo,
@@ -695,15 +428,10 @@ const HomeScreen = () => {
     //                     "CostCenter": detailsData[i].CostCenter,
     //                     "Resource": detailsData[i].Resource
     //                 }
-
     //                 obj.push(arr);
     //             }
-
-
     //         } else {
-
     //             for (let i = 0; i < detailsData.length; i++) {
-
     //                 const arr = {
     //                     "IOUTypeID": detailsData[i].IOUTypeID,
     //                     "IOUTypeNo": "",
@@ -714,216 +442,112 @@ const HomeScreen = () => {
     //                     "CostCenter": detailsData[i].CostCenter,
     //                     "Resource": detailsData[i].Resource
     //                 }
-
     //                 obj.push(arr);
     //             }
-
     //         }
-
-
     //         saveJsonObject_To_Loog(prams);
-
     //         console.log("[][][][][] IOU UPLOAD JSON ", prams, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
     //         console.log("[][][][][] IOU UPLOAD JSON job details ", obj, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
     //         // console.log("[][][][][] IOU UPLOAD JSON attachments ", Fileobj, '=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--');
-
     //         await axios.get(URL, { headers })
     //         axios.post(URL, prams, {
     //             headers: headers
     //         }).then((response) => {
     //             // console.log("[s][t][a][t][u][s][]", response.status);
-
     //             logger(" IOU Upload Response Status ", response.status + "");
-
     //             saveJsonObject_To_Loog(response.data);
-
     //             if (response.status == 200) {
-
     //                 // updateSyncStatus(IOUNo, (result: any) => {
-
     //                 // });
-
     //                 if (response.data.ErrorId == 0) {
-
     //                     updateIDwithStatus(IOUNo, response.data.ID, (resp: any) => {
-
     //                         console.log(" update id after sync ====  ", resp);
-
     //                         if (resp === 'success') {
-
     //                             updateIOUDetailLineSyncStatus(IOUNo, (resp1: any) => {
-
     //                             });
     //                         }
-
-
     //                     });
-
     //                 }
-
-
     //                 // console.log("success ======= ", response.statusText);
-
     //                 console.log(" IOU UPLOAD response OBJECT  === ", response.data);
-
-
-
-
     //             } else {
-
     //                 console.log(" IOU UPLOAD ERROR response code ======= ", response.status);
-
     //             }
     //         }).catch((error) => {
-
     //             console.log("error .....   ", error);
-
     //             logger(" IOU Upload ERROR ", "");
-
     //             saveJsonObject_To_Loog(error);
-
-
     //         });
-
-
     //     } catch (error) {
     //         // console.log(error);
-
     //         logger(" IOU Upload ERROR ", error + "");
-
-
     //     }
-
-      
-
     // }
-
-
     // -------------------- Upload IOU Approved Requests -------------------------------------
-
     const UploadIOUApproved = () => {
-
         try {
-
-
-
         } catch (error) {
-
-
-
         }
-
     }
-
-
-
     // -------------------- Upload IOU-SETTLEMENTS Requests -------------------------------------
-
     const UploadIOUSETTLEMENTS = () => {
-
-
-
     }
-
-
     // -------------------- Upload ONE-OFF Requests -------------------------------------
-
     const UploadOneOff = () => {
-
-
-
     }
-
-
-
     // -------------------- Download IOU Types --------------------------------------
-
     const Download_IOU_Types = async () => {
-
         const URL = BASE_URL + '/Mob_GetIOUType.xsjs?dbName=' + DB_LIVE;
-
         console.log(" iou types ===  ", URL);
-
-
         await axios.get(URL, { headers })
             .then(response => {
-
                 if (response.status === 200) {
-
                     if (response.data.length > 0) {
-
-
                         saveIOUType(response.data, (resp: any) => {
-
                             setOnRefresh(false);
-
                             // console.log("save get response ------------>>>>>  ", resp);
-
                             if (resp == 1) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'IOU Type Downloading...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                             } else if (resp == 2) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'IOU Type Download Failed...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
                                 Download_Expense_Types();
-
                             } else if (resp == 3) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'IOU Type Download Successfully...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                                 Download_Expense_Types();
                             }
-
                         });
-
                     } else {
-
                         setOnRefresh(false);
-
                         arrayindex++;
-
                         SyncArray1.push({
                             name: 'No IOU Types...',
                             id: arrayindex,
                         });
-
                         setSyncArray(SyncArray1);
                         setOnRefresh(true);
                         Download_Expense_Types();
-
                     }
-
                 } else {
-
                     // console.log(" response code ======= ", response.status);
-
                     setOnRefresh(false);
-
                     arrayindex++;
                     SyncArray1.push({
                         name: 'IOU Type Download Failed...',
@@ -932,17 +556,11 @@ const HomeScreen = () => {
                     setSyncArray(SyncArray1);
                     setOnRefresh(true);
                     Download_Expense_Types();
-
                 }
-
-
             })
             .catch((error) => {
-
                 // console.log(" IOUTypes error .....   ", error);
-
                 setOnRefresh(false);
-
                 arrayindex++;
                 SyncArray1.push({
                     name: 'IOU Type Download Failed...',
@@ -952,11 +570,8 @@ const HomeScreen = () => {
                 setOnRefresh(true);
                 Download_Expense_Types();
             });
-
     }
-
     // -------------------- Download Expence Types --------------------------------------
-
     const Download_Expense_Types = async () => {
 
         const URL = BASE_URL + '/Mob_GetExpenseTypes.xsjs?dbName=' + DB_LIVE + '&sapDbName=' + SAP_LIVE_DB;
@@ -1120,10 +735,7 @@ const HomeScreen = () => {
         });
 
     }
-
-
     // -------------------- Download User Rolls --------------------------------------
-
     const Download_User_Rolls = async () => {
 
         const URL = BASE_URL + '/Mob_GetUserRoleMaster.xsjs?dbName=' + DB_LIVE;
@@ -1241,9 +853,7 @@ const HomeScreen = () => {
             });
 
     }
-
     // -------------------- Download Users --------------------------------------
-
     const Download_Users = async () => {
 
         const URL = BASE_URL + '/Mob_GetUserMaster.xsjs?dbName=' + DB_LIVE;
@@ -1357,10 +967,7 @@ const HomeScreen = () => {
             });
 
     }
-
-
     // -------------------- Download Vehicle No --------------------------------------
-
     const Download_VehicleNo = async () => {
 
         const URL = BASE_URL + '/Mob_GetAllVehicleNumbers.xsjs?dbName=' + DB_LIVE + '&sapDbName=' + SAP_LIVE_DB + '&ResType=VEHICLE';
@@ -1477,9 +1084,7 @@ const HomeScreen = () => {
             });
 
     }
-
     // -------------------- Download Departments --------------------------------------
-
     const Download_Departments = async () => {
 
         const URL = BASE_URL + '/Mob_GetAllDepartment.xsjs?dbName=' + DB_LIVE;
@@ -1620,9 +1225,7 @@ const HomeScreen = () => {
 
 
     }
-
     // -------------------------- Download Employees -------------------------------------
-
     const Download_Employee = async () => {
 
         const URL = BASE_URL + '/Mob_GetAllEmployee.xsjs?dbName=' + DB_LIVE;
@@ -1739,9 +1342,7 @@ const HomeScreen = () => {
             });
 
     }
-
     // -------------------- Download Job Owners --------------------------------------
-
     const Download_JobOwners = async () => {
 
         const URL = BASE_URL + '/Mob_GetJobOwners.xsjs?dbName=' + DB_LIVE + '&sapDbName=' + SAP_LIVE_DB;
@@ -1932,10 +1533,7 @@ const HomeScreen = () => {
         //     });
 
     }
-
-
     // -------------------- Download Job No -------------------------------------------
-
     const Download_JobNo = async () => {
 
         const URL = BASE_URL + '/Mob_GetJobOwnerDetails.xsjs?dbName=' + DB_LIVE;
@@ -2060,201 +1658,120 @@ const HomeScreen = () => {
 
     }
     // -------------------- Download GL Accounts -------------------------------------------
-
     const Download_GL_ACCOUNT = async () => {
-
         const URL = COMMON_BASE_URL + '/GetAllGLAccounts.xsjs?dbName=' + DB_LIVE;
-
-        console.log("DOWNLOAD GL ACCOUNT =====  " , URL);
-        
-
+        // console.log("DOWNLOAD GL ACCOUNT =====  " , URL);
         await axios.get(URL, { headers })
             .then(response => {
-
                 if (response.status === 200) {
-
-                    console.log(" GL Accounts ===    " , response.data);
-                    
-
+                    // console.log(" GL Accounts ===    " , response.data);
                     if (response.data.length > 0) {
-
                         saveGLAccount(response.data, (resp: any) => {
-
                             setOnRefresh(false);
-
                             if (resp == 1) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'GL Accounts Downloading...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                             } else if (resp == 2) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'GL Accounts Download Failed...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
                                 Download_IOURequest();
-
                             } else if (resp == 3) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'GL Accounts Download Successfully...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                                 Download_IOURequest();
                             }
-
-
                         });
-
-
                     } else {
-
                         setOnRefresh(false);
-
                         arrayindex++;
-
                         SyncArray1.push({
                             name: 'No available GL Accounts for Download...',
                             id: arrayindex,
                         });
-
                         setSyncArray(SyncArray1);
                         setOnRefresh(true);
-
                         Download_IOURequest();
-
                     }
-
-
-
                 } else {
-
                     // console.log(" response code ======= ", response.status);
                     setOnRefresh(false);
-
                     arrayindex++;
-
                     SyncArray1.push({
                         name: 'GL Accounts Download Failed...',
                         id: arrayindex,
                     });
-
                     setSyncArray(SyncArray1);
                     setOnRefresh(true);
-
                     Download_IOURequest();
                 }
-
-
             })
             .catch((error) => {
-
                 console.log(" GL ACCOUNT  .....   ", error);
                 setOnRefresh(false);
-
                 arrayindex++;
-
                 SyncArray1.push({
                     name: 'GL Accounts Download Failed...',
                     id: arrayindex,
                 });
-
                 setSyncArray(SyncArray1);
                 setOnRefresh(true);
-
-
                 Download_IOURequest();
-
             });
-
     }
-
-
     // -------------------- Download IOU Request --------------------------------------
-
     const Download_IOURequest = async () => {
-
         console.log(" user ID ==== ", userID);
-
-
         const URL = BASE_URL + '/Mob_GetAllIOURequest.xsjs?dbName=' + DB_LIVE + '&emp=' + userID;
-
         await axios.get(URL, { headers })
             .then(response => {
-
                 if (response.status === 200) {
-
                     //console.log(response.data.header,'=====================');
-
                     if (response.data.header.length > 0) {
-
                         saveIOU(response.data.header, 1, (resp: any) => {
-
                             // console.log("save IOU ------------>>>>>  ", resp);
-
                             setOnRefresh(false);
-
                             if (resp == 1) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'IOU Request Downloading...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                             } else if (resp == 2) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'IOU Request Download Failed...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                                 Download_IOUSETRequest();
-
                             } else if (resp == 3) {
-
                                 arrayindex++;
-
                                 SyncArray1.push({
                                     name: 'IOU Request Download Successfully...',
                                     id: arrayindex,
                                 });
-
                                 setSyncArray(SyncArray1);
                                 setOnRefresh(true);
-
                                 Download_IOUSETRequest();
                             }
-
-
                         });
 
 
@@ -2320,8 +1837,6 @@ const HomeScreen = () => {
             });
 
     }
-
-
     // -------------------- Download IOU Settlement Request --------------------------------------
     const Download_IOUSETRequest = async () => {
 
@@ -2447,8 +1962,6 @@ const HomeScreen = () => {
             });
 
     }
-
-
     // -------------------- Download One-Off Settlement Request --------------------------------------
     const Download_ONE_OFF_SETRequest = async () => {
 
@@ -2574,7 +2087,6 @@ const HomeScreen = () => {
             });
 
     }
-
     // -------------------- Download IOU Settlement JOBS Request --------------------------------------
     const Download_IOUSETJOBS = async () => {
 
@@ -2711,7 +2223,6 @@ const HomeScreen = () => {
 
 
     }
-
     // -------------------- Download OneOff JOBS Request --------------------------------------
     const Download_ONEOFFJOBS = async () => {
 
@@ -2846,8 +2357,6 @@ const HomeScreen = () => {
 
 
     }
-
-
     // -------------------- Download IOU Job Data --------------------------------------
     const Download_IOUJobs = async () => {
 
@@ -3055,33 +2564,24 @@ const HomeScreen = () => {
 
 
     }
-
     const sync = () => {
-
         Conection_Checking((resp: any) => {
             if (resp != false) {
-
                 SyncArray1 = [];
                 setSyncArray([]);
                 SetCloseBtnSync(false)
                 toggleModal();
-
                 Download_IOU_Types();
-
-
             } else {
-
                 Alert.alert('No Internet Connection', 'Please check your internet connection! ', [
 
                     { text: 'Ok', onPress: () => console.log('ok pressed') },
                 ]);
-
             }
         });
 
 
     }
-
     const shareLogFiles = () => {
 
         console.log(" pressed log file btn");
@@ -3105,16 +2605,42 @@ const HomeScreen = () => {
 
 
     }
-
     //Sync Functions end --------------------------------------------------------------------------------------
-
+    useEffect(() => {
+        setviewLogFileList(false);
+        checkCurrentTime();
+    }, [HeaderText]);
+    useFocusEffect(
+        React.useCallback(() => {
+            const backHandler = BackHandler.addEventListener(
+                'hardwareBackPress',
+                handleBackButton
+            );
+            getLoginUserID().then(res => {
+                userID = res;
+                // setUserID(res);
+                // console.log( ,"logged user id ==== " , res);
+                SetCloseBtnSync(false)
+                SyncArray1 = [];
+                setSyncArray([]);
+                OnLoadData();
+                checkCurrentTime();
+            })
+            getLoginUserRoll().then(res1 => {
+                setRoll(res1 + "");
+                UserRoleID = res1;
+                console.log("User Role: ", res1);
+            })
+            //createChannels();
+            setviewLogFileList(false);
+        }, [navigation])
+    );
     return (
 
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
             <Header title={`${HeaderText}\n${uName}`} image={true} isIcon={true} iconOnPress={() => sync()} ShareLog={() => shareLogFiles()} />
-
+            < DropdownAlert alert={func => (alert = func)} alertPosition="top" />
             {/* // --------------- Sync Modal ---------------------------------- */}
-
             <Modal isVisible={isModalVisible} style={{ backgroundColor: ComponentsStyles.COLORS.WHITE, borderRadius: 10 }}>
                 <View style={{ flex: 1 }}>
                     <View style={{ flex: 1.5, marginBottom: 5 }}>
@@ -3155,69 +2681,74 @@ const HomeScreen = () => {
             </Modal>
 
             {/* // ------------------------------------------------------------- */}
-
-
             <View style={{ padding: 10 }} />
-
             <ScrollView style={ComponentsStyles.CONTENT} showsVerticalScrollIndicator={true}>
-
-
-                <View style={homeStyle.container}>
-
-
+                {/* <View style={homeStyle.container}>
                     <View style={homeStyle.MainCard}>
-
                         <Text style={homeStyle.callText}>Total Payable</Text>
-
                         <Text style={homeStyle.amountText}>{TotalPayableAmount}</Text>
                     </View>
-
+                </View> */}
+                <View style={homeStyle.cardContainer}>
+                    <CardView
+                        iconName='file-invoice-dollar'
+                        iconColor={ComponentsStyles.COLORS.SUB_COLOR}
+                        Title='Total Payable'
+                        Count={TotalPayableAmount + ""}
+                        cardContainer={homeStyle.SelectedcardStyle}
+                        numberStyle={homeStyle.SelectednumberStyle}
+                        titleStyle={homeStyle.SelectedtitleStyle}
+                        cardOnPressed={() => setPendingListType("IOU")}
+                        isViewAll={false}
+                    />
+                    <View style={{ padding: 15 }} />
+                    <CardView
+                        iconName='file-invoice-dollar'
+                        iconColor={ComponentsStyles.COLORS.MAIN_COLOR}
+                        Title='IOU'
+                        Count={IOUTotalAmount + ""}
+                        cardOnPressed={() => setPendingListType("IOU")}
+                        isViewAll={true}
+                    />
                 </View>
-
-
-
-                <View style={homeStyle.list}>
+                <View style={homeStyle.cardContainer}>
+                    <CardView
+                        iconName='file-invoice-dollar'
+                        iconColor={ComponentsStyles.COLORS.MAIN_COLOR}
+                        Title={`IOU\nSettlements`}
+                        Count={IOUSETTotalAmount + ""}
+                        cardOnPressed={() => setPendingListType("SETTLEMENT")}
+                        isViewAll={true}
+                    />
+                    <View style={{ padding: 15 }} />
+                    <CardView
+                        iconName='file-invoice-dollar'
+                        iconColor={ComponentsStyles.COLORS.MAIN_COLOR}
+                        Title={`One-Off\nSettlements`}
+                        Count={ONEOFFTotalAmount + ""}
+                        cardOnPressed={() => setPendingListType("ONEOFF")}
+                        isViewAll={true}
+                    />
+                </View>
+                {/* <View style={homeStyle.list}>
                     <View style={homeStyle.MainCard}>
                         <View style={{ flexDirection: 'row', alignContent: "center", backgroundColor: '#CEF1E8', }}>
-
                             <Text style={homeStyle.callText}>IOU</Text>
                             <View style={{ flex: 1 }} />
                             <Text style={homeStyle.callText}>{IOUTotalAmount}</Text>
-
                         </View>
                     </View>
-                </View>
-
-
-                {/* <View style={{ justifyContent: "center", marginTop: 10 }}>
-                            {/* <ProgressBar
-                                progress={IOUProgressBar}
-                                color={ComponentsStyles.COLORS.LOW_BUTTON_GREEN}
-
-                            /> 
-                        </View> */}
-                <View style={homeStyle.list2}>
+                </View> */}
+                {/* <View style={homeStyle.list2}>
                     <View style={homeStyle.MainCard}>
-
                         <View style={{ flexDirection: 'row', alignContent: "center", backgroundColor: '#F1CED4' }}>
-
                             <Text style={homeStyle.callText}>Settlement</Text>
                             <View style={{ flex: 1 }} />
                             <Text style={homeStyle.callText}>{IOUSETTotalAmount}</Text>
-
-
                         </View>
                     </View>
-                </View>
-
-                {/* <View style={{ justifyContent: "center", marginTop: 10 }}>
-                            {/* <ProgressBar
-                                progress={IOUSETProgressBar}
-                                color={ComponentsStyles.COLORS.ORANGE}
-
-                            /> 
-                        </View> */}
-                <View style={homeStyle.list3}>
+                </View> */}
+                {/* <View style={homeStyle.list3}>
                     <View style={homeStyle.MainCard}>
 
                         <View style={{ flexDirection: 'row', alignContent: "center", backgroundColor: '#F7F5AA', }}>
@@ -3229,26 +2760,8 @@ const HomeScreen = () => {
 
                         </View>
                     </View>
-                </View>
-
-                {/* <View style={{ justifyContent: "center", marginTop: 10 }}>
-                            {/* <ProgressBar
-                                progress={ONEOFFProgressBar}
-                                color={ComponentsStyles.COLORS.YELLOW}
-
-                            /> 
-                        </View> */}
-                {/* {
-                            roll == 'Requester' ?
-                                <View>
-                                    
-                                </View>
-
-
-                                :
-                                <></>
-                        } */}
-                <View style={homeStyle.container}>
+                </View> */}
+                {/* <View style={homeStyle.container}>
                     <View style={homeStyle.MainCard}>
 
                         <View style={{ flexDirection: 'row', marginTop: 15, justifyContent: "space-around" }}>
@@ -3294,27 +2807,9 @@ const HomeScreen = () => {
                         <View><Text></Text></View>
 
                     </View>
-                </View>
+                </View> */}
 
-
-                {/* <View style={{ marginTop: 5, justifyContent: "center", alignItems: "center" }}>
-                            <ActionButton
-                                title="Add New One-Off Settlement "
-                                style={homeStyle.ActionButton}
-                                is_icon={true}
-                                iconColor={ComponentsStyles.COLORS.WHITE}
-                                icon_name="plus"
-                                styletouchable={{ width: '80%' }}
-                                onPress={() => navigation.navigate('NewOneOffSettlement')}
-                            />
-                        </View>
-                        <View><Text></Text></View> */}
-
-
-
-
-
-                <View style={{ flexDirection: 'row', marginTop: 15 }}>
+                <View style={{ flexDirection: 'row', marginTop: 20 }}>
                     <Text style={homeStyle.callText}>Pending IOU</Text>
                     <View style={{ flex: 1 }} />
                     <TouchableOpacity onPress={() => setPendingListType("IOU")}>
@@ -3323,23 +2818,19 @@ const HomeScreen = () => {
                             <IconA
                                 name="angle-double-right"
                                 size={20}
-                                color={ComponentsStyles.COLORS.ICON_BLUE}
+                                color={ComponentsStyles.COLORS.MAIN_COLOR}
                             />
                         </Text>
                     </TouchableOpacity>
                 </View>
-
                 {
-
                     IOUList.length == 0 ?
-
                         <View style={{ justifyContent: "center", alignContent: "center", alignItems: "center", marginTop: 10 }}>
 
                             <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, alignItems: "center", color: ComponentsStyles.COLORS.DASH_COLOR }}>No Pending IOU Requests</Text>
 
                         </View>
                         :
-
                         <FlatList
                             showsHorizontalScrollIndicator={false}
                             // data={Arrays.SelectPackage.Wash.filter(ob => ob.extras == true)}
@@ -3368,8 +2859,6 @@ const HomeScreen = () => {
                             }}
                             keyExtractor={item => `${item.Id}`}
                         />
-
-
                 }
 
 
@@ -3382,7 +2871,7 @@ const HomeScreen = () => {
                             <IconA
                                 name="angle-double-right"
                                 size={20}
-                                color={ComponentsStyles.COLORS.ICON_BLUE}
+                                color={ComponentsStyles.COLORS.MAIN_COLOR}
                             />
                         </Text>
                     </TouchableOpacity>
@@ -3438,30 +2927,24 @@ const HomeScreen = () => {
                             <IconA
                                 name="angle-double-right"
                                 size={20}
-                                color={ComponentsStyles.COLORS.ICON_BLUE}
+                                color={ComponentsStyles.COLORS.MAIN_COLOR}
                             />
                         </Text>
                     </TouchableOpacity>
                 </View>
-
                 {
-
-OneOFfSettlementList.length == 0 ?
-
+                    OneOFfSettlementList.length == 0 ?
                         <View style={{ justifyContent: "center", alignContent: "center", alignItems: "center", marginTop: 10 }}>
-
                             <Text style={{ fontFamily: ComponentsStyles.FONT_FAMILY.REGULAR, alignItems: "center", color: ComponentsStyles.COLORS.DASH_COLOR }}>No Pending One-Off Settlements</Text>
-
                         </View>
                         :
-
                         <FlatList
                             showsHorizontalScrollIndicator={false}
                             // data={Arrays.SelectPackage.Wash.filter(ob => ob.extras == true)}
                             data={OneOFfSettlementList}
                             style={{ marginTop: 5 }}
                             horizontal={true}
-                            renderItem={({ item }) => {
+                            renderItem={(item: any) => {
                                 return (
                                     <View style={{ width: width - 210, padding: 5 }}>
                                         <ListBox
@@ -3483,32 +2966,19 @@ OneOFfSettlementList.length == 0 ?
                             }}
                             keyExtractor={item => `${item.Id}`}
                         />
-
                 }
-
                 <View style={{ marginBottom: 70 }}></View>
-
             </ScrollView>
-
             {
                 viewLogFileList ?
-
                     <LogFileDialogBox />
-
                     :
-
                     <></>
             }
-
-
         </SafeAreaView>
-
     );
-
 }
-
 const homeStyle = StyleSheet.create({
-
     container: {
         backgroundColor: 'white',
         width: '100%',
@@ -3522,11 +2992,7 @@ const homeStyle = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-
-
-
     },
-
     callText: {
         fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
         color: ComponentsStyles.COLORS.HEADER_BLACK,
@@ -3534,20 +3000,18 @@ const homeStyle = StyleSheet.create({
     },
     amountText: {
         fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
-        color: ComponentsStyles.COLORS.ICON_BLUE,
+        color: ComponentsStyles.COLORS.MAIN_COLOR,
         fontSize: 28
     },
-
     seeAllText: {
         fontFamily: ComponentsStyles.FONT_FAMILY.BOLD,
-        color: ComponentsStyles.COLORS.ICON_BLUE,
+        color: ComponentsStyles.COLORS.MAIN_COLOR,
         fontSize: 16
     },
     headerText: {
         color: ComponentsStyles.COLORS.SERVISE_HEADER_ASH,
         fontFamily: ComponentsStyles.FONT_FAMILY.SEMI_BOLD,
         fontSize: 14,
-
     },
     subText: {
         color: ComponentsStyles.COLORS.PROCEED_ASH,
@@ -3558,7 +3022,6 @@ const homeStyle = StyleSheet.create({
         marginTop: 15,
         marginBottom: 5,
         width: '99%',
-
     },
     MainCard: {
         width: '100%',
@@ -3571,10 +3034,6 @@ const homeStyle = StyleSheet.create({
         backgroundColor: 'white',
         flex: 4,
         justifyContent: "center",
-
-
-
-
     },
     SubCard: {
         backgroundColor: 'white',
@@ -3590,29 +3049,14 @@ const homeStyle = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
-
     list: {
-        // flex: 1,
-        // padding: 7,
         backgroundColor: '#CEF1E8',
         borderColor: ComponentsStyles.COLORS.LOW_BUTTON_GREEN,
         borderWidth: 3,
         borderRadius: 4,
         marginVertical: 3,
-
-        // marginHorizontal: 6,
         justifyContent: "center",
         alignItems: "center",
-        // flexDirection: "row",
-
-        // shadowColor: "#000",
-        // shadowOffset: {
-        //     width: 0,
-        //     height: 2,
-        // },
-        // shadowOpacity: 0.25,
-        // shadowRadius: 3.84,
-        // elevation: 5,
         width: '100%',
         shadowColor: "#000",
         padding: 7,
@@ -3624,32 +3068,14 @@ const homeStyle = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-
-
-
     },
     list2: {
-        // flex: 1,
-        // padding: 7,
-        // backgroundColor: ComponentsStyles.COLORS.WHITE,
         borderColor: ComponentsStyles.COLORS.ORANGE,
         borderWidth: 3,
         borderRadius: 4,
         marginVertical: 3,
-        // marginHorizontal: 6,
         justifyContent: "center",
         alignItems: "center",
-        // flexDirection: "row",
-
-        // shadowColor: "#000",
-        // shadowOffset: {
-        //     width: 0,
-        //     height: 2,
-        // },
-        // shadowOpacity: 0.25,
-        // shadowRadius: 3.84,
-        // elevation: 5,
-
         backgroundColor: '#F1CED4',
         width: '100%',
         shadowColor: "#000",
@@ -3663,30 +3089,13 @@ const homeStyle = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
-
     list3: {
-        // flex: 1,
-        // padding: 7,
-        // backgroundColor: ComponentsStyles.COLORS.WHITE,
         borderColor: ComponentsStyles.COLORS.YELLOW,
         borderWidth: 3,
         borderRadius: 4,
         marginVertical: 3,
-        // marginHorizontal: 6,
         justifyContent: "center",
         alignItems: "center",
-        // flexDirection: "row",
-
-
-        // shadowColor: "#000",
-        // shadowOffset: {
-        //     width: 0,
-        //     height: 2,
-        // },
-        // shadowOpacity: 0.25,
-        // shadowRadius: 3.84,
-        // elevation: 5,
-
         backgroundColor: '#F7F5AA',
         width: '100%',
         shadowColor: "#000",
@@ -3700,10 +3109,22 @@ const homeStyle = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
-
-
+    cardContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 15
+    },
+    SelectedcardStyle: {
+        backgroundColor: ComponentsStyles.COLORS.MAIN_COLOR,
+        color: ComponentsStyles.COLORS.SUB_COLOR,
+    },
+    SelectednumberStyle: {
+        color: ComponentsStyles.COLORS.SUB_COLOR,
+    },
+    SelectedtitleStyle: {
+        color: ComponentsStyles.COLORS.SUB_COLOR,
+    },
 });
-
 export default HomeScreen;
 
 
