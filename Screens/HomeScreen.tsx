@@ -2944,7 +2944,7 @@ const HomeScreen = () => {
                             data={OneOFfSettlementList}
                             style={{ marginTop: 5 }}
                             horizontal={true}
-                            renderItem={(item: any) => {
+                            renderItem={({item}) => {
                                 return (
                                     <View style={{ width: width - 210, padding: 5 }}>
                                         <ListBox
