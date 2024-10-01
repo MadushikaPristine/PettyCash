@@ -2698,10 +2698,10 @@ const HomeScreen = () => {
                         cardContainer={homeStyle.SelectedcardStyle}
                         numberStyle={homeStyle.SelectednumberStyle}
                         titleStyle={homeStyle.SelectedtitleStyle}
-                        cardOnPressed={() => setPendingListType("IOU")}
+                        //cardOnPressed={() => setPendingListType("IOU")}
                         isViewAll={false}
                     />
-                    <View style={{ padding: 15 }} />
+                    <View style={{ padding: 5 }} />
                     <CardView
                         iconName='file-invoice-dollar'
                         iconColor={ComponentsStyles.COLORS.MAIN_COLOR}
@@ -2720,7 +2720,7 @@ const HomeScreen = () => {
                         cardOnPressed={() => setPendingListType("SETTLEMENT")}
                         isViewAll={true}
                     />
-                    <View style={{ padding: 15 }} />
+                    <View style={{ padding: 5 }} />
                     <CardView
                         iconName='file-invoice-dollar'
                         iconColor={ComponentsStyles.COLORS.MAIN_COLOR}

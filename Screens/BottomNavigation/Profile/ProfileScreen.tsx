@@ -123,7 +123,8 @@ const ProfileScreen = () => {
 
     console.log("-----  version -----   ", version);
 
-    setAppVersion("CLIVE" + version + "V");
+    //setAppVersion("CLIVE" + version + "V");
+    setAppVersion("CUAT" + version + "V");
 
   }
 

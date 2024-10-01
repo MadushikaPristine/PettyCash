@@ -49,7 +49,7 @@ export default CardView;
 
 const styles = StyleSheet.create({
     container: {
-        width: '42%',
+        width: '48%',
         height: 150,
         backgroundColor: ComponentsStyles.COLORS.SUB_COLOR,
         color: ComponentsStyles.COLORS.SUB_COLOR,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
         borderColor: ComponentsStyles.COLORS.SUB_COLOR,
         borderWidth: 1,
         shadowColor: "#000",
-        padding: 7,
+        padding: 5,
         shadowOffset: {
             width: 0,
             height: 2,
