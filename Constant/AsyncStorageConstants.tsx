@@ -38,6 +38,8 @@ export default class AsyncStorageConstants {
 
     static ASYNC_CURRENT_PENDING_LIST_TYPE = 'LIST_TYPE';
     static VIEW_LOG_FILE_BOX = 'LOG_FILE_VIEW';
+    static ASYNC_STORAGE_Is_inprogressOneOff = 'ASYNC_STORAGE_Is_inprogressOneOff';
+    static ASYNC_STORAGE_Is_inprogressIOU = 'ASYNC_STORAGE_Is_inprogressIOU';
 }
 
     

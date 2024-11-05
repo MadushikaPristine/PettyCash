@@ -32,7 +32,7 @@ type ParamTypes = {
     isEdit?: boolean;
     isDelete?: boolean;
     isSettlementAmount?: boolean;
-    onPressIcon?: Function;
+    onPressIcon?: any;
     IOU_Type?: any;
     accNo?: any;
     costCenter?: any;
@@ -50,7 +50,7 @@ const NewJobsView = ({ isDelete,onPressDeleteIcon, settlementAmount, isSettlemen
 
                 <View style={{ flexDirection: 'row', flex: 4 }}>
 
-                    <Text style={styles.textHeader}>{IOU_Type == 1 ? "Job No" : (IOU_Type == 2 ? "Vehicle No" : "")}</Text>
+                    <Text style={styles.textHeader}>{IOU_Type == 1 ? "Job No" : IOU_Type == 2 ? "Vehicle No" : ""}</Text>
                     <View style={{ flex: 1 }} />
                     <Text style={styles.text}>{IOUTypeNo}</Text>
 
@@ -70,7 +70,7 @@ const NewJobsView = ({ isDelete,onPressDeleteIcon, settlementAmount, isSettlemen
 
                     <Text style={styles.textHeader}>Request Amount</Text>
                     <View style={{ flex: 1 }} />
-                    <Text style={styles.text}>{amount = null || '' ? "0.00 LKR" : amount.toLocaleString("en-LK", {
+                    <Text style={styles.text}>{amount.toLocaleString("en-LK", {
                         style: "currency",
                         currency: "LKR",
                         minimumFractionDigits: 2,
@@ -118,7 +118,7 @@ const NewJobsView = ({ isDelete,onPressDeleteIcon, settlementAmount, isSettlemen
 
                             <Text style={[styles.textHeader, { color: ComponentsStyles.COLORS.RED_COLOR }]}>Settlement Amount</Text>
                             <View style={{ flex: 1 }} />
-                            <Text style={[styles.text, { color: ComponentsStyles.COLORS.RED_COLOR }]}>{settlementAmount = null || '' ? "0.00 LKR" : settlementAmount.toLocaleString("en-LK", {
+                            <Text style={[styles.text, { color: ComponentsStyles.COLORS.RED_COLOR }]}>{settlementAmount == null || '' ? "0.00 LKR" : settlementAmount.toLocaleString("en-LK", {
                                 style: "currency",
                                 currency: "LKR",
                                 minimumFractionDigits: 2,
@@ -265,6 +265,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        alignSelf:"center"
 
     },
 });

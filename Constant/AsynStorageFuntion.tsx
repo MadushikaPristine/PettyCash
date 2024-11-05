@@ -168,6 +168,22 @@ export const get_ASYNC_JOBOWNER_APPROVAL_AMOUNT = async () => {
     // console.log('Failed to fetch the data from storage')
   }
 }
+export const get_ASYNC_IsInprogress_OneOff = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressOneOff)
+    return value
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
+export const get_ASYNC_IsInprogress_IOU = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressIOU)
+    return value
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
 
 
   //   set_data = async (storage_key, value) => {

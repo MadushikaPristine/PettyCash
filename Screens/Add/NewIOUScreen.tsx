@@ -66,7 +66,7 @@ import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
 import DetailsBox from "../../Components/DetailsBox";
 import { Dialog, FAB } from "react-native-paper";
 import DropdownAlert, { DropdownAlertData, DropdownAlertType } from "react-native-dropdownalert";
-
+import Spinner from "react-native-loading-spinner-overlay";
 const data = [
     { label: 'JOV1542', value: '1' },
     { label: 'JOV1543', value: '2' },
@@ -173,6 +173,7 @@ const NewIOUScreen = () => {
     const [saveTitle, setsaveTitle] = useState("Add");
     const [isDialog, setIsDialog] = useState(false);
     const [isSubmitDialog, setIsSubmitDialog] = useState(false);
+    const [loading, setloading] = useState(false);
     var typeID = 0;
     var currentDate1 = moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss');
     var currentDate = moment().utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
@@ -374,16 +375,18 @@ const NewIOUScreen = () => {
         //     Alert.alert("Please Add Attachments");
         // }
         else {
+            setloading(true);
             getIOUJobTotAmount(IOUNo, async (resp: any) => {
                 amount = parseFloat(resp[0].totAmount);
                 if (parseFloat(resp[0].totAmount) == 0.0) {
+                    setloading(false);
                     await alert({
                         type: DropdownAlertType.Error,
                         title: 'No Data',
                         message: "Please Add Job.",
                     });
                 } else {
-
+                    setloading(false);
                     setError({ field: '', message: '' });
                     // setIsSubmit(true);
                     // slideInModal();
@@ -446,13 +449,15 @@ const NewIOUScreen = () => {
         let HODID: any;
         let IsLimit: any;
         closeSubmitDialog();
+        setloading(true);
         getLoggedUserHOD(async (res: any) => {
             console.log(" hod ===  ", res);
-            setHODID(res[0].ID);
-            HODID = res[0].ID;
+            // setHODID(res[0].ID);
+            // HODID = res[0].ID;
             console.log(" request amount ----   ", amount, '----------  limit =========== ', CreateReqLimit);
             if (amount > CreateReqLimit) {
                 //Requester limit exceed
+                setloading(false);
                 await alert({
                     type: DropdownAlertType.Error,
                     title: 'Limit Exceed!',
@@ -654,6 +659,7 @@ const NewIOUScreen = () => {
                                     }
                                 });
                             } else {
+                                setloading(false);
                                 await alert({
                                     type: DropdownAlertType.Error,
                                     title: 'Sync Failed',
@@ -707,6 +713,7 @@ const NewIOUScreen = () => {
                                         // AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_IS_COPY, "false");
                                         // navigation.navigate('PendingList');
                                     } else {
+                                        setloading(false);
                                         await alert({
                                             type: DropdownAlertType.Error,
                                             title: 'Failed',
@@ -715,6 +722,7 @@ const NewIOUScreen = () => {
                                     }
                                 });
                             } else {
+                                setloading(false);
                                 await alert({
                                     type: DropdownAlertType.Error,
                                     title: 'Sync Failed',
@@ -1330,6 +1338,7 @@ const NewIOUScreen = () => {
                                 });
                             }
                         });
+                        setloading(false);
                         await alert({
                             type: DropdownAlertType.Success,
                             title: 'Sync Success',
@@ -1339,6 +1348,7 @@ const NewIOUScreen = () => {
                     // console.log("success ======= ", response.statusText);
                     console.log(" IOU UPLOAD response OBJECT  === ", response.data);
                 } else {
+                    setloading(false);
                     await alert({
                         type: DropdownAlertType.Error,
                         title: 'Sync Failed',
@@ -1350,6 +1360,7 @@ const NewIOUScreen = () => {
                 console.log("error .....   ", error);
                 logger(" IOU Upload ERROR ", "");
                 saveJsonObject_To_Loog(error);
+                setloading(false);
                 await alert({
                     type: DropdownAlertType.Error,
                     title: 'Sync Failed',
@@ -1358,6 +1369,7 @@ const NewIOUScreen = () => {
             });
         } catch (error) {
             // console.log(error);
+            setloading(false);
             logger(" IOU Upload ERROR ", error + "");
             await alert({
                 type: DropdownAlertType.Error,
@@ -1825,6 +1837,15 @@ const NewIOUScreen = () => {
                 </Animated.View>
             </>
             <Header title="Add New IOU" isBtn={true} btnOnPress={naviBack} />
+            <Spinner
+                visible={loading}
+                textContent="Saving..."
+                textStyle={{
+                    color: ComStyles.COLORS.DASH_COLOR,
+                    fontFamily: ComStyles.FONT_FAMILY.SEMI_BOLD,
+                    fontSize: 20
+                }}
+            />
             <DropdownAlert alert={func => (alert = func)} alertPosition="top" />
             <ScrollView style={ComStyles.CONTENT} showsVerticalScrollIndicator={false}>
                 <View style={{ padding: 5 }} />

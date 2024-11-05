@@ -384,7 +384,7 @@ const NewOneOffSettlement = () => {
         let HODID: any;
         let IsLimit: any;
         getLoggedUserHOD(async (res: any) => {
-            console.log(" hod ===  ", OneOffSettlementNo);
+            console.log(" hod ===  ", parseInt(res[0].ID) ,  " ----  ",OneOffSettlementNo , " req Limit ------  " , CreateReqLimit , " ---- amount --------  " , amount);
             setHODID(res[0].ID);
             HODID = res[0].ID;
             console.log("iou type ==== ", IOUTypeID);
@@ -396,6 +396,7 @@ const NewOneOffSettlement = () => {
                     message: "Requested amount is limit exceeded.",
                 });
             } else {
+
                 if (IOUTypeID === '3') {
                     console.log("other type == ");
                     IsLimit = "";
@@ -413,7 +414,8 @@ const NewOneOffSettlement = () => {
                             REMARK: "",
                             Reject_Remark: "",
                             Attachment_Status: 1,
-                            HOD: parseInt(res[0].ID),
+                            // HOD: parseInt(res[0].ID),
+                            HOD: parseInt(HODId),
                             FirstActionBy: '',
                             FirstActionAt: '',
                             RIsLimit: null,
@@ -428,7 +430,8 @@ const NewOneOffSettlement = () => {
                         if (res != false) {
                             saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                                 if (Response == 3) {
-                                    getDetailsData(parseInt(res[0].ID), IsLimit);
+                                    // getDetailsData(parseInt(res[0].ID), IsLimit);
+                                    getDetailsData(parseInt(HODId), IsLimit);
                                     setIsSubmitDialog(false);
                                     await alert({
                                         type: DropdownAlertType.Success,
@@ -471,7 +474,7 @@ const NewOneOffSettlement = () => {
                             REMARK: "",
                             Reject_Remark: "",
                             Attachment_Status: 1,
-                            HOD: parseInt(res[0].ID),
+                            HOD: parseInt(HODId),
                             FirstActionBy: '',
                             FirstActionAt: '',
                             RIsLimit: 'YES',
@@ -488,7 +491,7 @@ const NewOneOffSettlement = () => {
                             saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                                 console.log("Save One-Off Settlement...", Response);
                                 if (Response == 3) {
-                                    getDetailsData(parseInt(res[0].ID), IsLimit);
+                                    getDetailsData(parseInt(HODId), IsLimit);
                                     slideOutModal();
                                     setIsSubmitDialog(false);
                                     await alert({
@@ -511,14 +514,14 @@ const NewOneOffSettlement = () => {
                             await alert({
                                 type: DropdownAlertType.Error,
                                 title: 'Sync Failed',
-                                message: "Please Check your internet connection",
+                                message: "Please Check your internet connection", 
                             });
                         }
                     });
                 } else {
                     if (IOUTypeID === '3') {
                         //other type
-                        console.log("Other type ----  ", HODID);
+                        console.log("Other type ----  ", HODID , " state v ........ " , HODId);
                         IsLimit = "";
                         OneOffData = [
                             {
@@ -534,7 +537,7 @@ const NewOneOffSettlement = () => {
                                 REMARK: "",
                                 Reject_Remark: "",
                                 Attachment_Status: 1,
-                                HOD: parseInt(res[0].ID),
+                                HOD: parseInt(HODId),
                                 FirstActionBy: '',
                                 FirstActionAt: '',
                                 RIsLimit: null,
@@ -549,7 +552,7 @@ const NewOneOffSettlement = () => {
                             if (res != false) {
                                 saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                                     if (Response == 3) {
-                                        getDetailsData(parseInt(res[0].ID), IsLimit);
+                                        getDetailsData(parseInt(HODID), IsLimit);
                                         setIsSubmitDialog(false);
                                         await alert({
                                             type: DropdownAlertType.Success,
@@ -579,6 +582,7 @@ const NewOneOffSettlement = () => {
                         console.log("job no or vehicle");
                         IsLimit = "NO";
                         HODID = '';
+                        setHODID('');
                         OneOffData = [
                             {
                                 PCRCode: OneOffSettlementNo,
@@ -593,7 +597,7 @@ const NewOneOffSettlement = () => {
                                 REMARK: "",
                                 Reject_Remark: "",
                                 Attachment_Status: 1,
-                                HOD: parseInt(res[0].ID),
+                                HOD: parseInt(HODId),
                                 FirstActionBy: '',
                                 FirstActionAt: '',
                                 RIsLimit: 'NO',
@@ -608,7 +612,8 @@ const NewOneOffSettlement = () => {
                             if (res != false) {
                                 saveOneOffSettlement(OneOffData, 0, async (Response: any) => {
                                     if (Response == 3) {
-                                        getDetailsData(HODID, IsLimit);
+                                        // getDetailsData(HODID, IsLimit);
+                                        getDetailsData(HODId, IsLimit);
                                         setIsSubmitDialog(false);
                                         await alert({
                                             type: DropdownAlertType.Success,
@@ -808,7 +813,7 @@ const NewOneOffSettlement = () => {
             setError(jobError);
         } else if (requestAmount == "0" || requestAmount == "0.0") {
             jobError.field = 'requestAmount'
-            jobError.message = 'Enter Valit Amount'
+            jobError.message = 'Enter Valid Amount'
             setError(jobError);
         } else {
             saveJob();

@@ -24,6 +24,7 @@ import { getLoginUserRoll } from "../../Constant/AsynStorageFuntion";
 import SyncScreen from "../SyncData/SyncScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PendingRequestList from "../PendingRequest/PendingRequestList";
+import CreateNewIOUScreen from "../newIOURequest/CreateNewIOUScreen";
 
 let width = Dimensions.get("screen").width;
 const height = Dimensions.get('screen').height;
@@ -32,13 +33,8 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function HomeStack() {
-
-
-
     return (
-
         <Stack.Navigator initialRouteName="Home">
-
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
             <Stack.Screen name="OneOffScreen" component={OneOffScreen} options={{ headerShown: false }} />
             <Stack.Screen name="PendingList" component={PendingList} options={{ headerShown: false }} />
@@ -49,9 +45,7 @@ function HomeStack() {
             <Stack.Screen name="NewOneOffSettlement" component={NewOneOffSettlement} options={{ headerShown: false }} />
             <Stack.Screen name="Sync" component={SyncScreen} options={{ headerShown: false }} />
             <Stack.Screen name="PendingRequestList" component={PendingRequestList} options={{ headerShown: false }} />
-
         </Stack.Navigator>
-
     );
 }
 
