@@ -184,6 +184,14 @@ export const get_ASYNC_IsInprogress_IOU = async () => {
     // console.log('Failed to fetch the data from storage')
   }
 }
+export const get_ASYNC_IsInprogress_IOUSET = async () => {
+  try {
+    const value = await AsyncStorage.getItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressIOUSettlement)
+    return value
+  } catch (e) {
+    // console.log('Failed to fetch the data from storage')
+  }
+}
 
 
   //   set_data = async (storage_key, value) => {

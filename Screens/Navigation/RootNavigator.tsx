@@ -10,6 +10,7 @@ import AddAttatchmentOneOffScreen from '../NewOneOffRequest/AddAttatchmentOneOff
 import CreateNewIOUScreen from '../newIOURequest/CreateNewIOUScreen';
 import AddIOUDetailScreen from '../newIOURequest/AddIOUDetailScreen';
 import AddAttatchmentIOUScreen from '../newIOURequest/AddAttatchmentIOUScreen';
+import CreateNewIOUSettlementScreen from '../NewIOUSettlementRequest/CreateNewIOUSettlementScreen';
 
 
 const stack = createNativeStackNavigator();
@@ -31,6 +32,7 @@ const RootNavigator = () => {
                 <stack.Screen name="CreateNewIOUScreen" component={CreateNewIOUScreen} options={{ headerShown: false }} />
                 <stack.Screen name="AddIOUDetailScreen" component={AddIOUDetailScreen} options={{ headerShown: false }} />
                 <stack.Screen name="AddAttatchmentIOUScreen" component={AddAttatchmentIOUScreen} options={{ headerShown: false }} />
+                <stack.Screen name="CreateNewIOUSettlementScreen" component={CreateNewIOUSettlementScreen} options={{ headerShown: false }} />
 
             </stack.Navigator>
 

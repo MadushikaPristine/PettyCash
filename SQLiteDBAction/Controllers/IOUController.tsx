@@ -295,7 +295,7 @@ export const getLastIOU = (callBack: any) => {
 export const getIOU = (callBack: any) => {
 
     DB.searchData(
-        "SELECT ifnull(a.IOU_ID || ' - ' || a.Amount || ' LKR' || ' - ' ||  STRFTIME('%d/%m/%Y', a.RequestDate) ,IOU_ID) as IOU_ID,a.WebRefID, a.JobOwner_ID , a.IOU_Type , a.EmpId , a.Amount , a.RequestDate , a.HOD FROM IOU a WHERE NOT EXISTS(SELECT b.* FROM IOU_SETTLEMENT b WHERE b.IOU_ID = a.IOU_ID ) AND a.FinanceStatus=?",
+        "SELECT ifnull(a.IOU_ID || ' - ' || a.Amount || ' LKR' || ' - ' ||  STRFTIME('%d/%m/%Y', a.RequestDate) ,IOU_ID) as IOU_ID,a.WebRefID, a.JobOwner_ID , a.IOU_Type , a.EmpId , a.Amount , a.RequestDate , a.HOD ,a.IOU_ID as ID FROM IOU a WHERE NOT EXISTS(SELECT b.* FROM IOU_SETTLEMENT b WHERE b.IOU_ID = a.IOU_ID ) AND a.FinanceStatus=?",
         // 'SELECT a.* FROM IOU a WHERE NOT EXISTS(SELECT b.* FROM IOU_SETTLEMENT b WHERE b.IOU_ID = a.IOU_ID ) AND a.FinanceStatus=?',
         ['Approved'],
         (resp: any, err: any) => {
@@ -464,29 +464,22 @@ export const getPendingSecondApprovalIOUList = (amount: any, callBack: any) => {
 };
 
 export const getIOUJobsListByID = (RequestID: any, callBack: any) => {
-
     // console.log(" ID SETT === " , RequestID);
 try {
     DB.searchData(
         'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU.IOU_ID=?',
         [RequestID],
         (resp: any, err: any) => {
+            console.log(" query  response ------" , resp);
             callBack(resp, err);
         },
     );
 } catch (error) {
     console.log(" query error response ------" , error);
-    
 }  
 };
-
-
-
 export const getIOUJobsListDetailsByID = (RequestID: any, callBack: any) => {
-
     // console.log(" ID SETT === " , RequestID);
-
-
     DB.searchData(
         'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, e.Description as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = IOU_JOBS.Expences_Type WHERE IOU.IOU_ID=?',
         [RequestID],
@@ -495,35 +488,23 @@ export const getIOUJobsListDetailsByID = (RequestID: any, callBack: any) => {
         },
     );
 };
-
-
 //------IOU PENDING LIST FILTER BY DATE-------
-
 export const getDateFilterIOUList = (firstDate: any, secondDate: any, callBack: any) => {
     // console.log(firstDate, secondDate);
-
     DB.searchData(
         //'SELECT IOU._Id as Id ,IOU.IOU_ID as ID ,EMPLOYEE.EmpName as employee ,IOU.Amount as Amount,IOU.Approve_Status, IOU.RequestDate FROM IOU INNER JOIN EMPLOYEE ON IOU.EmpId = EMPLOYEE.Emp_ID WHERE IOU.RequestDate >= ? AND IOU.RequestDate <= ? AND IOU.Approve_Status=0',
         'SELECT IOU._Id as Id ,IOU.IOU_ID as ID ,USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark, IOU.RequestDate FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  WHERE IOU.RequestDate >= ? AND IOU.RequestDate <= ? AND IOU.Approve_Status=1 ORDER BY IOU._Id DESC',
         [firstDate, secondDate],
-
         (resp: any, err: any) => {
-
             callBack(resp, err);
             //console.log(resp);
             // console.log(secondDate);
         },
-
     );
-
-
 };
-
 //------IOU APPROVED LIST FILTER BY DATE-------
-
 export const getDateFilterIOUApproveList = (firstDate: any, secondDate: any, callBack: any) => {
     // console.log(firstDate);
-
     DB.searchData(
         'SELECT IOU._Id as Id ,IOU.IOU_ID as ID ,USER.DisplayName as employee ,USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status,IOU.Approve_Remark, IOU.RequestDate , it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.RequestDate >= ? AND IOU.RequestDate <= ? AND IOU.Approve_Status=2 ORDER BY IOU._Id DESC',
         [firstDate, secondDate],

@@ -238,7 +238,7 @@ const AddOneOffDetailScreen = (props: any) => {
         if (route.params?.OneOffJobdataSet) {
             setOneOffJobData(route.params.OneOffJobdataSet);
         }
-    }, [route.params?.OneOffdataSet]);
+    }, [route.params?.OneOffJobdataSet]);
     useEffect(() => {
         if (route.params?.OneOffdataSet) {
             setOneOffData(route.params.OneOffdataSet);

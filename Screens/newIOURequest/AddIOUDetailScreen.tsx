@@ -2,7 +2,7 @@ import { Alert, SafeAreaView, ScrollView, Text, View } from "react-native";
 import ComponentsStyles from "../../Constant/Components.styles";
 import DropdownAlert, { DropdownAlertData, DropdownAlertType } from "react-native-dropdownalert";
 import Header from "../../Components/Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import moment from "moment";
 import ComStyles from "../../Constant/Components.styles";
 import style from './IOUStyle';
@@ -10,10 +10,12 @@ import { Dropdown } from "react-native-element-dropdown";
 import InputText from "../../Components/InputText";
 import ActionButton from "../../Components/ActionButton";
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { getCostCenterByJobNo } from "../../SQLiteDBAction/Controllers/JobNoController";
+import { getCostCenterByJobNo, getJobNOByOwners } from "../../SQLiteDBAction/Controllers/JobNoController";
 import { getGLAccNo } from "../../SQLiteDBAction/Controllers/GLAccountController";
 import { get_ASYNC_COST_CENTER } from "../../Constant/AsynStorageFuntion";
 import { generateReferenceNo } from "../../Constant/IDGenerator";
+import { getVehicleNoAll } from "../../SQLiteDBAction/Controllers/VehicleNoController";
+import { getExpenseTypeAll } from "../../SQLiteDBAction/Controllers/ExpenseTypeController";
 let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 const AddIOUDetailScreen = (props: any) => {
     const { navigation, route } = props;
@@ -96,6 +98,7 @@ const AddIOUDetailScreen = (props: any) => {
                     arr: { ...NewIOUJobData }
                 }
             ]);
+            showSuccessAlert('Success', 'Detail Added Successfully...');
             if ('totAmount' in NewIOUJobData && IOUData.totAmount?.value != '') {
                 let amount = parseFloat(IOUData.totAmount?.value);
                 let updateAmount = parseFloat(NewIOUJobData.requestAmount?.value) + amount;
@@ -187,6 +190,43 @@ const AddIOUDetailScreen = (props: any) => {
         } catch (error) {
         }
     }
+    const getVehicleNo = () => {
+        getVehicleNoAll((resp: any) => {
+            //console.log("Vehicle No............", resp);
+            setVehicle_NoList(resp);
+        })
+    }
+    const getJobNoByJobOwner = (ID: any) => {
+        getJobNOByOwners(IOUData.JobOwnerEPF?.value, (res: any) => {
+            setJob_NoList(res);
+        });
+    }
+    const getExpenseTypes = () => {
+        getExpenseTypeAll((result: any) => {
+            setExpenseTypeList(result);
+        });
+    }
+    useEffect(() => {
+        if (route.params?.IOUAttachmentSet) {
+            setIOUAttachments(route.params.IOUAttachmentSet);
+        }
+    }, [route.params?.IOUAttachmentSet]);
+    useEffect(() => {
+        if (route.params?.IOUJobdataSet) {
+            setIOUJobData(route.params.IOUJobdataSet);
+        }
+    }, [route.params?.IOUJobdataSet]);
+    useEffect(() => {
+        if (route.params?.ioudataSet) {
+            setIOUData(route.params.ioudataSet);
+            if (route.params?.ioudataSet.IOUType?.Id == 1) {
+                getJobNoByJobOwner(route.params?.ioudataSet.IOUType?.Id);
+            }
+            getVehicleNo();
+            getExpenseTypes();
+            generateNo();
+        }
+    }, [route.params?.ioudataSet]);
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
             <Header title="Add Details" isBtn={true} btnOnPress={naviBack} />

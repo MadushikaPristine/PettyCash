@@ -52,7 +52,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
                 }
             });
         } catch (error) {
-
+            showErrorAlert('Failed', 'Camera permission denied');
         }
     };
     const showErrorAlert = async (title: any, message: any) => {
@@ -390,7 +390,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
         if (route.params?.OneOffJobdataSet) {
             setOneOffJobData(route.params.OneOffJobdataSet);
         }
-    }, [route.params?.OneOffdataSet]);
+    }, [route.params?.OneOffJobdataSet]);
     useEffect(() => {
         if (route.params?.OneOffdataSet) {
             setOneOffData(route.params.OneOffdataSet);
