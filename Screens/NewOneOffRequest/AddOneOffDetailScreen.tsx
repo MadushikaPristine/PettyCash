@@ -98,14 +98,18 @@ const AddOneOffDetailScreen = (props: any) => {
     }
     const saveJobDetail = () => {
         try {
-            setOneOffJobData((prevState: any) => [
-                ...prevState,
-                {
-                    key: prevState.length + 1, // Generate a unique key for each entry
-                    arr: { ...NewOneOffJobData }
-                }
-            ]);
-            if ('totAmount' in NewOneOffJobData && OneOffData.totAmount?.value != '') {
+            setOneOffJobData((prevState: any) => {
+                // Calculate the maximum key in the existing array
+                const maxKey = prevState.reduce((max: number, item: any) => Math.max(max, item.key), 0);
+                return [
+                    ...prevState,
+                    {
+                        key: maxKey + 1, // Set key as max key + 1
+                        arr: { ...NewOneOffJobData }
+                    }
+                ];
+            });
+            if ('totAmount' in OneOffData && OneOffData.totAmount?.value != '') {
                 let amount = parseFloat(OneOffData.totAmount?.value);
                 let updateAmount = parseFloat(NewOneOffJobData.requestAmount?.value) + amount;
                 console.log("");

@@ -1,14 +1,9 @@
 import * as DB from '../DBService';
 
 export const saveIOUSETJOB = (data: any, type: any, callBack: any) => {
-
     var response: any;
-
     console.log(" job details array [[[[[   ", data);
-
-
     for (let i = 0; i < data.length; ++i) {
-
         DB.insertOrReplace(
             [
                 {
@@ -33,31 +28,21 @@ export const saveIOUSETJOB = (data: any, type: any, callBack: any) => {
                         data[i].RequestedAmount,
                         data[i].IstoEdit,
                         data[i].IOU_TYPEID
-
-
                     ],
                 },
             ],
             (res: any, err: any) => {
                 if (res === 'success') {
-
                     if (i + 1 == data.length) {
                         response = 3;
-
                         callBack(response);
                         // console.log(" end");
-
-
                     } else if (i == 0) {
-
                         response = 1;
                         callBack(response);
                         // console.log(" first  .....");
                     }
-
-
                 } else {
-
                     response = 2;
                     callBack(response);
                     console.log(res, " ..........  error ...  ", err);

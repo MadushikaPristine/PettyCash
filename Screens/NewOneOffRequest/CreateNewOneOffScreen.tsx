@@ -48,6 +48,14 @@ const NewOneOffScreen = (props: any) => {
             { text: 'Yes', onPress: (back) },
         ]);
     }
+    const gotoNextScreen = async () => {
+        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressOneOff, "true");
+        navigation.navigate('AddOneOffDetailScreen', { OneOffdataSet: OneOffData, OneOffJobdataSet: OneOffJobData, OneOffAttachmentSet: OneOffAttachments });
+    }
+    const AddAttachments = async () => {
+        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressOneOff, "true");
+        navigation.navigate('AddAttatchmentOneOffScreen', { OneOffdataSet: OneOffData, OneOffJobdataSet: OneOffJobData, OneOffAttachmentSet: OneOffAttachments });
+    }
     const chechMandetory = async (type: any) => {
         if ('IOUType' in OneOffData && OneOffData.IOUType?.Id != '' && OneOffData.IOUType?.Id != null) {
             if ('JobOwner' in OneOffData && OneOffData.JobOwner?.Id != '' && OneOffData.JobOwner?.Id != null) {
@@ -78,14 +86,6 @@ const NewOneOffScreen = (props: any) => {
                 message: 'Please Select IOU Type',
             });
         }
-    }
-    const gotoNextScreen = async () => {
-        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressOneOff, "true");
-        navigation.navigate('AddOneOffDetailScreen', { OneOffdataSet: OneOffData, OneOffJobdataSet: OneOffJobData, OneOffAttachmentSet: OneOffAttachments });
-    }
-    const AddAttachments = async () => {
-        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressOneOff, "true");
-        navigation.navigate('AddAttatchmentOneOffScreen', { OneOffdataSet: OneOffData, OneOffJobdataSet: OneOffJobData, OneOffAttachmentSet: OneOffAttachments });
     }
     const handleChange = (value: any, Id: any, key: any) => {
         try {

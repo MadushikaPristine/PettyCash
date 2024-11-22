@@ -6,89 +6,12 @@ export const saveIOU = (data: any, type: any, callBack: any) => {
     var response: any;
 
 
-    if(type == 1){
-    // 1 - api 
-
-    for (let i = 0; i < data.length; ++i) {
-
-    
-
-        DB.insertOrReplace(
-            [
-                {
-                    table: 'IOU',
-                    columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,FinanceStatus,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt,ActionStep,WebRefID,FStatus`,
-                    values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
-                    params: [
-
-                        data[i].PCRCode,
-                        data[i].JobOwner,
-                        data[i].IOUType,
-                        data[i].EmployeeNo,
-                        data[i].CreateAt,
-                        data[i].Amount,
-                        data[i].StatusID,
-                        data[i].RequestedBy,
-                        parseInt(type),
-                        data[i].Remark,
-                        "",
-                        "0",
-                        data[i].FinanceStatus,
-                        data[i].FirstActionBy,
-                        data[i].HOD,
-                        data[i].FirstActionBy,
-                        data[i].FirstActionAt,
-                        data[i].RIsLimit,
-                        data[i].AIsLimit,
-                        data[i].RIouLimit,
-                        data[i].AIouLimit,
-                        data[i].SecondActionBy,
-                        data[i].SecondActionAt,
-                        data[i].ActionStep,
-                        data[i].ID,
-                        data[i].FStatus,
-
-
-                    ],
-                },
-            ],
-            (res: any, err: any) => {
-                if (res === 'success') {
-
-                    if (i + 1 == data.length) {
-                        response = 3;
-
-                        callBack(response);
-                        // console.log(" end");
-
-
-                    } else if (i == 0) {
-
-                        response = 1;
-                        callBack(response);
-                        // console.log(" first  .....");
-                    }
-
-
-                } else {
-
-                    if (i + 1 == data.length) {
-                        response = 2;
-                        callBack(response);
-                        // console.log(res, " ..........  error ...  ", err);
-                    }
-                }
-
-            },
-        );
-
-    }
-
-    }else{
+    if (type == 1) {
+        // 1 - api 
 
         for (let i = 0; i < data.length; ++i) {
 
-    
+
 
             DB.insertOrReplace(
                 [
@@ -97,7 +20,84 @@ export const saveIOU = (data: any, type: any, callBack: any) => {
                         columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,FinanceStatus,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt,ActionStep,WebRefID,FStatus`,
                         values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
                         params: [
-    
+
+                            data[i].PCRCode,
+                            data[i].JobOwner,
+                            data[i].IOUType,
+                            data[i].EmployeeNo,
+                            data[i].CreateAt,
+                            data[i].Amount,
+                            data[i].StatusID,
+                            data[i].RequestedBy,
+                            parseInt(type),
+                            data[i].Remark,
+                            "",
+                            "0",
+                            data[i].FinanceStatus,
+                            data[i].FirstActionBy,
+                            data[i].HOD,
+                            data[i].FirstActionBy,
+                            data[i].FirstActionAt,
+                            data[i].RIsLimit,
+                            data[i].AIsLimit,
+                            data[i].RIouLimit,
+                            data[i].AIouLimit,
+                            data[i].SecondActionBy,
+                            data[i].SecondActionAt,
+                            data[i].ActionStep,
+                            data[i].ID,
+                            data[i].FStatus,
+
+
+                        ],
+                    },
+                ],
+                (res: any, err: any) => {
+                    if (res === 'success') {
+
+                        if (i + 1 == data.length) {
+                            response = 3;
+
+                            callBack(response);
+                            // console.log(" end");
+
+
+                        } else if (i == 0) {
+
+                            response = 1;
+                            callBack(response);
+                            // console.log(" first  .....");
+                        }
+
+
+                    } else {
+
+                        if (i + 1 == data.length) {
+                            response = 2;
+                            callBack(response);
+                            // console.log(res, " ..........  error ...  ", err);
+                        }
+                    }
+
+                },
+            );
+
+        }
+
+    } else {
+
+        for (let i = 0; i < data.length; ++i) {
+
+
+
+            DB.insertOrReplace(
+                [
+                    {
+                        table: 'IOU',
+                        columns: `IOU_ID,JobOwner_ID,IOU_Type,EmpId,RequestDate,Amount,Approve_Status,CreatedBy,IsSync,Approve_Remark,Reject_Remark,Attachment_Status,FinanceStatus,ApprovedBy,HOD,FirstActionBy,FirstActionAt,RIsLimit,AIsLimit,RIOULimit,AIOULimit,SecondActionBy,SecondActionAt,ActionStep,WebRefID,FStatus`,
+                        values: '?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?',
+                        params: [
+
                             data[i].PCRCode,
                             data[i].JobOwner,
                             data[i].IOUType,
@@ -124,45 +124,45 @@ export const saveIOU = (data: any, type: any, callBack: any) => {
                             data[i].ActionStep,
                             data[i].ID,
                             data[i].FStatus,
-    
-    
+
+
                         ],
                     },
                 ],
                 (res: any, err: any) => {
                     if (res === 'success') {
-    
+
                         if (i + 1 == data.length) {
                             response = 3;
-    
+
                             callBack(response);
                             // console.log(" end");
-    
-    
+
+
                         } else if (i == 0) {
-    
+
                             response = 1;
                             callBack(response);
                             // console.log(" first  .....");
                         }
-    
-    
+
+
                     } else {
-    
+
                         if (i + 1 == data.length) {
                             response = 2;
                             callBack(response);
                             // console.log(res, " ..........  error ...  ", err);
                         }
                     }
-    
+
                 },
             );
-    
+
         }
 
     }
-    
+
 
 };
 
@@ -324,7 +324,7 @@ export const getPendingIOUHome = (callBack: any) => {
     DB.searchData(
         // 'SELECT IOU.IOU_ID AS ID, IOU.Amount, EMPLOYEE.EmpName FROM IOU INNER JOIN EMPLOYEE ON IOU.EmpId = EMPLOYEE.Emp_ID INNER JOIN WHERE Approve_Status=0 ORDER BY _Id DESC',
         'SELECT * FROM IOU WHERE Approve_Status=? OR Approve_Status=?  ORDER BY _Id DESC LIMIT 10',
-        [1,5],
+        [1, 5],
         (resp: any, err: any) => {
             console.log(" pending ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  iou ", resp);
 
@@ -370,33 +370,33 @@ export const getCancelledIOU = (callBack: any) => {
 };
 
 
-export const getPendingIOUList = (roleID:any , callBack: any) => {
+export const getPendingIOUList = (roleID: any, callBack: any) => {
 
 
-    console.log("^^^^^^^^^^^^^^^^^^^^^^"+roleID);
-    
+    console.log("^^^^^^^^^^^^^^^^^^^^^^" + roleID);
 
-    if(roleID == '3'){
+
+    if (roleID == '3') {
         //Job owner  
-        console.log("^^^^^^^^^^^^^22^^^^^^^^^"+roleID);
+        console.log("^^^^^^^^^^^^^22^^^^^^^^^" + roleID);
         DB.searchData(
             'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.Approve_Status=? AND IOU.IOU_Type=? ORDER BY IOU._Id DESC',
             // 'SELECT * FROM USER ',
-            [1,1],
+            [1, 1],
             (resp: any, err: any) => {
-    
-               
-                
+
+
+
                 callBack(resp, err);
             },
         );
 
-    }else {
+    } else {
 
         //transport officer
         DB.searchData(
             'SELECT IOU._Id as Id ,IOU.IOU_ID as ID, USER.DisplayName as employee, USER.USER_ID, IFNULL(IOU.Amount,0) as Amount,IOU.Approve_Status, IOU.Approve_Remark,IOU.CreatedBy, IOU.RequestDate,it.Description as IOUType FROM IOU INNER JOIN USER ON IOU.CreatedBy = USER.USER_ID  LEFT OUTER JOIN IOU_Type it ON it.IOUType_ID = IOU.IOU_Type WHERE IOU.Approve_Status=? AND IOU.IOU_Type=? ORDER BY IOU._Id DESC',
-            [1,2],
+            [1, 2],
             (resp: any, err: any) => {
                 console.log(resp);
                 callBack(resp, err);
@@ -404,7 +404,7 @@ export const getPendingIOUList = (roleID:any , callBack: any) => {
         );
 
     }
-   
+
 
 };
 
@@ -417,7 +417,7 @@ export const getAllPendingIOUList = (callBack: any) => {
         (resp: any, err: any) => {
 
             console.log(resp);
-            
+
             callBack(resp, err);
         },
     );
@@ -462,21 +462,35 @@ export const getPendingSecondApprovalIOUList = (amount: any, callBack: any) => {
     );
 
 };
-
 export const getIOUJobsListByID = (RequestID: any, callBack: any) => {
-    // console.log(" ID SETT === " , RequestID);
-try {
-    DB.searchData(
-        'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU.IOU_ID=?',
-        [RequestID],
-        (resp: any, err: any) => {
-            console.log(" query  response ------" , resp);
-            callBack(resp, err);
-        },
-    );
-} catch (error) {
-    console.log(" query error response ------" , error);
-}  
+    console.log(" ID SETT === ", RequestID);
+    try {
+        DB.searchData(
+            'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, IOU_JOBS.Expences_Type as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID WHERE IOU.IOU_ID=?',
+            [RequestID],
+            (resp: any, err: any) => {
+                console.log(" query  response ------", resp);
+                callBack(resp, err);
+            },
+        );
+    } catch (error) {
+        console.log(" query error response ------", error);
+    }
+};
+export const getIOUJobsListForSellementsByID = (RequestID: any, callBack: any) => {
+    console.log(" ID SETT === ", RequestID);
+    try {
+        DB.searchData(
+            'SELECT IOU_JOBS._Id,IOU_JOBS.Job_ID,IOU.JobOwner_ID,IOU.IOU_Type,IOU.IOU_ID, IOU_JOBS.Job_NO as IOUTypeNo, e.Description as ExpenseType, IFNULL(IOU_JOBS.Amount,0) as Amount, IOU_JOBS.Remark, IOU_JOBS.AccNo, IOU_JOBS.CostCenter, IOU_JOBS.Resource , IOU_JOBS.Expences_Type as ExpID FROM IOU INNER JOIN IOU_JOBS ON IOU.IOU_ID = IOU_JOBS.Request_ID LEFT OUTER JOIN EXPENSE_TYPE e ON e.ExpType_ID = IOU_JOBS.Expences_Type WHERE IOU.IOU_ID=?',
+            [RequestID],
+            (resp: any, err: any) => {
+                console.log(" query  response ------", resp);
+                callBack(resp, err);
+            },
+        );
+    } catch (error) {
+        console.log(" query error response ------", error);
+    }
 };
 export const getIOUJobsListDetailsByID = (RequestID: any, callBack: any) => {
     // console.log(" ID SETT === " , RequestID);
@@ -692,7 +706,7 @@ export const Update_IOU_ValidateAmount = (data: any, callBack: any) => {
 
     DB.updateData(
         'UPDATE IOU SET FirstActionBy=?,FirstActionAt=?,AIsLimit=?,AIOULimit=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE IOU_ID=?',
-        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].AIsLimit, data[0].AIOULimit, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep,0, data[0].IOU_ID],
+        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].AIsLimit, data[0].AIOULimit, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -705,7 +719,7 @@ export const Update_IOU_FirstApprovel = (data: any, callBack: any) => {
 
     DB.updateData(
         'UPDATE IOU SET FirstActionBy=?,FirstActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE IOU_ID=?',
-        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep,0, data[0].IOU_ID],
+        [data[0].FirstActionBy, data[0].FirstActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -717,7 +731,7 @@ export const Update_IOU_SecondApprovel = (data: any, callBack: any) => {
 
     DB.updateData(
         'UPDATE IOU SET SecondActionBy=?,SecondActionAt=?,Approve_Remark=?,Approve_Status=?,ActionStep=?,IsSync=? WHERE IOU_ID=?',
-        [data[0].SecondActionBy, data[0].SecondActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0,data[0].IOU_ID],
+        [data[0].SecondActionBy, data[0].SecondActionAt, data[0].Approve_Remark, data[0].Approve_Status, data[0].ActionStep, 0, data[0].IOU_ID],
         (resp: any, err: any) => {
             callBack(resp, err)
 
@@ -729,7 +743,7 @@ export const getIOUForUpload = (callBack: any) => {
 
     DB.updateData(
         'SELECT * FRom IOU WHERE IsSync = ? AND Approve_Status = ?',
-        [0,1],
+        [0, 1],
         (resp: any, err: any) => {
             callBack(resp, err)
 

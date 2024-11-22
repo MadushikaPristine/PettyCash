@@ -13,17 +13,19 @@ export const generateReferenceNo = (type: any, returnValue: any) => {
         const seconds = String(currentDate.getSeconds()).padStart(2, "0");
 
         const formattedVal = `${year}${month}${day}${hours}${minutes}${seconds}`;
+        const hashValue = parseInt(formattedVal) % 1000000; // Keep only the last 6 digits
+        const lastval = hashValue.toString().padStart(6, "0");
 
         getLoginUserID().then(res => {
             // console.log(" user ID ===  " , res);
             if (type == 'IOU') {
-                ID = "IOU" + formattedVal + res + "M"
+                ID = "IOU" + lastval + res + "M"
             } else if (type == 'IOUSET') {
-                ID = "IOUSET" + formattedVal + res + "M"
+                ID = "IOUSET" + lastval + res + "M"
             } else if (type == 'OFS') {
-                ID = "OFS" + formattedVal + res + "M"
-            }else{
-                ID = formattedVal + "M";
+                ID = "OFS" + lastval + res + "M"
+            } else {
+                ID = lastval + "M";
             }
             returnValue(ID);
         })

@@ -351,23 +351,24 @@ const AddAttatchmentIOUScreen = (props: any) => {
     }
     const Save = async () => {
         try {
-            if (IOUJobData.length > 0) {
-                Alert.alert('Submit', 'Are you sure save this IOU request ?', [
-                    {
-                        text: 'No',
-                        onPress: () => console.log('Cancel Pressed'),
-                        style: 'cancel',
-                    },
-                    { text: 'Yes', onPress: () => checkLimit() },
-                ]);
-            } else {
-                showErrorAlert('Error', 'Please Add Details');
-            }
+                if (IOUJobData.length > 0) {
+                    Alert.alert('Submit', 'Are you sure save this IOU request ?', [
+                        {
+                            text: 'No',
+                            onPress: () => console.log('Cancel Pressed'),
+                            style: 'cancel',
+                        },
+                        { text: 'Yes', onPress: () => checkLimit() },
+                    ]);
+                } else {
+                    showErrorAlert('Error', 'Please Add Details');
+                }
         } catch (error) {
         }
     }
     useEffect(() => {
         if (route.params?.IOUJobdataSet) {
+            console.log(" settlement data ==========   " , route.params?.IOUJobdataSet);
             setIOUJobData(route.params.IOUJobdataSet);
         }
     }, [route.params?.IOUJobdataSet]);

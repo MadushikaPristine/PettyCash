@@ -7,7 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { generateReferenceNo } from "../../Constant/IDGenerator";
 import { get_ASYNC_COST_CENTER, get_ASYNC_IsInprogress_IOUSET, getLoginUserID, getLoginUserName, getLoginUserRoll } from "../../Constant/AsynStorageFuntion";
 import { useFocusEffect } from "@react-navigation/native";
-import { getIOU, getIOUJobsListByID } from "../../SQLiteDBAction/Controllers/IOUController";
+import { getIOU, getIOUJobsListByID, getIOUJobsListForSellementsByID } from "../../SQLiteDBAction/Controllers/IOUController";
 import style from './IOUSetStyle';
 import DetailsBox from "../../Components/DetailsBox";
 import ComponentsStyles from "../../Constant/Components.styles";
@@ -55,6 +55,7 @@ const CreateNewIOUSettlementScreen = (props: any) => {
             setIOUSettlementData((prevState: any) => ({
                 ...prevState, [key]: { value, Id }
             }));
+            // console.log("iou set data ========  " , IOUSettlementData);
         } catch (error) {
         }
     }
@@ -103,18 +104,30 @@ const CreateNewIOUSettlementScreen = (props: any) => {
             { text: 'Yes', onPress: () => deleteDetail(key, amount) },
         ]);
     }
+    const gotoNextScreen = async () => {
+        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressIOUSettlement, "true");
+        navigation.navigate('AddIOUSETDetailScreen', { iouSetdataSet: IOUSettlementData, IOUSetJobdataSet: IOUSettlementJobData, IOUSetAttachmentSet: IOUSettlementAttachments, isEdit: 0 });
+    }
+    const AddAttachments = async () => {
+        await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressIOUSettlement, "true");
+        navigation.navigate('AddAttatchmmentSettlement', { iouSetdataSet: IOUSettlementData, IOUSetJobdataSet: IOUSettlementJobData, IOUSetAttachmentSet: IOUSettlementAttachments });
+    }
+    const chechMandetory = async (type: any) => {
+        if ('IOUNO' in IOUSettlementData && IOUSettlementData.IOUNO?.value != '' && IOUSettlementData.IOUNO?.value != null) {
+            if (type == 1) {
+                gotoNextScreen();
+            } else {
+                AddAttachments();
+            }
+        } else {
+            showErrorAlert('Error', 'Please Select IOU Request');
+        }
+    }
     const getAllIOUNo = () => {
         setIOUList([]);
         getIOU((result1: any) => {
             setIOUList(result1);
         });
-    }
-    const DeleteIOuJobs = () => {
-        try {
-
-        } catch (error) {
-            console.log(" error -     ", error);
-        }
     }
     const getEmpDetails = (ID: any) => {
         try {
@@ -125,14 +138,48 @@ const CreateNewIOUSettlementScreen = (props: any) => {
         }
     }
     const getIOUJobList = (IOUID: any) => {
-        console.log(IOUID);
-        setiouJobList([]);
-        getIOUJobsListByID(IOUID, (response: any) => {
-            setiouJobList(response);
-            console.log("get iou job list ======= " + response);
-            console.log(ioujoblist);
-
-        });
+        try {
+            setIOUSettlementJobData([]);
+            let totalAmount = 0.0;
+            getIOUJobsListForSellementsByID(IOUID, (response: any) => {
+                response.forEach((element: any , index:any) => {
+                    totalAmount = totalAmount + parseFloat(element.Amount);
+                    generateReferenceNo("job", (ID: any) => {
+                        const arr =
+                        {
+                            Job_ID: ID,
+                            IOUTypeNo: element.IOUTypeNo,
+                            JobOwner_ID: element.JobOwner_ID,
+                            AccNo: element.AccNo,
+                            CostCenter: element.CostCenter,
+                            Resource: element.Resource,
+                            ExpenseType: element.ExpenseType,
+                            ExpenseTypeID: element.ExpID,
+                            Amount: element.Amount,
+                            Remark: element.Remark,
+                            RequestedBy: IOUSettlementData.UserID?.value,
+                            RequestedAmount: element.Amount,
+                            IOU_TYPEID: element.IOU_Type,
+                            IsDelete: false,
+                        }
+                        setIOUSettlementJobData((prevState: any) => [
+                            ...prevState,
+                            {
+                                key: prevState.length + 1, // Generate a unique key for each entry
+                                arr: { ...arr }
+                            }
+                        ]);
+                        if(index === response.length-1){
+                            handleChange(totalAmount, null, "totAmount");
+                        }
+                    });
+                })
+            });
+        } catch (error) {
+        }
+    }
+    const editJobs = (key: any, type: any) => {
+        navigation.navigate('AddIOUSETDetailScreen', { iouSetdataSet: IOUSettlementData, IOUSetJobdataSet: IOUSettlementJobData, IOUSetAttachmentSet: IOUSettlementAttachments, isEdit: type, jobKey: key });
     }
     const getJJobOwnerTransportHOD = (ID: any, type: any) => {
         // type = 1 - job owner / 2 - transport officer / 3 - hod
@@ -187,6 +234,8 @@ const CreateNewIOUSettlementScreen = (props: any) => {
     }
     useEffect(() => {
         if (route.params?.IOUSetJobdataSet) {
+            console.log(" job data array >>>>>>>>>>>>>>  ", route.params.IOUSetJobdataSet);
+
             setIOUSettlementJobData(route.params.IOUSetJobdataSet);
         }
     }, [route.params?.IOUSetJobdataSet]);
@@ -243,16 +292,14 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                         valueField="IOU_ID"
                         placeholder={!isFocus ? 'Select IOU ' : '...'}
                         searchPlaceholder="Search IOU"
-                        value={IOUSettlementData.IOU?.value}
+                        value={IOUSettlementData.IOUNO?.value}
                         onFocus={() => setIsFocus(true)}
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
                             console.log(" select item ----------- ", item);
-
                             handleChange(null, item.IOU_Type, "IOUType")
                             handleChange(item.IOU_ID, item.ID, "IOUNO")
                             getEmpDetails(item.EmpId);
-                            DeleteIOuJobs();
                             handleChange(null, null, "JobOwner")
                             getIOUJobList(item.ID);
                             if (item.IOU_Type == 1) {
@@ -328,30 +375,32 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                 <ScrollView horizontal>
                     <FlatList
                         nestedScrollEnabled={true}
-                        data={ioujoblist}
+                        data={IOUSettlementJobData}
                         //horizontal={false}
                         renderItem={({ item }) => {
                             return (
                                 <View style={{ width: width - 30, padding: 5 }}>
                                     <NewJobsView
-                                        IOU_Type={IOUSettlementData.IOUTypeName?.value}
-                                        amount={item.Amount}
-                                        IOUTypeNo={item.IOUTypeNo}
-                                        ExpenseType={item.ExpenseType}
-                                        jobremarks={item.Remark}
-                                        accNo={item.AccNo}
-                                        costCenter={item.CostCenter}
-                                        resource={item.Resource}
+                                        IOU_Type={IOUSettlementData.IOUType?.Id}
+                                        amount={item.arr.RequestedAmount}
+                                        IOUTypeNo={IOUSettlementData.IOUType?.Id == 1 ? item.arr.IOUTypeNo : item.arr.Resource}
+                                        ExpenseType={item.arr.ExpenseType}
+                                        jobremarks={item.arr.Remark}
+                                        accNo={item.arr.AccNo}
+                                        costCenter={item.arr.CostCenter}
+                                        resource={item.arr.Resource}
                                         isEdit={true}
-                                        // onPressIcon={() => editJobs(item._Id)}
-                                        settlementAmount={item.Amount}
-                                        isSettlementAmount={true}
+                                        isDelete={item.arr.IsDelete}
+                                        onPressIcon={() => editJobs(item.key, item.arr.IsDelete ? 1 : 2)}
+                                        settlementAmount={item.arr.Amount}
+                                        isSettlementAmount={!item.arr.IsDelete}
+                                        onPressDeleteIcon={() => deletePermission(item.key, item.arr.requestAmount?.value)}
                                     />
                                 </View>
                             )
                         }
                         }
-                        keyExtractor={item => `${item._Id}`}
+                        keyExtractor={item => `${item.key}`}
                     />
                 </ScrollView>
             </ScrollView>
@@ -362,12 +411,12 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                         styletouchable={{ width: '49%', marginLeft: 5 }}
                         style={{ backgroundColor: ComStyles.COLORS.SUB_COLOR }}
                         textStyle={{ color: ComStyles.COLORS.BLACK }}
-                    // onPress={() => chechMandetory(1)}
+                        onPress={() => chechMandetory(1)}
                     />
                     <ActionButton
                         title="Next"
                         styletouchable={{ width: '48%', marginLeft: 5 }}
-                    // onPress={() => chechMandetory(2)}
+                        onPress={() => chechMandetory(2)}
                     />
                 </View>
             </View>
