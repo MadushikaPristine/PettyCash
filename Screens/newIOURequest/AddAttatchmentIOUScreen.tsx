@@ -231,7 +231,7 @@ const AddAttatchmentIOUScreen = (props: any) => {
     const saveJobData = (date: any) => {
         try {
             IOUJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value;
+                let requestAmount = element.arr.requestAmount?.value+"";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
                 if (isDecimal != -1) {

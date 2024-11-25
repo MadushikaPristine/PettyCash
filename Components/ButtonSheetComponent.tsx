@@ -29,37 +29,31 @@ const ButtonSheetComponent = () => {
     }
 
     const newIOU = () => {
-        // ====================================================
-        // getLoginUserID().then(result => {
-        //     checkOpenRequests(parseInt(result + ""), async (resp: any) => {
-        //         if (resp.length > 0) {
-        //             Alert.alert('Can not create a new Request', 'You already have an open status request', [
-        //                 {
-        //                     text: 'Ok',
-        //                     onPress: () => console.log('Cancel Pressed'),
-        //                     style: 'cancel',
-        //                 },
-        //                 // { text: 'Yes', onPress: (back) },
-        //             ]);
-        //             setModalVisible(false);
-        //         } else {
-        //             setModalVisible(false);
-        //             // navigation.navigate('NewIOU');
-        //             navigation.navigate('CreateNewIOUScreen');
-        //         }
-        //     });
-        // })
-        navigation.navigate('CreateNewIOUScreen');
-        // ================================================
+        getLoginUserID().then(result => {
+            checkOpenRequests(parseInt(result + ""), async (resp: any) => {
+                if (resp.length > 0) {
+                    Alert.alert('Can not create a new Request', 'You already have an open status request', [
+                        {
+                            text: 'Ok',
+                            onPress: () => console.log('Cancel Pressed'),
+                            style: 'cancel',
+                        },
+                        // { text: 'Yes', onPress: (back) },
+                    ]);
+                    setModalVisible(false);
+                } else {
+                    setModalVisible(false);
+                    // navigation.navigate('NewIOU');
+                    navigation.navigate('CreateNewIOUScreen');
+                }
+            });
+        })
     }
     const NewIOUSettlement = () => {
-
         setModalVisible(false);
         // navigation.navigate('NewIOUSettlement');
         navigation.navigate('CreateNewIOUSettlementScreen');
-
     }
-
     const NewOneOffSettlement = () => {
         // getLoginUserID().then(result => {
 
