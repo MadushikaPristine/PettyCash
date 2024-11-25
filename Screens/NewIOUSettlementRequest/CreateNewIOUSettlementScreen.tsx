@@ -301,6 +301,7 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                             handleChange(item.IOU_ID, item.ID, "IOUNO")
                             getEmpDetails(item.EmpId);
                             handleChange(null, null, "JobOwner")
+                            handleChange(0, null, "totAmount");
                             getIOUJobList(item.ID);
                             if (item.IOU_Type == 1) {
                                 handleChange("Job Owner", null, "OwnerType")

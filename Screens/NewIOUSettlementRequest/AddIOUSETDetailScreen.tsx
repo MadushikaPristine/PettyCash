@@ -96,10 +96,10 @@ const AddIOUSETDetailScreen = (props: any) => {
                     return parseFloat(amount.replaceAll(',', '') || '0');
                 }
             };
-           let finalAmount =  parseAmount(amount+"");
+            let finalAmount = parseAmount(amount + "");
             if (route.params?.isEdit == 2) { //edited iou job
                 handleNewJobDataChange(finalAmount, null, "settleAmount");
-            }else{
+            } else {
                 handleNewJobDataChange(finalAmount, null, "requestAmount");
                 handleNewJobDataChange(finalAmount, null, "settleAmount");
             }
@@ -167,8 +167,8 @@ const AddIOUSETDetailScreen = (props: any) => {
             handleNewJobDataChange(foundObject.arr.CostCenter, null, "CostCenter")
             handleNewJobDataChange(foundObject.arr.Resource, null, "Resource")
             handleNewJobDataChange(foundObject.arr.ExpenseType, foundObject.arr.ExpenseTypeID, "ExpenseType")
-            handleNewJobDataChange(foundObject.arr.RequestedAmount+"", null, "requestAmount")
-            handleNewJobDataChange(foundObject.arr.Amount+"", null, "settleAmount")
+            handleNewJobDataChange(foundObject.arr.RequestedAmount + "", null, "requestAmount")
+            handleNewJobDataChange(foundObject.arr.Amount + "", null, "settleAmount")
             handleNewJobDataChange(foundObject.arr.Remark, null, "remark")
             handleNewJobDataChange(foundObject.arr.AccNo, null, "GLAccount")
             handleNewJobDataChange(foundObject.arr.IsDelete, null, "isDelete")
@@ -215,15 +215,15 @@ const AddIOUSETDetailScreen = (props: any) => {
                 ];
             });
             showSuccessAlert('Success', 'Detail Added Successfully...');
-            if ('totAmount' in IOUSettlementData && IOUSettlementData.totAmount?.value != '') {
-                let amount = parseFloat(IOUSettlementData.totAmount?.value);
-                let updateAmount = parseFloat(NewIOUSETJobData.requestAmount?.value) + amount;
-                handleChange(updateAmount, null, "totAmount");
-            } else {
-                let newAmount = parseFloat(NewIOUSETJobData.requestAmount?.value)
-                console.log(" new amount ----   ", newAmount);
-                handleChange(newAmount, null, "totAmount");
-            }
+            // if ('totAmount' in IOUSettlementData && IOUSettlementData.totAmount?.value != '') {
+            let amount = parseFloat(IOUSettlementData.totAmount?.value);
+            let updateAmount = parseFloat(NewIOUSETJobData.requestAmount?.value) + amount;
+            handleChange(updateAmount, null, "totAmount");
+            // } else {
+            //     let newAmount = parseFloat(NewIOUSETJobData.requestAmount?.value)
+            //     console.log(" new amount ----   ", newAmount);
+            //     handleChange(newAmount, null, "totAmount");
+            // }
             setNewIOUSETJobData([]); // Reset NewIOUJobData
             generateNo();
         } catch (error) {
@@ -260,14 +260,14 @@ const AddIOUSETDetailScreen = (props: any) => {
             let updateAmount = amount - parseFloat(NewIOUSETJobData.requestAmount?.value) + parseFloat(NewIOUSETJobData.settleAmount?.value);
             handleChange(updateAmount, null, "totAmount");
         } else { // edited newly added detail
-            if ('totAmount' in IOUSettlementData && IOUSettlementData.totAmount?.value != '') {
+            // if ('totAmount' in IOUSettlementData && IOUSettlementData.totAmount?.value != '') {
                 let amount = parseFloat(IOUSettlementData.totAmount?.value);
                 let updateAmount = parseFloat(NewIOUSETJobData.requestAmount?.value) + amount;
                 handleChange(updateAmount, null, "totAmount");
-            } else {
-                let newAmount = parseFloat(NewIOUSETJobData.requestAmount?.value)
-                handleChange(newAmount, null, "totAmount");
-            }
+            // } else {
+            //     let newAmount = parseFloat(NewIOUSETJobData.requestAmount?.value)
+            //     handleChange(newAmount, null, "totAmount");
+            // }
         }
         setNewIOUSETJobData([]); // Reset NewIOUJobData
     }
@@ -349,7 +349,7 @@ const AddIOUSETDetailScreen = (props: any) => {
             getExpenseTypes();
             generateNo();
             if (route.params?.isEdit == 0) { // new job create 
-              
+
             } else {
                 getJobDataFromKey(route.params?.jobKey);
             }
@@ -482,7 +482,7 @@ const AddIOUSETDetailScreen = (props: any) => {
                     placeholder={route.params?.isEdit == 2 ? "Settlement Amount(LKR)*" : "Requested amount(LKR)*"}
                     keyType='decimal-pad'
                     returnKeyType='done'
-                    stateValue={route.params?.isEdit == 2 ? NewIOUSETJobData?.settleAmount?.value  || '' : NewIOUSETJobData?.requestAmount?.value || ''}
+                    stateValue={route.params?.isEdit == 2 ? NewIOUSETJobData?.settleAmount?.value || '' : NewIOUSETJobData?.requestAmount?.value || ''}
                     editable={true}
                     setState={(val: any) => setFormatAmount(val)}
                     style={ComStyles.IOUInput}

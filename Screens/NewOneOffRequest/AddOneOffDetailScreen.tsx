@@ -176,6 +176,8 @@ const AddOneOffDetailScreen = (props: any) => {
             handleNewJobDataChange(foundObject.arr.remark?.value, null, "remark")
             handleNewJobDataChange(foundObject.arr.GLAccount?.value, null, "GLAccount")
             let updateAmount = parseFloat(OneOffData.totAmount?.value) - parseFloat(foundObject.arr.requestAmount?.value)
+            console.log(" update amount ---------   " , updateAmount);
+            
             if (!Number.isNaN(updateAmount)) {
                 handleChange(updateAmount, null, "totAmount");
             } else {
@@ -198,18 +200,18 @@ const AddOneOffDetailScreen = (props: any) => {
                     }
                 ];
             });
-            if ('totAmount' in OneOffData && OneOffData.totAmount?.value != '' || 'totAmount' in OneOffData && !Number.isNaN(OneOffData.totAmount?.value)) {
+            // if ('totAmount' in OneOffData && OneOffData.totAmount?.value != '' || 'totAmount' in OneOffData && !Number.isNaN(OneOffData.totAmount?.value)) {
                 let amount = parseFloat(OneOffData.totAmount?.value);
-                let updateAmount = parseFloat(NewOneOffJobData.requestAmount?.value) + amount;
-                console.log("");
+                let updateAmount = amount + parseFloat(NewOneOffJobData.requestAmount?.value);
+                console.log("update amount ------  " , updateAmount);
 
                 handleChange(updateAmount, null, "totAmount");
-            } else {
-                let newAmount = parseFloat(NewOneOffJobData.requestAmount?.value)
-                console.log(" new amount ----   ", newAmount);
+            // } else {
+            //     let newAmount = parseFloat(NewOneOffJobData.requestAmount?.value)
+            //     console.log(" new amount ----   ", newAmount);
 
-                handleChange(newAmount, null, "totAmount");
-            }
+            //     handleChange(newAmount, null, "totAmount");
+            // }
             showSuccessAlert('Success', 'Detail Added Successfully...');
             setNewOneOffJobData([]); // Reset NewOneOffJobData
             generateNo();

@@ -152,18 +152,18 @@ const AddIOUDetailScreen = (props: any) => {
                 ];
             });
             showSuccessAlert('Success', 'Detail Added Successfully...');
-            if ('totAmount' in IOUData && IOUData.totAmount?.value != '' || 'totAmount' in IOUData && !Number.isNaN(IOUData.totAmount?.value)) {
+            // if ('totAmount' in IOUData && IOUData.totAmount?.value != '' || 'totAmount' in IOUData && !Number.isNaN(IOUData.totAmount?.value)) {
                 let amount = parseFloat(IOUData.totAmount?.value);
                 let updateAmount = parseFloat(NewIOUJobData.requestAmount?.value) + amount;
                 console.log(" updateAmount   ", updateAmount);
 
                 handleChange(updateAmount, null, "totAmount");
-            } else {
-                let newAmount = parseFloat(NewIOUJobData.requestAmount?.value)
-                console.log(" new amount ----   ", newAmount);
+            // } else {
+            //     let newAmount = parseFloat(NewIOUJobData.requestAmount?.value)
+            //     console.log(" new amount ----   ", newAmount);
 
-                handleChange(newAmount, null, "totAmount");
-            }
+            //     handleChange(newAmount, null, "totAmount");
+            // }
             setNewIOUJobData([]); // Reset NewIOUJobData
             generateNo();
         } catch (error) {

@@ -215,6 +215,8 @@ const NewOneOffScreen = (props: any) => {
     }, [route.params?.OneOffJobdataSet]);
     useEffect(() => {
         if (route.params?.OneOffdataSet) {
+            console.log("total amount -------------   " , route.params?.OneOffdataSet);
+            
             setOneOffData(route.params.OneOffdataSet);
         }
     }, [route.params?.OneOffdataSet]);
