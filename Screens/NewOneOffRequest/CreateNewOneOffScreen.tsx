@@ -146,7 +146,7 @@ const NewOneOffScreen = (props: any) => {
         try {
             get_ASYNC_IsInprogress_OneOff().then(res => {
                 if (res == "true") {
-                }else{
+                } else {
                     generateReferenceNo("OFS", (ID: any) => {
                         handleChange(ID, null, "OneOffNo");
                     });
@@ -192,12 +192,21 @@ const NewOneOffScreen = (props: any) => {
         setOneOffJobData(newData);
         let amountTot = parseFloat(OneOffData.totAmount?.value);
         let newAmnt = amountTot - parseFloat(amount);
-        handleChange(newAmnt, null, "totAmount");
+        console.log(" now amount ---  " , newAmnt);
+        
+        if (!Number.isNaN(newAmnt)) {
+            handleChange(newAmnt, null, "totAmount");
+        } else {
+            handleChange(0, null, "totAmount");
+        }
         await alert({
-            type: DropdownAlertType.Error,
+            type: DropdownAlertType.Success,
             title: 'Success',
             message: 'Detail Deleted Successfully...',
         });
+    }
+    const editJobs = (key: any, type: any) => {
+        navigation.navigate('AddOneOffDetailScreen', { OneOffdataSet: OneOffData, OneOffJobdataSet: OneOffJobData, OneOffAttachmentSet: OneOffAttachments, isEdit: type, jobKey: key });
     }
     useEffect(() => {
         if (route.params?.OneOffJobdataSet) {
@@ -263,6 +272,8 @@ const NewOneOffScreen = (props: any) => {
                         onChange={item => {
                             handleChange(item.Description, item.IOUType_ID, "IOUType")
                             handleChange(null, null, "JobOwner")
+                            handleChange(0, null, "totAmount");
+                            setOneOffJobData([]);
                             if (item.IOUType_ID == 1) {
                                 handleChange("Job Owner", null, "OwnerType")
                                 handleChange("Job No", null, "IOUTypeName")
@@ -359,6 +370,7 @@ const NewOneOffScreen = (props: any) => {
                                         resource={item.arr.Resource?.value || "-"}
                                         isDelete={true}
                                         isEdit={true}
+                                        onPressIcon={() => editJobs(item.key, 1)}
                                         onPressDeleteIcon={() => deletePermission(item.key, item.arr.requestAmount?.value)}
                                     />
                                 </View>

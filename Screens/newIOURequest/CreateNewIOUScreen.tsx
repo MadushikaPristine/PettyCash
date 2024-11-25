@@ -193,7 +193,13 @@ const CreateNewIOUScreen = (props: any) => {
         setIOUJobData(newData);
         let amountTot = parseFloat(IOUData.totAmount?.value);
         let newAmnt = amountTot - parseFloat(amount);
-        handleChange(newAmnt, null, "totAmount");
+        console.log("  newAmnt    " , newAmnt);
+        
+        if (!Number.isNaN(newAmnt)) {
+            handleChange(newAmnt, null, "totAmount");
+        } else {
+            handleChange(0, null, "totAmount");
+        }
         showSuccessAlert('Success', 'Detail Deleted Successfully...');
     }
     const deletePermission = (key: any, amount: any) => {
@@ -228,6 +234,9 @@ const CreateNewIOUScreen = (props: any) => {
         } else {
             showErrorAlert('Error', 'Please Select IOU Type');
         }
+    }
+    const editJobs = (key: any, type: any) => {
+        navigation.navigate('AddIOUDetailScreen', { ioudataSet: IOUData, IOUJobdataSet: IOUJobData, IOUAttachmentSet: IOUAttachments, isEdit: type, jobKey: key });
     }
     useEffect(() => {
         if (route.params?.IOUJobdataSet) {
@@ -293,6 +302,9 @@ const CreateNewIOUScreen = (props: any) => {
                         onChange={item => {
                             handleChange(item.Description, item.IOUType_ID, "IOUType")
                             handleChange(null, null, "JobOwner")
+                            handleChange(null, null, "employee")
+                            handleChange(0, null, "totAmount");
+                            setIOUJobData([]);
                             if (item.IOUType_ID == 1) {
                                 handleChange("Job Owner", null, "OwnerType")
                                 handleChange("Job No", null, "IOUTypeName")
@@ -429,6 +441,7 @@ const CreateNewIOUScreen = (props: any) => {
                                         resource={item.arr.Resource?.value || "-"}
                                         isDelete={true}
                                         isEdit={true}
+                                        onPressIcon={() => editJobs(item.key, 1)}
                                         onPressDeleteIcon={() => deletePermission(item.key, item.arr.requestAmount?.value)}
                                     />
                                 </View>

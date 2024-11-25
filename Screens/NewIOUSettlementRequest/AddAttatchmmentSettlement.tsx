@@ -102,6 +102,8 @@ const AddAttatchmmentSettlement = (props: any) => {
     }
     const UploadRequestData = () => {
         try {
+            console.log(" upload function -----------");
+            
             const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=' + DB_LIVE;
             var currentDate = moment(new Date()).utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
             var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++   Upload IOU SETTLEMENT  ++++++++++++++++";
@@ -110,24 +112,25 @@ const AddAttatchmmentSettlement = (props: any) => {
             var obj: any[] = [];
             var Fileobj: any = [];
             IOUSettlementJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value;
-                let Amount = element.arr.settleAmount?.value;
-                let isDecimal = requestAmount.indexOf(".");
-                let isDecimalS = Amount.indexOf(".");
-                let decimalAmount = 0.0;
-                let decimalSAmount = 0.0;
-                if (isDecimal != -1) {
-                    const splitAmount = requestAmount.split(".");
-                    decimalAmount = parseFloat(splitAmount[0].replaceAll(',', '') + "." + splitAmount[1]);
-                } else {
-                    decimalAmount = parseFloat(requestAmount.replaceAll(',', ''));
-                }
-                if (isDecimalS != -1) {
-                    const splitSAmount = Amount.split(".");
-                    decimalSAmount = parseFloat(splitSAmount[0].replaceAll(',', '') + "." + splitSAmount[1]);
-                } else {
-                    decimalSAmount = parseFloat(Amount.replaceAll(',', ''));
-                }
+                const parseAmount = (amount: any) => {
+                    if (!amount) return 0.0; // Default to 0.0 if the amount is empty or undefined
+
+                    const isDecimal = amount.indexOf(".") !== -1;
+                    if (isDecimal) {
+                        const [integerPart, decimalPart] = amount.split(".");
+                        return parseFloat(
+                            (integerPart?.replaceAll(',', '') || '0') + "." + (decimalPart || '0')
+                        );
+                    } else {
+                        return parseFloat(amount.replaceAll(',', '') || '0');
+                    }
+                };
+
+                let requestAmount = element.arr?.RequestedAmount+"" || '';
+                let Amount = element.arr?.Amount+"" || '';
+
+                let decimalAmount = parseAmount(requestAmount);
+                let decimalSAmount = parseAmount(Amount);
                 const arr = {
                     "IOUTypeID": IOUSettlementData.IOUType?.Id,
                     "IOUTypeNo": element.arr.IOUTypeNo || '',
@@ -173,7 +176,7 @@ const AddAttatchmmentSettlement = (props: any) => {
                 headers: headers
             }).then((response) => {
                 // console.log("[s][t][a][t][u][s][]", response.status);
-                // console.log("[s][t][a][t][u][s][] one off reponse METHOD   ........  ", response.data);
+                console.log("[s][t][a][t][u][s][] IOU SET reponse METHOD   ........  ", response.data);
                 // logger(" One-Off Upload Response Status ", response.status + "");
                 saveJsonObject_To_Loog(response.data);
                 if (response.status == 200) {
@@ -197,20 +200,22 @@ const AddAttatchmmentSettlement = (props: any) => {
                         viewAlertNavigate();
                     }
                 } else {
-                    // console.log(" response code ======= ", response.status);
+                    console.log(" response code ======= ", response.status);
                     logger(" IOU SET Upload ERROR ", "");
                     saveJsonObject_To_Loog(response.data);
                     showErrorAlert('Sync Failed', "IOU Settlement Request Failed!");
                     viewAlertNavigate();
                 }
             }).catch((error) => {
-                // console.log("error .....   ", error);
+                console.log("error .....   ", error);
                 logger(" IOU SET Upload ERROR ", "");
                 saveJsonObject_To_Loog(error);
                 showErrorAlert('Sync Failed', "IOU Settlement Request Failed!");
                 viewAlertNavigate();
             });
         } catch (error: any) {
+            console.log("failed in catch --------- " , error);
+            
             logger(" IOU SET Upload ERROR ", "");
             saveJsonObject_To_Loog(error);
             showErrorAlert('Sync Failed', "IOU Settlement Request Failed!");

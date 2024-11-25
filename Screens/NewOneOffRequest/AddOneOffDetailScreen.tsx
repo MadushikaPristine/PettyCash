@@ -85,15 +85,104 @@ const AddOneOffDetailScreen = (props: any) => {
     }
     const setFormatAmount = (amount: any) => {
         try {
-            let isDecimal = amount.indexOf(".");
-            if (isDecimal != -1) {
-                // console.log(" decimal number =====    ");
-                const split = amount.split(".");
-                handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "requestAmount")
+            console.log(" amount to format ============  ", amount);
+
+            const parseAmount = (amounts:any) => {
+                if (!amount) return 0.0; // Default to 0.0 if the amount is empty or undefined
+
+                const isDecimal = amounts.indexOf(".") !== -1;
+                if (isDecimal) {
+                    const [integerPart, decimalPart] = amounts.split(".");
+                    return parseFloat(
+                        (integerPart?.replaceAll(',', '') || '0') + "." + (decimalPart || '0')
+                    );
+                } else {
+                    return parseFloat(amounts.replaceAll(',', '') || '0');
+                }
+            };
+            let amountFinal = parseAmount(amount+"");
+            handleNewJobDataChange(amountFinal, null, "requestAmount");
+            // let isDecimal = amount.indexOf(".");
+            // if (isDecimal != -1) {
+            //     // console.log(" decimal number =====    ");
+            //     const split = amount.split(".");
+            //     handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "requestAmount")
+            // } else {
+            //     handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "requestAmount");
+            // }
+        } catch (error) {
+        }
+    }
+    const showSuccessAlert = async (title: any, message: any) => {
+        await alert({
+            type: DropdownAlertType.Success,
+            title: title,
+            message,
+        });
+    };
+    const UpdateDetail = () => {
+        try {
+            console.log("Found key job:", route.params?.jobKey)
+            setOneOffJobData((prevState: any[]) => {
+                return prevState.map((item) => {
+                    if (item.key === route.params?.jobKey) {
+                        console.log("Found matching job:", item); // Debugging log
+                        return {
+                            ...item,
+                            arr: { ...item.arr, ...NewOneOffJobData }, // Merge new data with existing `arr`
+                        };
+                    }
+                    return item; // Keep other items unchanged
+                });
+            });
+            const parseAmount = (amount: any) => {
+              let Amounts = amount+"";
+
+                if (Amounts.includes(".")) {
+                    const [integerPart, decimalPart] = Amounts.split(".");
+                    return parseFloat(
+                        (integerPart?.replaceAll(',', '') || '0') + "." + (decimalPart || '0')
+                    );
+                } else {
+                    return parseFloat(Amounts.replaceAll(',', '') || '0');
+                }
+            };
+            let amount = parseFloat(OneOffData.totAmount?.value);
+
+            let newAnm = parseAmount(NewOneOffJobData.requestAmount?.value);
+
+            let updateAmount = amount + newAnm;
+            handleChange(updateAmount, null, "totAmount");
+            console.log(" up amount ----  ", updateAmount);
+            setNewOneOffJobData([]); // Reset NewOneOffJobData
+            generateNo();
+            showSuccessAlert('Success', 'Detail Updated Successfully...');
+        } catch (error) {
+            console.log("catch error ----------  ", error);
+
+        }
+    }
+    const getJobDataFromKey = (jKey: any) => {
+        try {
+            const foundObject = OneOffJobData.find((item: any) => item.key === jKey);
+            console.log("found ==  ", foundObject);
+            // if ('SelectJobVehicle' in foundObject) {
+            handleNewJobDataChange(foundObject.arr.SelectJobVehicle?.value, foundObject.arr.SelectJobVehicle?.Id, "SelectJobVehicle")
+            // }
+            handleNewJobDataChange(foundObject.arr.CostCenter?.value, null, "CostCenter")
+            handleNewJobDataChange(foundObject.arr.Resource?.value, null, "Resource")
+            handleNewJobDataChange(foundObject.arr.ExpenseType?.value, foundObject.arr.ExpenseType?.Id, "ExpenseType")
+            handleNewJobDataChange(foundObject.arr.requestAmount?.value+"", foundObject.arr.requestAmount?.value, "requestAmount")
+            handleNewJobDataChange(foundObject.arr.remark?.value, null, "remark")
+            handleNewJobDataChange(foundObject.arr.GLAccount?.value, null, "GLAccount")
+            let updateAmount = parseFloat(OneOffData.totAmount?.value) - parseFloat(foundObject.arr.requestAmount?.value)
+            if (!Number.isNaN(updateAmount)) {
+                handleChange(updateAmount, null, "totAmount");
             } else {
-                handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "requestAmount");
+                handleChange(0, null, "totAmount");
             }
         } catch (error) {
+            console.log("catch update error");
         }
     }
     const saveJobDetail = () => {
@@ -109,7 +198,7 @@ const AddOneOffDetailScreen = (props: any) => {
                     }
                 ];
             });
-            if ('totAmount' in OneOffData && OneOffData.totAmount?.value != '') {
+            if ('totAmount' in OneOffData && OneOffData.totAmount?.value != '' || 'totAmount' in OneOffData && !Number.isNaN(OneOffData.totAmount?.value)) {
                 let amount = parseFloat(OneOffData.totAmount?.value);
                 let updateAmount = parseFloat(NewOneOffJobData.requestAmount?.value) + amount;
                 console.log("");
@@ -121,6 +210,7 @@ const AddOneOffDetailScreen = (props: any) => {
 
                 handleChange(newAmount, null, "totAmount");
             }
+            showSuccessAlert('Success', 'Detail Added Successfully...');
             setNewOneOffJobData([]); // Reset NewOneOffJobData
             generateNo();
         } catch (error) {
@@ -133,8 +223,14 @@ const AddOneOffDetailScreen = (props: any) => {
                     if ('requestAmount' in NewOneOffJobData && NewOneOffJobData.requestAmount?.value != '' && NewOneOffJobData.requestAmount?.value != null) {
                         if (NewOneOffJobData.requestAmount?.value != 0 && NewOneOffJobData.requestAmount?.value != 0.0 && NewOneOffJobData.requestAmount?.value != 'NaN') {
                             if ('GLAccount' in NewOneOffJobData && NewOneOffJobData.GLAccount?.value != '' && NewOneOffJobData.GLAccount?.value != null) {
-                                //save
-                                saveJobDetail();
+                                if (route.params?.jobKey) {
+                                    console.log("update ==========");
+                                    UpdateDetail();
+                                } else {
+                                    //save
+                                    console.log("save ================");
+                                    saveJobDetail();
+                                }
                             } else { // No Account
                                 await alert({
                                     type: DropdownAlertType.Error,
@@ -183,8 +279,14 @@ const AddOneOffDetailScreen = (props: any) => {
                 if ('requestAmount' in NewOneOffJobData && NewOneOffJobData.requestAmount?.value != '' && NewOneOffJobData.requestAmount?.value != null) {
                     if (NewOneOffJobData.requestAmount?.value != 0 && NewOneOffJobData.requestAmount?.value != 0.0 && NewOneOffJobData.requestAmount?.value != 'NaN') {
                         if ('GLAccount' in NewOneOffJobData && NewOneOffJobData.GLAccount?.value != '' && NewOneOffJobData.GLAccount?.value != null) {
-                            //save
-                            saveJobDetail();
+                            if (route.params?.jobKey) {
+                                console.log("update ==========");
+                                UpdateDetail();
+                            } else {
+                                //save
+                                console.log("save ================");
+                                saveJobDetail();
+                            }
                         } else { // No Account
                             await alert({
                                 type: DropdownAlertType.Error,
@@ -252,11 +354,15 @@ const AddOneOffDetailScreen = (props: any) => {
             getVehicleNo();
             getExpenseTypes();
             generateNo();
+            if (route.params?.jobKey) {
+                console.log("key ---------  ", route.params?.jobKey);
+                getJobDataFromKey(route.params?.jobKey);
+            }
         }
     }, [route.params?.OneOffdataSet]);
     return (
         <SafeAreaView style={ComStyles.CONTAINER}>
-            <Header title="Add Details" isBtn={true} btnOnPress={naviBack} />
+            <Header title={route.params?.jobKey ? "Update Details" : "Add Details"} isBtn={true} btnOnPress={naviBack} />
             <DropdownAlert alert={func => (alert = func)} alertPosition="top" />
             <ScrollView style={ComStyles.CONTENT} showsVerticalScrollIndicator={false}>
                 {
@@ -464,7 +570,7 @@ const AddOneOffDetailScreen = (props: any) => {
             </ScrollView>
             <View style={{ flexDirection: 'row', marginBottom: 5, alignContent: 'center' }}>
                 <ActionButton
-                    title="Add"
+                    title={route.params?.jobKey ? "Update" : "Add"}
                     styletouchable={{ width: '49%', marginLeft: 5 }}
                     onPress={() => checkMandetory()}
                 />

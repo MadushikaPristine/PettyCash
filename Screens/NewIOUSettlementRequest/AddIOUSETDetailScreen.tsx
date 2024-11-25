@@ -84,27 +84,45 @@ const AddIOUSETDetailScreen = (props: any) => {
     const setFormatAmount = (amount: any) => {
         try {
             console.log("amount ------  ", amount);
-
-            let isDecimal = amount.indexOf(".");
+            const parseAmount = (amount: any) => {
+                if (!amount) return 0.0; // Default to 0.0 if the amount is empty or undefined
+                const isDecimal = amount.indexOf(".") !== -1;
+                if (isDecimal) {
+                    const [integerPart, decimalPart] = amount.split(".");
+                    return parseFloat(
+                        (integerPart?.replaceAll(',', '') || '0') + "." + (decimalPart || '0')
+                    );
+                } else {
+                    return parseFloat(amount.replaceAll(',', '') || '0');
+                }
+            };
+           let finalAmount =  parseAmount(amount+"");
             if (route.params?.isEdit == 2) { //edited iou job
-                if (isDecimal != -1) {
-                    // console.log(" decimal number =====    ");
-                    const split = amount.split(".");
-                    handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "settleAmount")
-                } else {
-                    handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "settleAmount");
-                }
-            } else {
-                if (isDecimal != -1) {
-                    // console.log(" decimal number =====    ");
-                    const split = amount.split(".");
-                    handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "requestAmount")
-                    handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "settleAmount")
-                } else {
-                    handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "requestAmount");
-                    handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "settleAmount");
-                }
+                handleNewJobDataChange(finalAmount, null, "settleAmount");
+            }else{
+                handleNewJobDataChange(finalAmount, null, "requestAmount");
+                handleNewJobDataChange(finalAmount, null, "settleAmount");
             }
+            // let isDecimal = amount.indexOf(".");
+            // if (route.params?.isEdit == 2) { //edited iou job
+            //     if (isDecimal != -1) {
+            //         // console.log(" decimal number =====    ");
+            //         const split = amount.split(".");
+            //         handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "settleAmount")
+            //     } else {
+            //         handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "settleAmount");
+            //     }
+            // } else {
+            //     if (isDecimal != -1) {
+            //         // console.log(" decimal number =====    ");
+            //         const split = amount.split(".");
+            //         handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "requestAmount")
+            //         handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "settleAmount")
+            //     } else {
+            //         handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "requestAmount");
+            //         handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "settleAmount");
+            //     }
+            // }
 
         } catch (error) {
             console.log("error amount format");
@@ -317,7 +335,7 @@ const AddIOUSETDetailScreen = (props: any) => {
     }, [route.params?.IOUSetAttachmentSet]);
     useEffect(() => {
         if (route.params?.IOUSetJobdataSet) {
-            console.log(" job data ............. >>>>>>>>>>>>>>>> ", route.params?.IOUSetJobdataSet);
+            // console.log(" job data ............. >>>>>>>>>>>>>>>> ", route.params?.IOUSetJobdataSet);
             setIOUSettlementJobData(route.params.IOUSetJobdataSet);
         }
     }, [route.params?.IOUSetJobdataSet]);

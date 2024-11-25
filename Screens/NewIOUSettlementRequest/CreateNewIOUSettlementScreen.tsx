@@ -383,7 +383,7 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                                     <NewJobsView
                                         IOU_Type={IOUSettlementData.IOUType?.Id}
                                         amount={item.arr.RequestedAmount}
-                                        IOUTypeNo={IOUSettlementData.IOUType?.Id == 1 ? item.arr.IOUTypeNo : item.arr.Resource}
+                                        IOUTypeNo={IOUSettlementData.IOUType?.Id == 1  ? item.arr.IOUTypeNo : IOUSettlementData.IOUType?.Id == 2 ?item.arr.Resource : ''}
                                         ExpenseType={item.arr.ExpenseType}
                                         jobremarks={item.arr.Remark}
                                         accNo={item.arr.AccNo}

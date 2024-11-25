@@ -133,7 +133,7 @@ const LoginScreen = () => {
             var u_name = "dinushkam";
             var p_word = "GdBzSuV6mAdEyA6/H4plMQ==";
             const URL = LOGIN_BASE_URL + "Mob_Login.xsjs?dbName=" + DB_LIVE + "&username=" + uName + "&password=" + encryptedPassword + "&sap=" + SAP_LIVE_DB;
-            console.log("Login URL === ", URL);
+            // console.log("Login URL === ", URL);
             var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++LOGIN ++++++++++++++++";
 
             // logger(loggerDate,"Login URL " + "   *******   " +URL );
@@ -256,10 +256,10 @@ const LoginScreen = () => {
             CreateLogFile();
             checkVersionUpdate();
             getLoginUName().then(res => {
-                console.log(" user name >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
+                // console.log(" user name >>>>>>>>>>>>>>>>>>>>>>>>>>     ", res);
                 if (res != null) {
                     getLoginPassword().then(resp => {
-                        console.log(" pword >>>>>>>>>>>>>>>>>>>>>>>>>>     ", resp);
+                        // console.log(" pword >>>>>>>>>>>>>>>>>>>>>>>>>>     ", resp);
                         if (resp != null) {
                             setisEditUName(false);
                             // setisEditPW(false);

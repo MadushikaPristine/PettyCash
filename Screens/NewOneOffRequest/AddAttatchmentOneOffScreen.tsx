@@ -87,7 +87,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
             var obj: any[] = [];
             var Fileobj: any = [];
             OneOffJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value;
+                let requestAmount = element.arr.requestAmount?.value+"";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
                 if (isDecimal != -1) {
@@ -166,20 +166,21 @@ const AddAttatchmentOneOffScreen = (props: any) => {
                         viewAlertNavigate();
                     }
                 } else {
-                    // console.log(" response code ======= ", response.status);
+                    console.log(" response code ======= ", response.status);
                     logger(" One-Off Upload ERROR ", "");
                     saveJsonObject_To_Loog(response.data);
                     showErrorAlert('Sync Failed', "One-Off Settlement Request Failed!");
                     viewAlertNavigate();
                 }
             }).catch((error) => {
-                // console.log("error .....   ", error);
+                console.log("error .....   ", error);
                 logger(" One-Off Upload ERROR ", "");
                 saveJsonObject_To_Loog(error);
                 showErrorAlert('Sync Failed', "One-Off Settlement Request Failed!");
                 viewAlertNavigate();
             });
         } catch (error: any) {
+            console.log("error .....   ", error);
             logger(" One-Off Upload ERROR ", "");
             saveJsonObject_To_Loog(error);
             showErrorAlert('Sync Failed', "One-Off Settlement Request Failed!");
@@ -216,7 +217,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
     const saveJobData = (date: any) => {
         try {
             OneOffJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value;
+                let requestAmount = element.arr.requestAmount?.value + "";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
                 if (isDecimal != -1) {
@@ -250,6 +251,8 @@ const AddAttatchmentOneOffScreen = (props: any) => {
                 });
             });
         } catch (error) {
+            console.log("catch error in job save -------  " , error);
+            
         }
     }
     const saveSubmit = () => {

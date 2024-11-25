@@ -89,6 +89,55 @@ const AddIOUDetailScreen = (props: any) => {
         } catch (error) {
         }
     }
+    const getJobDataFromKey = (jKey: any) => {
+        try {
+            const foundObject = IOUJobData.find((item: any) => item.key === jKey);
+            console.log("found ==  ", foundObject);
+            // if ('SelectJobVehicle' in foundObject) {
+            handleNewJobDataChange(foundObject.arr.SelectJobVehicle?.value, foundObject.arr.SelectJobVehicle?.Id, "SelectJobVehicle")
+            // }
+            handleNewJobDataChange(foundObject.arr.CostCenter?.value, null, "CostCenter")
+            handleNewJobDataChange(foundObject.arr.Resource?.value, null, "Resource")
+            handleNewJobDataChange(foundObject.arr.ExpenseType?.value, foundObject.arr.ExpenseType?.Id, "ExpenseType")
+            handleNewJobDataChange(foundObject.arr.requestAmount?.value+"", null, "requestAmount")
+            handleNewJobDataChange(foundObject.arr.remark?.value, null, "remark")
+            handleNewJobDataChange(foundObject.arr.GLAccount?.value, null, "GLAccount")
+            let updateAmount = parseFloat(IOUData.totAmount?.value) - parseFloat(foundObject.arr.requestAmount?.value)
+            if (!Number.isNaN(updateAmount)) {
+                handleChange(updateAmount, null, "totAmount");
+            } else {
+                handleChange(0, null, "totAmount");
+            }
+        } catch (error) {
+            console.log("catch update error");
+        }
+    }
+    const UpdateDetail = () => {
+        try {
+            console.log("Found key job:", route.params?.jobKey)
+            setIOUJobData((prevState: any[]) => {
+                return prevState.map((item) => {
+                    if (item.key === route.params?.jobKey) {
+                        console.log("Found matching job:", item); // Debugging log
+                        return {
+                            ...item,
+                            arr: { ...item.arr, ...NewIOUJobData }, // Merge new data with existing `arr`
+                        };
+                    }
+                    return item; // Keep other items unchanged
+                });
+            });
+            showSuccessAlert('Success', 'Detail Updated Successfully...');
+            let amount = parseFloat(IOUData.totAmount?.value);
+            let updateAmount = amount + parseFloat(NewIOUJobData.requestAmount?.value);
+            handleChange(updateAmount, null, "totAmount");
+            console.log(" up amount ----  ", updateAmount);
+            setNewIOUJobData([]); // Reset NewIOUJobData
+            generateNo();
+        } catch (error) {
+
+        }
+    }
     const saveJobDetail = () => {
         try {
             setIOUJobData((prevState: any) => {
@@ -103,10 +152,10 @@ const AddIOUDetailScreen = (props: any) => {
                 ];
             });
             showSuccessAlert('Success', 'Detail Added Successfully...');
-            if ('totAmount' in IOUData && IOUData.totAmount?.value != '') {
+            if ('totAmount' in IOUData && IOUData.totAmount?.value != '' || 'totAmount' in IOUData && !Number.isNaN(IOUData.totAmount?.value)) {
                 let amount = parseFloat(IOUData.totAmount?.value);
                 let updateAmount = parseFloat(NewIOUJobData.requestAmount?.value) + amount;
-                console.log("");
+                console.log(" updateAmount   ", updateAmount);
 
                 handleChange(updateAmount, null, "totAmount");
             } else {
@@ -127,8 +176,14 @@ const AddIOUDetailScreen = (props: any) => {
                     if ('requestAmount' in NewIOUJobData && NewIOUJobData.requestAmount?.value != '' && NewIOUJobData.requestAmount?.value != null) {
                         if (NewIOUJobData.requestAmount?.value != 0 && NewIOUJobData.requestAmount?.value != 0.0 && NewIOUJobData.requestAmount?.value != 'NaN') {
                             if ('GLAccount' in NewIOUJobData && NewIOUJobData.GLAccount?.value != '' && NewIOUJobData.GLAccount?.value != null) {
-                                //save
-                                saveJobDetail();
+                                if (route.params?.jobKey) {
+                                    console.log("update ==========");
+                                    UpdateDetail();
+                                } else {
+                                    //save
+                                    console.log("save ================");
+                                    saveJobDetail();
+                                }
                             } else { // No Account
                                 showErrorAlert('Error', 'Account No is required');
                             }
@@ -153,8 +208,14 @@ const AddIOUDetailScreen = (props: any) => {
                 if ('requestAmount' in NewIOUJobData && NewIOUJobData.requestAmount?.value != '' && NewIOUJobData.requestAmount?.value != null) {
                     if (NewIOUJobData.requestAmount?.value != 0 && NewIOUJobData.requestAmount?.value != 0.0 && NewIOUJobData.requestAmount?.value != 'NaN') {
                         if ('GLAccount' in NewIOUJobData && NewIOUJobData.GLAccount?.value != '' && NewIOUJobData.GLAccount?.value != null) {
-                            //save
-                            saveJobDetail();
+                            if (route.params?.jobKey) {
+                                console.log("update ==========");
+                                UpdateDetail();
+                            } else {
+                                //save
+                                console.log("save ================");
+                                saveJobDetail();
+                            }
                         } else { // No Account
                             showErrorAlert('Error', 'Account No is required');
                         }
@@ -183,14 +244,20 @@ const AddIOUDetailScreen = (props: any) => {
     }
     const setFormatAmount = (amount: any) => {
         try {
-            let isDecimal = amount.indexOf(".");
-            if (isDecimal != -1) {
-                // console.log(" decimal number =====    ");
-                const split = amount.split(".");
-                handleNewJobDataChange(Intl.NumberFormat('en-US').format(split[0].replace(/[^a-zA-Z0-9 ]/g, '')) + "." + split[1].replace(/[^a-zA-Z0-9 ]/g, ''), null, "requestAmount")
-            } else {
-                handleNewJobDataChange(Intl.NumberFormat('en-US').format(amount.replace(/[^a-zA-Z0-9 ]/g, '')), null, "requestAmount");
-            }
+            const parseAmount = (amounts: any) => {
+                if (!amount) return 0.0; // Default to 0.0 if the amount is empty or undefined
+                const isDecimal = amounts.indexOf(".") !== -1;
+                if (isDecimal) {
+                    const [integerPart, decimalPart] = amounts.split(".");
+                    return parseFloat(
+                        (integerPart?.replaceAll(',', '') || '0') + "." + (decimalPart || '0')
+                    );
+                } else {
+                    return parseFloat(amounts.replaceAll(',', '') || '0');
+                }
+            };
+            let amountFinal = parseAmount(amount + "");
+            handleNewJobDataChange(amountFinal, null, "requestAmount");
         } catch (error) {
         }
     }
@@ -229,11 +296,15 @@ const AddIOUDetailScreen = (props: any) => {
             getVehicleNo();
             getExpenseTypes();
             generateNo();
+            if (route.params?.jobKey) {
+                console.log("key ---------  ", route.params?.jobKey);
+                getJobDataFromKey(route.params?.jobKey);
+            }
         }
     }, [route.params?.ioudataSet]);
     return (
         <SafeAreaView style={ComponentsStyles.CONTAINER}>
-            <Header title="Add Details" isBtn={true} btnOnPress={naviBack} />
+            <Header title={route.params?.jobKey ? "Update Details" : "Add Details"} isBtn={true} btnOnPress={naviBack} />
             <DropdownAlert alert={func => (alert = func)} alertPosition="top" />
             <ScrollView style={ComStyles.CONTENT} showsVerticalScrollIndicator={false}>
                 {
@@ -441,7 +512,7 @@ const AddIOUDetailScreen = (props: any) => {
             </ScrollView>
             <View style={{ flexDirection: 'row', marginBottom: 5, alignContent: 'center' }}>
                 <ActionButton
-                    title="Add"
+                    title={route.params?.jobKey ? "Update" : "Add"}
                     styletouchable={{ width: '49%', marginLeft: 5 }}
                     onPress={() => checkMandetory()}
                 />
