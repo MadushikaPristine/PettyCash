@@ -99,7 +99,7 @@ const AddIOUDetailScreen = (props: any) => {
             handleNewJobDataChange(foundObject.arr.CostCenter?.value, null, "CostCenter")
             handleNewJobDataChange(foundObject.arr.Resource?.value, null, "Resource")
             handleNewJobDataChange(foundObject.arr.ExpenseType?.value, foundObject.arr.ExpenseType?.Id, "ExpenseType")
-            handleNewJobDataChange(foundObject.arr.requestAmount?.value+"", null, "requestAmount")
+            handleNewJobDataChange(foundObject.arr.requestAmount?.value + "", null, "requestAmount")
             handleNewJobDataChange(foundObject.arr.remark?.value, null, "remark")
             handleNewJobDataChange(foundObject.arr.GLAccount?.value, null, "GLAccount")
             let updateAmount = parseFloat(IOUData.totAmount?.value) - parseFloat(foundObject.arr.requestAmount?.value)

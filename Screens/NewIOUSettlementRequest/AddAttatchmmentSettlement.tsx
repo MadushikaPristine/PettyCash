@@ -103,7 +103,7 @@ const AddAttatchmmentSettlement = (props: any) => {
     const UploadRequestData = () => {
         try {
             console.log(" upload function -----------");
-            
+
             const URL = BASE_URL + '/Mob_PostIOUSettlements.xsjs?dbName=' + DB_LIVE;
             var currentDate = moment(new Date()).utcOffset('+05:30').format('YYYY-MM-DDTHH:mm:ss');
             var loggerDate = "Date - " + moment().utcOffset('+05:30').format('YYYY-MM-DD HH:mm:ss') + "+++++++++++++   Upload IOU SETTLEMENT  ++++++++++++++++";
@@ -126,8 +126,8 @@ const AddAttatchmmentSettlement = (props: any) => {
                     }
                 };
 
-                let requestAmount = element.arr?.RequestedAmount+"" || '';
-                let Amount = element.arr?.Amount+"" || '';
+                let requestAmount = element.arr?.RequestedAmount + "" || '';
+                let Amount = element.arr?.Amount + "" || '';
 
                 let decimalAmount = parseAmount(requestAmount);
                 let decimalSAmount = parseAmount(Amount);
@@ -214,8 +214,8 @@ const AddAttatchmmentSettlement = (props: any) => {
                 viewAlertNavigate();
             });
         } catch (error: any) {
-            console.log("failed in catch --------- " , error);
-            
+            console.log("failed in catch --------- ", error);
+
             logger(" IOU SET Upload ERROR ", "");
             saveJsonObject_To_Loog(error);
             showErrorAlert('Sync Failed', "IOU Settlement Request Failed!");
@@ -224,7 +224,7 @@ const AddAttatchmmentSettlement = (props: any) => {
     }
     const saveAttachmentsDB = () => {
         try {
-            IOUSettlementAttachments.forEach((element: any) => {
+            IOUSettlementAttachments.forEach((element: any, index: any) => {
                 const attachementData = [
                     {
                         PCRCode: IOUSettlementData.IOUSetNo?.value,
@@ -235,7 +235,9 @@ const AddAttatchmmentSettlement = (props: any) => {
                 saveAttachments(attachementData, async (response: any) => {
                     if (response == 3) {
                         console.log(" save attachmnets .. ", response);
-                        UploadRequestData();
+                        if (index === IOUSettlementAttachments.length - 1) {
+                            UploadRequestData();
+                        }
                     } else {
                     }
                 })
@@ -245,7 +247,7 @@ const AddAttatchmmentSettlement = (props: any) => {
     }
     const saveJobData = (date: any) => {
         try {
-            IOUSettlementJobData.forEach((element: any) => {
+            IOUSettlementJobData.forEach((element: any, index: any) => {
                 console.log("all jobs --------- ", element.arr?.RequestedAmount);
 
                 const parseAmount = (amount: any) => {
@@ -262,8 +264,8 @@ const AddAttatchmmentSettlement = (props: any) => {
                     }
                 };
 
-                let requestAmount = element.arr?.RequestedAmount+"" || '';
-                let Amount = element.arr?.Amount+"" || '';
+                let requestAmount = element.arr?.RequestedAmount + "" || '';
+                let Amount = element.arr?.Amount + "" || '';
 
                 let decimalAmount = parseAmount(requestAmount);
                 let decimalSAmount = parseAmount(Amount);
@@ -290,7 +292,9 @@ const AddAttatchmmentSettlement = (props: any) => {
                 saveIOUSETJOB(saveObject, 0, async (response: any) => {
                     console.log(" save job .. ", response);
                     if (response == 3) {
-                        saveAttachmentsDB();
+                        if (index === IOUSettlementJobData.length - 1) {
+                            saveAttachmentsDB();
+                        }
                     } else {
                     }
                 });
@@ -405,8 +409,8 @@ const AddAttatchmmentSettlement = (props: any) => {
     }, [route.params?.IOUSetJobdataSet]);
     useEffect(() => {
         if (route.params?.iouSetdataSet) {
-            console.log(" ----------  " , route.params?.iouSetdataSet);
-            
+            console.log(" ----------  ", route.params?.iouSetdataSet);
+
             setIOUSettlementData(route.params.iouSetdataSet);
         }
     }, [route.params?.iouSetdataSet]);

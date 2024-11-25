@@ -87,7 +87,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
             var obj: any[] = [];
             var Fileobj: any = [];
             OneOffJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value+"";
+                let requestAmount = element.arr.requestAmount?.value + "";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
                 if (isDecimal != -1) {
@@ -189,7 +189,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
     }
     const saveAttachmentsDB = () => {
         try {
-            OneOffAttachments.forEach((element: any) => {
+            OneOffAttachments.forEach((element: any, index: any) => {
                 const attachementData = [
                     {
                         PCRCode: OneOffData.OneOffNo?.value,
@@ -200,7 +200,10 @@ const AddAttatchmentOneOffScreen = (props: any) => {
                 saveAttachments(attachementData, async (response: any) => {
                     if (response == 3) {
                         console.log(" save attachmnets .. ", response);
-                        UploadRequestData();
+                        if (index === OneOffAttachments.length - 1) {
+                            UploadRequestData();
+                        }
+
                     } else {
                     }
                 })
@@ -216,7 +219,7 @@ const AddAttatchmentOneOffScreen = (props: any) => {
     }
     const saveJobData = (date: any) => {
         try {
-            OneOffJobData.forEach((element: any) => {
+            OneOffJobData.forEach((element: any, index: any) => {
                 let requestAmount = element.arr.requestAmount?.value + "";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
@@ -245,14 +248,16 @@ const AddAttatchmentOneOffScreen = (props: any) => {
                 saveOneOffJOB(saveObject, 0, async (response: any) => {
                     console.log(" save job .. ", response);
                     if (response == 3) {
-                        saveAttachmentsDB();
+                        if (index === OneOffJobData.length - 1) {
+                            saveAttachmentsDB();
+                        }
                     } else {
                     }
                 });
             });
         } catch (error) {
-            console.log("catch error in job save -------  " , error);
-            
+            console.log("catch error in job save -------  ", error);
+
         }
     }
     const saveSubmit = () => {

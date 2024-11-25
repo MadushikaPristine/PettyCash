@@ -167,8 +167,8 @@ const AddIOUSETDetailScreen = (props: any) => {
             handleNewJobDataChange(foundObject.arr.CostCenter, null, "CostCenter")
             handleNewJobDataChange(foundObject.arr.Resource, null, "Resource")
             handleNewJobDataChange(foundObject.arr.ExpenseType, foundObject.arr.ExpenseTypeID, "ExpenseType")
-            handleNewJobDataChange(foundObject.arr.RequestedAmount, null, "requestAmount")
-            handleNewJobDataChange(foundObject.arr.Amount, null, "settleAmount")
+            handleNewJobDataChange(foundObject.arr.RequestedAmount+"", null, "requestAmount")
+            handleNewJobDataChange(foundObject.arr.Amount+"", null, "settleAmount")
             handleNewJobDataChange(foundObject.arr.Remark, null, "remark")
             handleNewJobDataChange(foundObject.arr.AccNo, null, "GLAccount")
             handleNewJobDataChange(foundObject.arr.IsDelete, null, "isDelete")
@@ -482,7 +482,7 @@ const AddIOUSETDetailScreen = (props: any) => {
                     placeholder={route.params?.isEdit == 2 ? "Settlement Amount(LKR)*" : "Requested amount(LKR)*"}
                     keyType='decimal-pad'
                     returnKeyType='done'
-                    stateValue={route.params?.isEdit == 2 ? String(NewIOUSETJobData?.settleAmount?.value || '') || '' : String(NewIOUSETJobData?.requestAmount?.value || '') || ''}
+                    stateValue={route.params?.isEdit == 2 ? NewIOUSETJobData?.settleAmount?.value  || '' : NewIOUSETJobData?.requestAmount?.value || ''}
                     editable={true}
                     setState={(val: any) => setFormatAmount(val)}
                     style={ComStyles.IOUInput}

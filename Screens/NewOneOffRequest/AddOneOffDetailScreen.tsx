@@ -87,7 +87,7 @@ const AddOneOffDetailScreen = (props: any) => {
         try {
             console.log(" amount to format ============  ", amount);
 
-            const parseAmount = (amounts:any) => {
+            const parseAmount = (amounts: any) => {
                 if (!amount) return 0.0; // Default to 0.0 if the amount is empty or undefined
 
                 const isDecimal = amounts.indexOf(".") !== -1;
@@ -100,7 +100,7 @@ const AddOneOffDetailScreen = (props: any) => {
                     return parseFloat(amounts.replaceAll(',', '') || '0');
                 }
             };
-            let amountFinal = parseAmount(amount+"");
+            let amountFinal = parseAmount(amount + "");
             handleNewJobDataChange(amountFinal, null, "requestAmount");
             // let isDecimal = amount.indexOf(".");
             // if (isDecimal != -1) {
@@ -136,7 +136,7 @@ const AddOneOffDetailScreen = (props: any) => {
                 });
             });
             const parseAmount = (amount: any) => {
-              let Amounts = amount+"";
+                let Amounts = amount + "";
 
                 if (Amounts.includes(".")) {
                     const [integerPart, decimalPart] = Amounts.split(".");
@@ -172,7 +172,7 @@ const AddOneOffDetailScreen = (props: any) => {
             handleNewJobDataChange(foundObject.arr.CostCenter?.value, null, "CostCenter")
             handleNewJobDataChange(foundObject.arr.Resource?.value, null, "Resource")
             handleNewJobDataChange(foundObject.arr.ExpenseType?.value, foundObject.arr.ExpenseType?.Id, "ExpenseType")
-            handleNewJobDataChange(foundObject.arr.requestAmount?.value+"", foundObject.arr.requestAmount?.value, "requestAmount")
+            handleNewJobDataChange(foundObject.arr.requestAmount?.value + "", foundObject.arr.requestAmount?.value, "requestAmount")
             handleNewJobDataChange(foundObject.arr.remark?.value, null, "remark")
             handleNewJobDataChange(foundObject.arr.GLAccount?.value, null, "GLAccount")
             let updateAmount = parseFloat(OneOffData.totAmount?.value) - parseFloat(foundObject.arr.requestAmount?.value)

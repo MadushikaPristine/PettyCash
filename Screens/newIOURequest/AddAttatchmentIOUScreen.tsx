@@ -111,7 +111,7 @@ const AddAttatchmentIOUScreen = (props: any) => {
             var obj: any[] = [];
             var Fileobj: any = [];
             IOUJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value+"";
+                let requestAmount = element.arr.requestAmount?.value + "";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
                 if (isDecimal != -1) {
@@ -209,7 +209,7 @@ const AddAttatchmentIOUScreen = (props: any) => {
     }
     const saveAttachmentsDB = () => {
         try {
-            IOUAttachments.forEach((element: any) => {
+            IOUAttachments.forEach((element: any, index: any) => {
                 const attachementData = [
                     {
                         PCRCode: IOUData.IOUNo?.value,
@@ -220,7 +220,9 @@ const AddAttatchmentIOUScreen = (props: any) => {
                 saveAttachments(attachementData, async (response: any) => {
                     if (response == 3) {
                         console.log(" save attachmnets .. ", response);
-                        UploadRequestData();
+                        if (index === IOUAttachments.length - 1) {
+                            UploadRequestData();
+                        }
                     } else {
                     }
                 })
@@ -230,8 +232,8 @@ const AddAttatchmentIOUScreen = (props: any) => {
     }
     const saveJobData = (date: any) => {
         try {
-            IOUJobData.forEach((element: any) => {
-                let requestAmount = element.arr.requestAmount?.value+"";
+            IOUJobData.forEach((element: any, index: any) => {
+                let requestAmount = element.arr.requestAmount?.value + "";
                 let isDecimal = requestAmount.indexOf(".");
                 let decimalAmount = 0.0;
                 if (isDecimal != -1) {
@@ -259,10 +261,12 @@ const AddAttatchmentIOUScreen = (props: any) => {
                 saveIOUJOB(saveObject, 0, async (response: any) => {
                     console.log(" save job .. ", response);
                     if (response == 3) {
-                        if (IOUAttachments.length > 0) {
-                            saveAttachmentsDB();
-                        } else {
-                            UploadRequestData();
+                        if (index === IOUJobData.length - 1) {
+                            if (IOUAttachments.length > 0) {
+                                saveAttachmentsDB();
+                            } else {
+                                UploadRequestData();
+                            }
                         }
                     } else {
                     }
@@ -351,24 +355,24 @@ const AddAttatchmentIOUScreen = (props: any) => {
     }
     const Save = async () => {
         try {
-                if (IOUJobData.length > 0) {
-                    Alert.alert('Submit', 'Are you sure save this IOU request ?', [
-                        {
-                            text: 'No',
-                            onPress: () => console.log('Cancel Pressed'),
-                            style: 'cancel',
-                        },
-                        { text: 'Yes', onPress: () => checkLimit() },
-                    ]);
-                } else {
-                    showErrorAlert('Error', 'Please Add Details');
-                }
+            if (IOUJobData.length > 0) {
+                Alert.alert('Submit', 'Are you sure save this IOU request ?', [
+                    {
+                        text: 'No',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                    { text: 'Yes', onPress: () => checkLimit() },
+                ]);
+            } else {
+                showErrorAlert('Error', 'Please Add Details');
+            }
         } catch (error) {
         }
     }
     useEffect(() => {
         if (route.params?.IOUJobdataSet) {
-            console.log(" settlement data ==========   " , route.params?.IOUJobdataSet);
+            console.log(" settlement data ==========   ", route.params?.IOUJobdataSet);
             setIOUJobData(route.params.IOUJobdataSet);
         }
     }, [route.params?.IOUJobdataSet]);
