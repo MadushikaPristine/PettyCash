@@ -310,8 +310,12 @@ const CreateNewIOUScreen = (props: any) => {
                         onChange={item => {
                             handleChange(item.Description, item.IOUType_ID, "IOUType")
                             handleChange(null, null, "JobOwner")
-                            handleChange(null, null, "employee")
                             handleChange(0, null, "totAmount");
+                            get_ASYNC_IS_Auth_Requester().then(async resp => {
+                                if (resp === '1') {
+                                    handleChange(null, null, "employee")
+                                }
+                            })
                             setIOUJobData([]);
                             if (item.IOUType_ID == 1) {
                                 handleChange("Job Owner", null, "OwnerType")
