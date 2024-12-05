@@ -96,6 +96,7 @@ const CreateNewIOUScreen = (props: any) => {
                     setJobOwnerlist(resp1);
                     if (userRole == '3' || userRole == '4') {
                         const empdata = resp1?.filter((a: any) => a.ID == parseInt(IOUData.UserID?.value))[0];
+                        handleChange(empdata.EPFNo, null, "JobOwnerEPF")
                         handleChange(empdata.Name, empdata.ID, "JobOwner")
                         handleChange(parseFloat(empdata.IOULimit), null, "IOULimit")
                     }
@@ -377,6 +378,7 @@ const CreateNewIOUScreen = (props: any) => {
                         onChange={item => {
                             handleChange(item.Name, item.ID, "JobOwner")
                             if (IOUData.IOUType?.Id == 1) {
+                                console.log(" epf select ====    " , item.EPFNo);
                                 handleChange(item.EPFNo, null, "JobOwnerEPF")
                                 handleChange(parseFloat(item.IOULimit), null, "IOULimit")
                             } else if (IOUData.IOUType?.Id == 2) {

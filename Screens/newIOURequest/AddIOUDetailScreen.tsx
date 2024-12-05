@@ -268,7 +268,8 @@ const AddIOUDetailScreen = (props: any) => {
         })
     }
     const getJobNoByJobOwner = (ID: any) => {
-        getJobNOByOwners(IOUData.JobOwnerEPF?.value, (res: any) => {
+        console.log(" epf no ---   " , ID);
+        getJobNOByOwners(ID, (res: any) => {
             setJob_NoList(res);
         });
     }
@@ -291,7 +292,7 @@ const AddIOUDetailScreen = (props: any) => {
         if (route.params?.ioudataSet) {
             setIOUData(route.params.ioudataSet);
             if (route.params?.ioudataSet.IOUType?.Id == 1) {
-                getJobNoByJobOwner(route.params?.ioudataSet.IOUType?.Id);
+                getJobNoByJobOwner(route.params?.ioudataSet.JobOwnerEPF?.value);
             }
             getVehicleNo();
             getExpenseTypes();
