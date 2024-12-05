@@ -379,7 +379,7 @@ const CreateNewIOUScreen = (props: any) => {
                             handleChange(item.Name, item.ID, "JobOwner")
                             if (IOUData.IOUType?.Id == 1) {
                                 console.log(" epf select ====    " , item.EPFNo);
-                                handleChange(item.EPFNo, null, "JobOwnerEPF")
+                                handleChange(item.EPFNo+"", null, "JobOwnerEPF")
                                 handleChange(parseFloat(item.IOULimit), null, "IOULimit")
                             } else if (IOUData.IOUType?.Id == 2) {
                                 handleChange(parseFloat(item.IOULimit), null, "IOULimit")
