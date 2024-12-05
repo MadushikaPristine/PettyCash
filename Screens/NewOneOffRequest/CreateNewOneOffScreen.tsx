@@ -345,7 +345,7 @@ const NewOneOffScreen = (props: any) => {
                         onChange={item => {
                             handleChange(item.Name, item.ID, "JobOwner")
                             if (OneOffData.IOUType?.Id == 1) {
-                                handleChange(item.EPFNo, null, "JobOwnerEPF")
+                                handleChange(item.EPFNo+"", null, "JobOwnerEPF")
                                 handleChange(parseFloat(item.IOULimit), null, "IOULimit")
                             } else if (OneOffData.IOUType?.Id == 2) {
                                 handleChange(parseFloat(item.IOULimit), null, "IOULimit")
