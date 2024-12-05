@@ -44,7 +44,7 @@ const ButtonSheetComponent = () => {
                 } else {
                     setModalVisible(false);
                     // navigation.navigate('NewIOU');
-                    navigation.navigate('CreateNewIOUScreen');
+                    navigation.navigate('CreateNewIOUScreen',{Rtype: 0});
                 }
             });
         })
@@ -52,7 +52,7 @@ const ButtonSheetComponent = () => {
     const NewIOUSettlement = () => {
         setModalVisible(false);
         // navigation.navigate('NewIOUSettlement');
-        navigation.navigate('CreateNewIOUSettlementScreen');
+        navigation.navigate('CreateNewIOUSettlementScreen',{Rtype: 0});
     }
     const NewOneOffSettlement = () => {
         // getLoginUserID().then(result => {
@@ -84,7 +84,7 @@ const ButtonSheetComponent = () => {
         // })
         setModalVisible(false);
         // navigation.navigate('NewOneOffSettlement');
-        navigation.navigate('NewOneOffScreen');
+        navigation.navigate('NewOneOffScreen',{Rtype: 0});
     }
 
     useFocusEffect(

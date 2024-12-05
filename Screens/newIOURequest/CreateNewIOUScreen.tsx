@@ -43,6 +43,8 @@ const CreateNewIOUScreen = (props: any) => {
     const [EmployeeList, setEmployeeList] = useState([]);
     const back = async () => {
         setIOUData([]);
+        setIOUJobData([]);
+        setIOUAttachments([]);
         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressIOU, "false");
         navigation.navigate('Home');
     }
@@ -66,14 +68,20 @@ const CreateNewIOUScreen = (props: any) => {
     }
     const generateNo = () => {
         try {
-            get_ASYNC_IsInprogress_IOU().then(res => {
-                if (res == "true") {
-                } else {
-                    generateReferenceNo("IOU", (ID: any) => {
-                        handleChange(ID, null, "IOUNo");
-                    });
-                }
-            });
+            if (route.params?.Rtype == 0) {
+                generateReferenceNo("IOU", (ID: any) => {
+                    handleChange(ID, null, "IOUNo");
+                });
+            } else {
+                get_ASYNC_IsInprogress_IOU().then(res => {
+                    if (res == "true") {
+                    } else {
+                        generateReferenceNo("IOU", (ID: any) => {
+                            handleChange(ID, null, "IOUNo");
+                        });
+                    }
+                });
+            }
         } catch (error) {
         }
     }
@@ -193,8 +201,8 @@ const CreateNewIOUScreen = (props: any) => {
         setIOUJobData(newData);
         let amountTot = parseFloat(IOUData.totAmount?.value);
         let newAmnt = amountTot - parseFloat(amount);
-        console.log("  newAmnt    " , newAmnt);
-        
+        console.log("  newAmnt    ", newAmnt);
+
         if (!Number.isNaN(newAmnt)) {
             handleChange(newAmnt, null, "totAmount");
         } else {

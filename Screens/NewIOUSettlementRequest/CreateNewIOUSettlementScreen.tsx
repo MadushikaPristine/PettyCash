@@ -37,6 +37,8 @@ const CreateNewIOUSettlementScreen = (props: any) => {
     const [ioujoblist, setiouJobList] = useState([]);
     const back = async () => {
         setIOUSettlementData([]);
+        setIOUSettlementJobData([]);
+        setIOUSettlementAttachments([]);
         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressIOUSettlement, "false");
         navigation.navigate('Home');
     }
@@ -61,14 +63,20 @@ const CreateNewIOUSettlementScreen = (props: any) => {
     }
     const generateNo = () => {
         try {
-            get_ASYNC_IsInprogress_IOUSET().then(res => {
-                if (res == "true") {
-                } else {
-                    generateReferenceNo("IOUSET", (ID: any) => {
-                        handleChange(ID, null, "IOUSetNo");
-                    });
-                }
-            });
+            if (route.params?.Rtype == 0) {
+                generateReferenceNo("IOUSET", (ID: any) => {
+                    handleChange(ID, null, "IOUSetNo");
+                });
+            } else {
+                get_ASYNC_IsInprogress_IOUSET().then(res => {
+                    if (res == "true") {
+                    } else {
+                        generateReferenceNo("IOUSET", (ID: any) => {
+                            handleChange(ID, null, "IOUSetNo");
+                        });
+                    }
+                });
+            }
         } catch (error) {
         }
     }
@@ -142,7 +150,7 @@ const CreateNewIOUSettlementScreen = (props: any) => {
             setIOUSettlementJobData([]);
             let totalAmount = 0.0;
             getIOUJobsListForSellementsByID(IOUID, (response: any) => {
-                response.forEach((element: any , index:any) => {
+                response.forEach((element: any, index: any) => {
                     totalAmount = totalAmount + parseFloat(element.Amount);
                     generateReferenceNo("job", (ID: any) => {
                         const arr =
@@ -169,7 +177,7 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                                 arr: { ...arr }
                             }
                         ]);
-                        if(index === response.length-1){
+                        if (index === response.length - 1) {
                             handleChange(totalAmount, null, "totAmount");
                         }
                     });
@@ -251,6 +259,8 @@ const CreateNewIOUSettlementScreen = (props: any) => {
     }, [route.params?.IOUSetAttachmentSet]);
     useFocusEffect(
         useCallback(() => {
+            if (route.params?.Rtype == 0) {
+            }
             generateNo();
             getInitialData();
             getAllIOUNo();
@@ -384,7 +394,7 @@ const CreateNewIOUSettlementScreen = (props: any) => {
                                     <NewJobsView
                                         IOU_Type={IOUSettlementData.IOUType?.Id}
                                         amount={item.arr.RequestedAmount}
-                                        IOUTypeNo={IOUSettlementData.IOUType?.Id == 1  ? item.arr.IOUTypeNo : IOUSettlementData.IOUType?.Id == 2 ?item.arr.Resource : ''}
+                                        IOUTypeNo={IOUSettlementData.IOUType?.Id == 1 ? item.arr.IOUTypeNo : IOUSettlementData.IOUType?.Id == 2 ? item.arr.Resource : ''}
                                         ExpenseType={item.arr.ExpenseType}
                                         jobremarks={item.arr.Remark}
                                         accNo={item.arr.AccNo}

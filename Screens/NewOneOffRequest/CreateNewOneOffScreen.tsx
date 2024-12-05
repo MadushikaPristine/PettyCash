@@ -35,6 +35,8 @@ const NewOneOffScreen = (props: any) => {
     const [jobOwnerList, setJobOwnerlist] = useState([]);
     const back = async () => {
         setOneOffData([]);
+        setOneOffJobData([]);
+        setOneOffAttachments([]);
         await AsyncStorage.setItem(AsyncStorageConstants.ASYNC_STORAGE_Is_inprogressOneOff, "false");
         navigation.navigate('Home');
     }
@@ -144,14 +146,20 @@ const NewOneOffScreen = (props: any) => {
     }
     const generateNo = () => {
         try {
-            get_ASYNC_IsInprogress_OneOff().then(res => {
-                if (res == "true") {
-                } else {
-                    generateReferenceNo("OFS", (ID: any) => {
-                        handleChange(ID, null, "OneOffNo");
-                    });
-                }
-            });
+            if (route.params?.Rtype == 0) {
+                generateReferenceNo("OFS", (ID: any) => {
+                    handleChange(ID, null, "OneOffNo");
+                });
+            } else {
+                get_ASYNC_IsInprogress_OneOff().then(res => {
+                    if (res == "true") {
+                    } else {
+                        generateReferenceNo("OFS", (ID: any) => {
+                            handleChange(ID, null, "OneOffNo");
+                        });
+                    }
+                });
+            }
         } catch (error) {
         }
     }
@@ -192,8 +200,8 @@ const NewOneOffScreen = (props: any) => {
         setOneOffJobData(newData);
         let amountTot = parseFloat(OneOffData.totAmount?.value);
         let newAmnt = amountTot - parseFloat(amount);
-        console.log(" now amount ---  " , newAmnt);
-        
+        console.log(" now amount ---  ", newAmnt);
+
         if (!Number.isNaN(newAmnt)) {
             handleChange(newAmnt, null, "totAmount");
         } else {
@@ -215,8 +223,8 @@ const NewOneOffScreen = (props: any) => {
     }, [route.params?.OneOffJobdataSet]);
     useEffect(() => {
         if (route.params?.OneOffdataSet) {
-            console.log("total amount -------------   " , route.params?.OneOffdataSet);
-            
+            console.log("total amount -------------   ", route.params?.OneOffdataSet);
+
             setOneOffData(route.params.OneOffdataSet);
         }
     }, [route.params?.OneOffdataSet]);

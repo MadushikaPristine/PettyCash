@@ -20,6 +20,7 @@ import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
 import Spinner from "react-native-loading-spinner-overlay";
 import RNFS from 'react-native-fs';
 import axios from "axios";
+import { requestCameraPermission } from "../../Constant/CameraPermission";
 let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 const AddAttatchmentOneOffScreen = (props: any) => {
     const { navigation, route } = props;
@@ -40,21 +41,43 @@ const AddAttatchmentOneOffScreen = (props: any) => {
             { text: 'Yes', onPress: (back) },
         ]);
     }
-    const captureImage = () => {
+    const captureImage = async () => {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) {
+            showErrorAlert('Permission Denied', 'Camera access is required to capture photos.');
+            return;
+        }
         try {
             launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, response => {
-                if (response.assets) {
+                if (response?.assets) {
                     const newImage = {
                         uri: response.assets[0].uri,
-                        base64: response.assets[0].base64,
                     };
                     setOneOffAttachments((prevImages: any) => [...prevImages, newImage]);
+                } else {
+                    showErrorAlert('No Image Captured', 'Please try again.');
                 }
             });
         } catch (error) {
-            showErrorAlert('Failed', 'Camera permission denied');
+            console.error("Error capturing image: ", error);
+            showErrorAlert('Failed', 'An unexpected error occurred.');
         }
     };
+    // const captureImage = () => {
+    //     try {
+    //         launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, response => {
+    //             if (response.assets) {
+    //                 const newImage = {
+    //                     uri: response.assets[0].uri,
+    //                     base64: response.assets[0].base64,
+    //                 };
+    //                 setOneOffAttachments((prevImages: any) => [...prevImages, newImage]);
+    //             }
+    //         });
+    //     } catch (error) {
+    //         showErrorAlert('Failed', 'Camera permission denied');
+    //     }
+    // };
     const showErrorAlert = async (title: any, message: any) => {
         await alert({
             type: DropdownAlertType.Error,
@@ -111,10 +134,11 @@ const AddAttatchmentOneOffScreen = (props: any) => {
             });
 
             OneOffAttachments.forEach(async (elementI: any) => {
+                const base64String = await RNFS.readFile(elementI.uri, 'base64');
                 const arr = {
                     "IOUTypeNo": OneOffData.IOUType?.Id,
                     "FileName": elementI.uri,
-                    "File": elementI.base64,
+                    "File": base64String,
                     "FileType": "image/jpeg"
                 }
                 Fileobj.push(arr);
@@ -214,6 +238,9 @@ const AddAttatchmentOneOffScreen = (props: any) => {
     const viewAlertNavigate = () => {
         setTimeout(() => {
             setLoading(false);
+            setOneOffData([]);
+            setOneOffJobData([]);
+            setOneOffAttachments([]);
             navigation.navigate('PendingList');
         }, 1000);
     }

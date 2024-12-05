@@ -19,6 +19,8 @@ import { saveAttachments } from "../../SQLiteDBAction/Controllers/AttachmentCont
 import { BASE_URL, DB_LIVE, headers } from "../../Constant/ApiConstants";
 import { logger, saveJsonObject_To_Loog } from "../../Constant/Logger";
 import axios from "axios";
+import { requestCameraPermission } from "../../Constant/CameraPermission";
+import RNFS from 'react-native-fs';
 let alert = (_data: DropdownAlertData) => new Promise<DropdownAlertData>(res => res);
 const AddAttatchmentIOUScreen = (props: any) => {
     const { navigation, route } = props;
@@ -47,22 +49,44 @@ const AddAttatchmentIOUScreen = (props: any) => {
         } catch (error) {
         }
     }
-    const captureImage = () => {
+    const captureImage = async () => {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) {
+            showErrorAlert('Permission Denied', 'Camera access is required to capture photos.');
+            return;
+        }
         try {
             launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, response => {
-                if (response.assets) {
+                if (response?.assets) {
                     const newImage = {
                         uri: response.assets[0].uri,
-                        base64: response.assets[0].base64,
                     };
                     setIOUAttachments((prevImages: any) => [...prevImages, newImage]);
+                } else {
+                    showErrorAlert('No Image Captured', 'Please try again.');
                 }
             });
         } catch (error) {
-            showErrorAlert('Failed', 'Camera permission denied');
-            // console.log('Camera permission denied');
+            console.error("Error capturing image: ", error);
+            showErrorAlert('Failed', 'An unexpected error occurred.');
         }
     };
+    // const captureImage = () => {
+    //     try {
+    //         launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, response => {
+    //             if (response.assets) {
+    //                 const newImage = {
+    //                     uri: response.assets[0].uri,
+    //                     base64: response.assets[0].base64,
+    //                 };
+    //                 setIOUAttachments((prevImages: any) => [...prevImages, newImage]);
+    //             }
+    //         });
+    //     } catch (error) {
+    //         showErrorAlert('Failed', 'Camera permission denied');
+    //         // console.log('Camera permission denied');
+    //     }
+    // };
     const showErrorAlert = async (title: any, message: any) => {
         await alert({
             type: DropdownAlertType.Error,
@@ -98,6 +122,9 @@ const AddAttatchmentIOUScreen = (props: any) => {
     const viewAlertNavigate = () => {
         setTimeout(() => {
             setLoading(false);
+            setIOUData([]);
+            setIOUJobData([]);
+            setIOUAttachments([]);
             navigation.navigate('PendingList');
         }, 1000);
     }
@@ -134,10 +161,11 @@ const AddAttatchmentIOUScreen = (props: any) => {
             });
             if (IOUAttachments.length > 0) {
                 IOUAttachments.forEach(async (elementI: any) => {
+                    const base64String = await RNFS.readFile(elementI.uri, 'base64');
                     const arr = {
                         "IOUTypeNo": IOUData.IOUType?.Id,
                         "FileName": elementI.uri,
-                        "File": elementI.base64,
+                        "File": base64String,
                         "FileType": "image/jpeg"
                     }
                     Fileobj.push(arr);
