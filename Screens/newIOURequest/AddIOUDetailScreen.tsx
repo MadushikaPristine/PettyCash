@@ -406,6 +406,9 @@ const AddIOUDetailScreen = (props: any) => {
                             getGL_AccNo(2, item.ExpType_ID);
                         } else if (IOUData.IOUType?.Id == "3") {
                             getGL_AccNo(3, item.ExpType_ID);
+                            get_ASYNC_COST_CENTER().then(async res => {
+                                handleNewJobDataChange(res, null, "CostCenter")
+                            });
                         }
                         setIsFocus(false);
                     }}
